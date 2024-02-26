@@ -76,7 +76,7 @@ get_option_name() {
 
 get_feature_name() {
     local name=$1
-    if ! [ $name ]; then name=$(get_option_name); fi 
+    if ! [ $name ]; then name=$(get_option_name); fi
     echo `echo $name | cut -d '-' -sf 4`
 }
 
@@ -93,7 +93,7 @@ print_help_option_one() {
     local key=$(get_option_field $f_key)
     if [ -z "$key" ]; then continue; fi
     local def=$(get_option_field $f_def)
-    if [ -z "$def" ]; then 
+    if [ -z "$def" ]; then
         printf "  %-${key_max_cols}s %s\n" $key "$(get_option_field $f_help)"
     else
         printf "  %-${key_max_cols}s %s [%s]\n" $key "$(get_option_field $f_help)" "$(get_option_field $f_def)"
@@ -132,12 +132,13 @@ f_pkg=4
 
 parallel=$njobs
 release=
+developer=1
 cc=gcc
 cxx=g++
 qmake=autodetect
 lrelease=autodetect
 macdeployqt=
-defaultskin=
+defaultskin=Ardis
 
 mo() {
     local value=$(eval echo \$$1)
@@ -317,7 +318,7 @@ check_valid_option() {
     local var
     local key=$(parse_for_key $arg)
     if [ $key = "--help" ]; then print_help; fi
-    
+
     if [ `echo "$key" | grep "^\-\-enable\|disable\-"` ]; then
         while read line; do
             option_line=$line
@@ -407,7 +408,7 @@ check_pkg() {
             fi
         done
     fi
-    
+
     if [ -z "$err_pkg" ]; then
         cflags="$cflags `pkg-config --cflags $pkgs`"
         libs="$libs `pkg-config --libs $pkgs`"
@@ -434,6 +435,22 @@ if [ "$os" = "win" ]; then
 fi
 
 if has_arg "developer"; then
+	printf "developer option enabled. \n"
+    if [ "$os" = "linux" ]; then
+        jack=enable
+        pulseaudio=enable
+        cdda=enable
+        vdpau=enable
+        vaapi=enable
+    elif [ "$os" = "osx" ]; then
+        qtsdk=/usr/local/opt/qt5
+        macdeployqt=macdeployqt
+        qmake=qmake
+        export PKG_CONFIG_PATH="/usr/local/opt/icu4c/lib/pkgconfig:/usr/local/opt/libass-ct/lib/pkgconfig:${PKG_CONFIG_PATH}"
+	fi
+fi
+if [ "$developer" = "1" ]; then
+	printf "built-in developer option enabled. \n"
     if [ "$os" = "linux" ]; then
         jack=enable
         pulseaudio=enable

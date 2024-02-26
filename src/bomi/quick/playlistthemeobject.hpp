@@ -9,9 +9,9 @@ struct ControlsTheme {
     bool showOnMouseMoved = true;
     bool showLocationsInPlaylist = true;
     bool showToolOnMouseOverEdge = false;
-    bool showPreviewOnMouseOverSeekBar = false;
+    bool showPreviewOnMouseOverSeekBar = true;
     bool showKeyframeForPreview = true;
-    bool showMediaTitleForLocalFilesInHistory = false;
+    bool showMediaTitleForLocalFilesInHistory = true;
     bool showMediaTitleForUrlsInHistory = true;
     qreal previewSize = 0.2;
     int previewMinimumSize = 100;

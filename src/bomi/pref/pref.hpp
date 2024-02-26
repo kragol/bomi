@@ -70,8 +70,8 @@ private:
     P0(bool, load_last, true)
     P0(bool, fit_to_video, false)
     P0(bool, use_mpris2, true)
-    P0(bool, pause_minimized, true)
-    P0(bool, pause_video_only, true)
+    P0(bool, pause_minimized, false)
+    P0(bool, pause_video_only, false)
     P0(bool, remember_stopped, true)
     P0(bool, resume_ignore_in_playlist, false)
     P0(bool, precise_seeking, false)
@@ -115,14 +115,14 @@ private:
     P0(bool, sub_prefer_external, true)
 
     P0(bool, enable_system_tray, true)
-    P0(bool, hide_rather_close, true)
+    P0(bool, hide_rather_close, false)
     P0(MouseActionMap, mouse_action_map, defaultMouseActionMap())
     P0(bool, invert_wheel, false)
 
     P0(Steps, steps, {})
     P0(QList<WindowSize>, window_sizes, WindowSize::defaults())
 
-    P0(bool, enable_hwaccel, false)
+    P0(bool, enable_hwaccel, true)
     P0(QList<CodecId>, hwaccel_codecs, OS::hwAcc()->fullCodecList())
     P0(DeintOptionSet, deinterlacing, {})
 
