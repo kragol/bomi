@@ -1,0 +1,116 @@
+---
+ libavcodec/libx264.c | 49 ++++++++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 40 insertions(+), 9 deletions(-)
+
+diff --git a/libavcodec/libx264.c b/libavcodec/libx264.c
+index e2455e18de..fb0bc9f10d 100644
+--- a/libavcodec/libx264.c
++++ b/libavcodec/libx264.c
+@@ -272,6 +272,7 @@ static int X264_frame(AVCodecContext *ctx, AVPacket *pkt, const AVFrame *frame,
+                       int *got_packet)
+ {
+     X264Context *x4 = ctx->priv_data;
++    const av_unused AVPixFmtDescriptor *desc = av_pix_fmt_desc_get(ctx->pix_fmt);
+     x264_nal_t *nal;
+     int nnal, i, ret;
+     x264_picture_t pic_out = {0};
+@@ -279,7 +280,7 @@ static int X264_frame(AVCodecContext *ctx, AVPacket *pkt, const AVFrame *frame,
+
+     x264_picture_init( &x4->pic );
+     x4->pic.img.i_csp   = x4->params.i_csp;
+-    if (x264_bit_depth > 8)
++    if (desc->comp[0].depth > 8)
+         x4->pic.img.i_csp |= X264_CSP_HIGH_DEPTH;
+     x4->pic.img.i_plane = avfmt2_num_planes(ctx->pix_fmt);
+
+@@ -453,6 +454,7 @@ static av_cold int X264_init(AVCodecContext *avctx)
+ {
+     X264Context *x4 = avctx->priv_data;
+     AVCPBProperties *cpb_props;
++    const av_unused AVPixFmtDescriptor *desc = av_pix_fmt_desc_get(avctx->pix_fmt);
+     int sw,sh;
+
+     if (avctx->global_quality > 0)
+@@ -723,6 +725,9 @@ FF_ENABLE_DEPRECATION_WARNINGS
+
+     x4->params.i_width          = avctx->width;
+     x4->params.i_height         = avctx->height;
++#if X264_BUILD >= 153
++    x4->params.i_bitdepth       = desc->comp[0].depth;
++#endif
+     av_reduce(&sw, &sh, avctx->sample_aspect_ratio.num, avctx->sample_aspect_ratio.den, 4096);
+     x4->params.vui.i_sar_width  = sw;
+     x4->params.vui.i_sar_height = sh;
+@@ -850,6 +855,35 @@ static const enum AVPixelFormat pix_fmts_8bit[] = {
+ #endif
+     AV_PIX_FMT_NONE
+ };
++
++#if CONFIG_LIBX264RGB_ENCODER
++static const enum AVPixelFormat pix_fmts_8bit_rgb[] = {
++    AV_PIX_FMT_BGR0,
++    AV_PIX_FMT_BGR24,
++    AV_PIX_FMT_RGB24,
++    AV_PIX_FMT_NONE
++};
++#endif
++
++#if X264_BUILD >= 153
++static const enum AVPixelFormat pix_fmts[] = {
++    AV_PIX_FMT_YUV420P,
++    AV_PIX_FMT_YUVJ420P,
++    AV_PIX_FMT_YUV422P,
++    AV_PIX_FMT_YUVJ422P,
++    AV_PIX_FMT_YUV444P,
++    AV_PIX_FMT_YUVJ444P,
++    AV_PIX_FMT_YUV420P9,
++    AV_PIX_FMT_YUV444P9,
++    AV_PIX_FMT_YUV420P10,
++    AV_PIX_FMT_YUV422P10,
++    AV_PIX_FMT_YUV444P10,
++    AV_PIX_FMT_NV12,
++    AV_PIX_FMT_NV16,
++    AV_PIX_FMT_NV21,
++    AV_PIX_FMT_NONE
++};
++#else
+ static const enum AVPixelFormat pix_fmts_9bit[] = {
+     AV_PIX_FMT_YUV420P9,
+     AV_PIX_FMT_YUV444P9,
+@@ -862,14 +896,6 @@ static const enum AVPixelFormat pix_fmts_10bit[] = {
+     AV_PIX_FMT_NV20,
+     AV_PIX_FMT_NONE
+ };
+-#if CONFIG_LIBX264RGB_ENCODER
+-static const enum AVPixelFormat pix_fmts_8bit_rgb[] = {
+-    AV_PIX_FMT_BGR0,
+-    AV_PIX_FMT_BGR24,
+-    AV_PIX_FMT_RGB24,
+-    AV_PIX_FMT_NONE
+-};
+-#endif
+
+ static av_cold void X264_init_static(AVCodec *codec)
+ {
+@@ -880,6 +906,7 @@ static av_cold void X264_init_static(AVCodec *codec)
+     else if (x264_bit_depth == 10)
+         codec->pix_fmts = pix_fmts_10bit;
+ }
++#endif
+
+ #define OFFSET(x) offsetof(X264Context, x)
+ #define VE AV_OPT_FLAG_VIDEO_PARAM | AV_OPT_FLAG_ENCODING_PARAM
+@@ -1023,7 +1050,11 @@ AVCodec ff_libx264_encoder = {
+     .capabilities     = AV_CODEC_CAP_DELAY | AV_CODEC_CAP_AUTO_THREADS,
+     .priv_class       = &x264_class,
+     .defaults         = x264_defaults,
++#if X264_BUILD >= 153
++    .pix_fmts         = pix_fmts,
++#else
+     .init_static_data = X264_init_static,
++#endif
+     .caps_internal    = FF_CODEC_CAP_INIT_THREADSAFE |
+                         FF_CODEC_CAP_INIT_CLEANUP,
+     .wrapper_name     = "libx264",
+--
+2.15.0

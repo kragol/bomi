@@ -14,7 +14,7 @@ if test $kern = "Darwin"; then
   procs=5
 elif test $kern = "Linux"; then
   echo "Build for Linux"
-  args="$args --disable-vda --enable-vaapi --enable-vdpau"
+  args="$args --enable-vaapi --enable-vdpau"
 else
   echo "Build for Windows"
   args="$args --enable-dxva2 --target-os=mingw32"
@@ -22,4 +22,4 @@ else
   export PATH="/mingw64/bin:${PATH}"
 fi
 
-cd src/ffmpeg* && make distclean; ./configure $args && make -j $procs && make install
+cd src/ffmpeg-4.0.1 && make distclean; ./configure $args && make -j $procs && make install

@@ -2,7 +2,7 @@
 
 install -d src
 
-version=2.6.2
+version=3.5
 url=http://www.ffmpeg.org/releases/ffmpeg-${version}.tar.gz
 out=ffmpeg.tar.gz
 if ! [ -f ${out} ]; then

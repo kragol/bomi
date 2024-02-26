@@ -1,0 +1,7 @@
+bomi (0.9.11-1ubuntu3) jammy; urgency=medium
+
+  * No-change rebuild against libplacebo192
+
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Sun, 06 Feb 2022 00:56:36 +0000
+
+

@@ -15,7 +15,8 @@
 #include <fcntl.h>
 #include <time.h>
 #include <sys/time.h>
-#include <sys/sysctl.h>
+//#include <sys/sysctl.h>
+#include <linux/sysctl.h>
 #include <sys/types.h>
 #include <xcb/xcb.h>
 #include <xcb/randr.h>
