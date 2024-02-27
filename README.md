@@ -6,7 +6,7 @@
 bomi is a multimedia player formerly known as CMPlayer,
 which is aimed for easy usage but also provides various powerful features and convenience functions.
 Just install and enjoy it! There will be already what you expect.
-If you don't like, you can configure almost everything. 
+If you don't like, you can configure almost everything.
 
 For more details, please visit [bomi Project Page](http://bomi-player.github.io).
 
@@ -80,7 +80,15 @@ $. /build-libchardet
 If you have any problem when building, please check Troubleshooting section.
 It may be helpful to check what you can configure using next command:
 ```
+EDIT: The file /usr/include/unistd.h needs to have the pause definition commented out
+just for the build, so change
+extern int pause (void);
+to;
+//extern int pause (void);
+Then change back after compile.
+
 $ ./configure --help
+$ make
 ```
 
 #### Test purpose
@@ -129,7 +137,7 @@ where `$pkgdir` is the fake root system. `jack` and `cdda` support is also enabl
 If you have problems or want some features, please report them in English, Korean, or Japanese.
 
 ### [E-mail](mailto:darklin20@gmail.com)
-If you want to contact me privately, please send me an e-mail. 
+If you want to contact me privately, please send me an e-mail.
 
 ## License
 
