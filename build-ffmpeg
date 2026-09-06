@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# gcc >= 14 defaults to a C standard that rejects a lot of ffmpeg 4.0-era C.
+# Pin gnu99 so the pinned ffmpeg keeps building on modern toolchains.
+extra_cflags="-std=gnu99 -Wno-incompatible-pointer-types -Wno-implicit-function-declaration"
+
 args="--prefix=`pwd`/build --enable-gpl --disable-debug --disable-shared --enable-static \
   --enable-runtime-cpudetect --disable-doc --disable-programs --enable-gnutls \
   --disable-avdevice --enable-avfilter --enable-swresample --disable-avresample --enable-pthreads \
@@ -22,4 +26,31 @@ else
   export PATH="/mingw64/bin:${PATH}"
 fi
 
-cd src/ffmpeg-4.0.1 && make distclean; ./configure $args && make -j $procs && make install
+# ffmpeg 4.x wants nasm for its x86 assembly; fall back to a C-only build
+# rather than failing outright if it is not installed.
+if ! command -v nasm >/dev/null 2>&1; then
+  echo "nasm not found: building without x86 assembly (slower, but works)."
+  echo "Install nasm and re-run for an optimised build."
+  args="$args --disable-x86asm"
+fi
+
+if ! [ -d src/ffmpeg ]; then
+  echo "src/ffmpeg is missing. Run ./download-ffmpeg first."
+  exit 1
+fi
+
+# Apply the pinned ffmpeg's compatibility patches. Idempotent: patches already
+# applied are skipped, so re-running this script is safe.
+for p in patches/ffmpeg-*.patch; do
+  [ -e "$p" ] || continue
+  if patch -d src/ffmpeg -p1 -N --dry-run --silent < "$p" >/dev/null 2>&1; then
+    echo "Applying $p"
+    patch -d src/ffmpeg -p1 -N --silent < "$p"
+  else
+    echo "Skipping $p (already applied)"
+  fi
+done
+
+cd src/ffmpeg && make distclean; \
+  ./configure $args --extra-cflags="$extra_cflags" && \
+  make -j $procs && make install
