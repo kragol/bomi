@@ -102,3 +102,11 @@ src/ffmpeg/doc/examples/pc-uninstalled/libswresample.pc
 src/ffmpeg/libswresample/libswresample.pc
 build/
 /bomi.1.gz
+
+# debhelper build output (debian/rules regenerates all of this)
+debian/bomi/
+debian/*.debhelper
+debian/*.debhelper.log
+debian/*.substvars
+debian/files
+__pycache__/
