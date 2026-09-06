@@ -132,7 +132,7 @@ static QFontDatabase::WritingSystem writingSystemForFont(QFontDatabase *db, cons
 struct FontData {
     DECL_EQ(FontData, &T::font);
     QFont font;
-    QString display, sys;
+    QString display;
 };
 
 class FontFamilyModel : public SimpleListModel<FontData> {
@@ -156,7 +156,13 @@ static auto generateList(bool fixedOnly) -> QList<FontData>
         FontData data;
         data.font = def;
         data.font.setFamily(family);
-        data.sys = QFontInfo(data.font).family();
+        // Deliberately no QFontInfo(data.font).family() here. That resolves the
+        // family through the font engine, forcing Qt to load and cache an engine
+        // for every installed family; with ~3700 families it costs ~18s, and
+        // because each QFont is kept alive in this list the engines can never be
+        // evicted, which pushes QFontCache::decreaseCache() into thrashing and
+        // takes it past 24s and climbing. Skipping it makes this loop ~4ms.
+        // setCurrentFont() resolves the one font it actually needs instead.
         bool hasLatin = false;
         const auto system = writingSystemForFont(&db, data.font, &hasLatin);
         const auto sample = db.writingSystemSample(system);
@@ -193,9 +199,14 @@ FontComboBox::FontComboBox(QWidget *parent)
     setMinimumContentsLength(10);
     connect(SIGNAL_VT(this, currentIndexChanged, int), this, [=] (int idx) {
         emit currentFontChanged();
-        if (idx < 0)
-            return;
-        setFont(d->model->at(idx).font);
+        Q_UNUSED(idx);
+        // This used to setFont(d->model->at(idx).font) so the closed combo box
+        // showed the family in its own typeface. QComboBox::changeEvent()
+        // answers a FontChange by relaying out the entire popup, and because
+        // each row draws in its own family that measures -- and loads a font
+        // engine for -- every installed family. With ~3700 fonts the
+        // preferences dialog never finished opening. The popup entries still
+        // render in their own families via FontFamilyModel::fontData().
     });
     d->model = new FontFamilyModel;
     d->model->setList(d->generateList());
@@ -219,13 +230,22 @@ auto FontComboBox::setFixedFontOnly(bool fixed) -> void
 
 auto FontComboBox::setCurrentFont(const QFont &font) -> void
 {
-    const auto family = QFontInfo(font).family();
-    for (int i = 0; i < d->model->size(); ++i) {
-        if (d->model->at(i).sys == family) {
-            setCurrentIndex(i);
-            break;
+    auto find = [this] (const QString &family) -> bool {
+        if (family.isEmpty())
+            return false;
+        for (int i = 0; i < d->model->size(); ++i) {
+            if (!d->model->at(i).font.family().compare(family, Qt::CaseInsensitive)) {
+                setCurrentIndex(i);
+                return true;
+            }
         }
-    }
+        return false;
+    };
+    // The requested family usually names an installed family outright, so try
+    // it before paying for QFontInfo, which has to load the font engine. Fall
+    // back to the resolved name for aliases such as "Sans Serif".
+    if (!find(font.family()))
+        find(QFontInfo(font).family());
 }
 
 auto FontComboBox::currentFont() const -> QFont
