@@ -1,6 +1,7 @@
 #include "fontcombobox.hpp"
 #include "misc/simplelistmodel.hpp"
 #include <QFontDatabase>
+#include <QListView>
 
 static QFontDatabase::WritingSystem writingSystemFromScript(QLocale::Script script)
 {
@@ -211,6 +212,14 @@ FontComboBox::FontComboBox(QWidget *parent)
     d->model = new FontFamilyModel;
     d->model->setList(d->generateList());
     setModel(d->model);
+    // Every row carries its own family through FontFamilyModel::fontData(), so
+    // laying the popup out measures each row in that family and loads a font
+    // engine for it. Opening the drop-down took ~24s with ~3700 families
+    // installed. Uniform sizes make QListView measure one row and reuse it,
+    // which brings that down to ~0.1s; only the visible rows then load an
+    // engine, when they are painted.
+    if (auto view = qobject_cast<QListView*>(this->view()))
+        view->setUniformItemSizes(true);
     setCurrentIndex(0);
 }
 
