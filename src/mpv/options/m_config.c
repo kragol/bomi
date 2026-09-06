@@ -424,7 +424,8 @@ static void m_config_add_option(struct m_config *config,
                 }
             }
             // In case this is dynamic data, it has to be allocated and copied.
-            union m_option_value temp = {0};
+            union m_option_value temp;
+            memset(&temp, 0, sizeof(temp));
             memcpy(&temp, co.default_data, arg->type->size);
             memset(co.data, 0, arg->type->size);
             m_option_copy(arg, co.data, &temp);
@@ -712,7 +713,8 @@ int m_config_set_option_node(struct m_config *config, bstr name,
 
     // Do this on an "empty" type to make setting the option strictly overwrite
     // the old value, as opposed to e.g. appending to lists.
-    union m_option_value val = {0};
+    union m_option_value val;
+    memset(&val, 0, sizeof(val));
 
     if (data->format == MPV_FORMAT_STRING) {
         bstr param = bstr0(data->u.string);

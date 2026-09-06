@@ -3196,7 +3196,8 @@ static int mp_property_option_info(void *ctx, struct m_property *prop,
         if (!co)
             return M_PROPERTY_UNKNOWN;
 
-        union m_option_value def = {0};
+        union m_option_value def;
+        memset(&def, 0, sizeof(def));
         if (co->default_data)
             memcpy(&def, co->default_data, co->opt->type->size);
 
@@ -4056,7 +4057,8 @@ static int *get_cmd_cycle_counter(struct MPContext *mpctx, char **args)
 
 static int mp_property_multiply(char *property, double f, struct MPContext *mpctx)
 {
-    union m_option_value val = {0};
+    union m_option_value val;
+    memset(&val, 0, sizeof(val));
     struct m_option opt = {0};
     int r;
 

@@ -12,6 +12,11 @@ INCLUDEPATH += ../mpv ../mpv/build kiss_fft
 LIBS += -L$${LIB_DIR} -lbz2 -lz
 
 include(configure.pro)
+
+# libmpv.a reaches the link line through LIBS as an absolute path, which qmake
+# does not turn into a prerequisite. Without this, rebuilding mpv leaves bomi
+# silently linked against the previous libmpv.a.
+PRE_TARGETDEPS += $${LIB_DIR}/libmpv.a
 !isEmpty(BOMI_RELEASE) {
 	CONFIG -= debug
     CONFIG += release

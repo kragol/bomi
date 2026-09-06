@@ -1181,7 +1181,8 @@ static void getproperty_fn(void *arg)
     struct getproperty_request *req = arg;
     const struct m_option *type = get_mp_type_get(req->format);
 
-    union m_option_value xdata = {0};
+    union m_option_value xdata;
+    memset(&xdata, 0, sizeof(xdata));
     void *data = req->data ? req->data : &xdata;
 
     int err = -1;
@@ -1422,7 +1423,8 @@ static void update_prop(void *p)
     struct mpv_handle *ctx = prop->client;
 
     const struct m_option *type = get_mp_type_get(prop->format);
-    union m_option_value val = {0};
+    union m_option_value val;
+    memset(&val, 0, sizeof(val));
 
     struct getproperty_request req = {
         .mpctx = ctx->mpctx,

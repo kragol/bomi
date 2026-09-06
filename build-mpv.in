@@ -20,8 +20,12 @@ export PATH="@PATH@"
 export PKG_CONFIG_PATH="@PKG_CONFIG_PATH@"
 export CC="@cc@"
 
-# gcc >= 14 defaults to a C standard this vintage of mpv predates.
-export CFLAGS="-std=gnu99 ${CFLAGS}"
+# options/m_option.c repeatedly redefines VAL(x) as (*(char **)(x)),
+# (*(float *)(x)) and so on, and reads a "union m_option_value" through them.
+# That is undefined behaviour under strict aliasing, so keep it switched off
+# rather than trust a modern gcc's judgement about what those reads can see.
+# mpv appends its own -std=c99 after this, so do not bother setting -std here.
+export CFLAGS="-fno-strict-aliasing ${CFLAGS}"
 
 # The bundled waf is old enough that it does not run on Python >= 3.12, which
 # removed imp and distutils. waf is only used to produce build/lib/libmpv.a, so
