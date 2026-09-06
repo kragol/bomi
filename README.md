@@ -10,13 +10,42 @@ If you don't like, you can configure almost everything.
 
 For more details, please visit [bomi Project Page](http://bomi-player.github.io).
 
+## About this fork
+
+This is a fork of [bm16ton/bomi](https://github.com/bm16ton/bomi), itself a fork of
+the original [xylosper/bomi](https://github.com/xylosper/bomi), which stopped in 2016.
+It carries the changes needed to build and run on a current Linux distribution
+(tested on Arch with gcc 16, Qt 5.15 and Python 3.14) and to work under a
+Wayland desktop session.
+
+Two things are worth knowing before you dig in:
+
+* bomi is not an ordinary libmpv client. It vendors a patched mpv (client API
+  1.18, early 2016) in `src/mpv`, links it **statically**, includes mpv's
+  internal headers, and overrides mpv's own `af_info_dummy` and
+  `vf_info_noformat` symbols at link time so that bomi's audio and video
+  filters run inside mpv's filter chain. mpv deleted that architecture in
+  0.30, so building against a modern system libmpv is a rewrite, not a version
+  bump. The vendored mpv and the pinned in-tree FFmpeg are not optional.
+* bomi is an X11 client. It uses xcb directly for fullscreen, always-on-top,
+  drag-to-move and screensaver inhibition. Under a Wayland session it runs on
+  XWayland: it defaults `QT_QPA_PLATFORM` to `xcb` when an X display is
+  available. Setting `QT_QPA_PLATFORM` yourself overrides that, and a native
+  Wayland run works with reduced functionality (no window-manager
+  integration, no screensaver inhibition).
+
 ## Requirements
 
 In order to build bomi, you need next tools:
 
 * `g++` or `clang` which supports C++14
 * `pkg-config`
-* `python`
+* `python` — plus an interpreter older than 3.12 for mpv's bundled waf, which
+  predates the removal of `imp` and `distutils`. `./configure` looks for
+  `python3.9`/`3.10`/`3.11`, including pyenv installs; override with
+  `--python=/path/to/python`.
+* `nasm` for FFmpeg's x86 assembly. Without it the in-tree FFmpeg still
+  builds, just without hand-written assembly.
 * `git` if you try to build from git repository
 
 You have to prepare next libraries, too:
@@ -58,10 +87,11 @@ At first, prepare the source code.
 
 ### In-tree build packages
 
-FFmpeg and chardet packages cannot be prepared easily for some Linux ditributions.
-For such case, you can build them with in-tree source.
-
-If you don't need in-tree build of FFmpeg and chardet, skip this section.
+**The in-tree FFmpeg is required, not optional.** It is pinned to 4.0.1, because
+the vendored mpv in `src/mpv` carries API fixes written against ffmpeg 4.0 and will
+not build against a current system FFmpeg. `./configure` prepends `build/lib/pkgconfig`
+to `PKG_CONFIG_PATH`, so build FFmpeg first and **re-run `./configure` afterwards** —
+otherwise bomi is configured against your system FFmpeg and nothing will link.
 
 * To build FFmpeg in-tree, run next:
 ```
@@ -69,10 +99,17 @@ $ ./download-ffmpeg
 $ ./build-ffmpeg
 ```
 
+`build-ffmpeg` applies everything in `patches/ffmpeg-*.patch` first, idempotently.
+Currently that is a backport of upstream `effadce6`, without which modern binutils
+rejects the inline assembly in `libavcodec/x86/mathops.h`.
+
+chardet can also be built in-tree if your distribution lacks it; skip it if
+`pkg-config chardet` already works.
+
 * To build chardet in-tree, run next:
 ```
-$. /download-libchardet
-$. /build-libchardet
+$ ./download-libchardet
+$ ./build-libchardet
 ```
 
 ### Build bomi
@@ -80,16 +117,25 @@ $. /build-libchardet
 If you have any problem when building, please check Troubleshooting section.
 It may be helpful to check what you can configure using next command:
 ```
-EDIT: The file /usr/include/unistd.h needs to have the pause definition commented out
-just for the build, so change
-extern int pause (void);
-to;
-//extern int pause (void);
-Then change back after compile.
-
 $ ./configure --help
 $ make
 ```
+
+For a build you can run straight from the source tree, pass `--developer`; it
+points the skin, import and translation paths at `src/bomi` instead of the
+install prefix. Do not use it when building a package.
+
+Hardware decoding (VA-API and VDPAU) is off in the tested configuration:
+```
+$ ./configure --disable-vaapi --disable-vdpau
+```
+Both paths are GLX-based and predate the current drivers. They still compile,
+but have not been verified on this fork.
+
+Earlier revisions of this README told you to comment out `extern int pause (void);`
+in `/usr/include/unistd.h` before building and put it back afterwards. That is no
+longer necessary: the collision was a `static void pause()` in mpv's
+`audio/out/ao_pulse.c`, which is now named `audio_pause()`.
 
 #### Test purpose
 If you want to try bomi without install, run next commands in order to build bomi:
