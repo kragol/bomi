@@ -142,6 +142,14 @@ class FontFamilyModel : public SimpleListModel<FontData> {
         auto &data = at(row);
         return data.display.isEmpty() ? data.font.family() : data.display;
     }
+    // Known cost: returning a per-row font means Qt loads that family's font
+    // engine the first time the row is painted, so scrolling the drop-down is
+    // sluggish until the visited rows are cached. Everything cheap has already
+    // been done -- the engine load is inherent to previewing each family, and
+    // it cannot be moved off the GUI thread because QFontDatabase engine
+    // loading is not thread-safe in Qt 5. Dropping it would mean giving up the
+    // preview, or previewing only the sample text and drawing the family name
+    // in the UI font, which roughly halves the work but changes the look.
     auto fontData(int row, int) const -> QFont { return at(row).font; }
 };
 
@@ -218,9 +226,41 @@ FontComboBox::FontComboBox(QWidget *parent)
     // installed. Uniform sizes make QListView measure one row and reuse it,
     // which brings that down to ~0.1s; only the visible rows then load an
     // engine, when they are painted.
-    if (auto view = qobject_cast<QListView*>(this->view()))
+    //
+    // Batched layout then keeps the *first* open cheap too. Uniform sizes
+    // alone still leave a one-off per-row pass -- ~900ms for 3700 rows -- and
+    // because that is longer than QApplication::doubleClickInterval() (400ms),
+    // QComboBox stops blocking the mouse release that follows the click, so
+    // the drop-down opened and immediately closed again. Laying out in batches
+    // brings the first open to ~27ms and it stays open.
+    if (auto view = qobject_cast<QListView*>(this->view())) {
         view->setUniformItemSizes(true);
+        view->setLayoutMode(QListView::Batched);
+    }
     setCurrentIndex(0);
+}
+
+void FontComboBox::showPopup()
+{
+    QComboBox::showPopup();
+    // With batched layout the rows past the first batch are not laid out yet
+    // when QComboBox does its own scroll-to-current, so the popup opens at the
+    // top of the list rather than at the selected family. Nudge it until the
+    // row has been laid out and the scroll actually lands.
+    const auto idx = model()->index(currentIndex(), modelColumn());
+    if (!idx.isValid())
+        return;
+    auto v = view();
+    auto timer = new QTimer(v);
+    timer->setInterval(10);
+    auto tries = std::make_shared<int>(0);
+    connect(timer, &QTimer::timeout, v, [v, idx, timer, tries] () {
+        v->scrollTo(idx, QAbstractItemView::PositionAtCenter);
+        const bool done = v->visualRect(idx).intersects(v->viewport()->rect());
+        if (done || !v->isVisible() || ++*tries > 50)
+            timer->deleteLater();
+    });
+    timer->start();
 }
 
 FontComboBox::~FontComboBox()

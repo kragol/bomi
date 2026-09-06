@@ -10,6 +10,7 @@ public:
     auto setCurrentFont(const QFont &font) -> void;
     auto currentFont() const -> QFont;
     auto setFixedFontOnly(bool fixed) -> void;
+    void showPopup() override;
 signals:
     void currentFontChanged();
 private:
