@@ -536,7 +536,9 @@ static void reset(struct ao *ao)
 }
 
 // Pause the audio stream by corking it on the server
-static void pause(struct ao *ao)
+// Not named "pause": pulseaudio's headers reach unistd.h on modern glibc,
+// whose extern int pause(void) this would conflict with.
+static void audio_pause(struct ao *ao)
 {
     cork(ao, true);
 }
@@ -810,7 +812,7 @@ const struct ao_driver audio_out_pulse = {
     .get_space = get_space,
     .play      = play,
     .get_delay = get_delay,
-    .pause     = pause,
+    .pause     = audio_pause,
     .resume    = resume,
     .drain     = drain,
     .wait      = wait_audio,

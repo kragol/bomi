@@ -5,7 +5,7 @@ args="--prefix=../../build --disable-manpage-build --enable-libmpv-static --disa
   --enable-iconv --disable-termios --disable-shm --disable-libguess --disable-drm \
   --enable-encoding --enable-libbluray --enable-dvdread --enable-dvdnav \
   --disable-enca --disable-ladspa --disable-libbs2b --disable-lcms2 --enable-libswresample --disable-libavfilter \
-  --disable-libavdevice --disable-libavresample --disable-vapoursynth --disable-vapoursynth-lazy \
+  --disable-libavdevice --disable-libavresample --disable-vapoursynth --disable-vapoursynth-lazy --disable-vapoursynth-core \
   --disable-sdl2 --disable-sdl1 --disable-rsound --disable-sndio --disable-openal \
   --disable-win32 --disable-x11 --disable-cocoa --disable-wayland --disable-xss --disable-xext \
   --disable-xv --disable-xinerama --disable-xrandr --enable-gl --enable-gl-dummy \
@@ -20,10 +20,22 @@ export PATH="@PATH@"
 export PKG_CONFIG_PATH="@PKG_CONFIG_PATH@"
 export CC="@cc@"
 
-py=
+# gcc >= 14 defaults to a C standard this vintage of mpv predates.
+export CFLAGS="-std=gnu99 ${CFLAGS}"
+
+# The bundled waf is old enough that it does not run on Python >= 3.12, which
+# removed imp and distutils. waf is only used to produce build/lib/libmpv.a, so
+# pinning an older interpreter here has no effect on the resulting binary.
+# Override with BOMI_PYTHON, or leave empty to use ./waf's own shebang.
+py="${BOMI_PYTHON:-@python@}"
 if [ "$os" = "win" ]; then
 	py=/usr/bin/python
 	args="$args --enable-win32-internal-pthreads"
+fi
+
+if [ -n "$py" ] && ! command -v "$py" >/dev/null 2>&1; then
+	echo "Configured python '$py' not found; falling back to ./waf's shebang."
+	py=
 fi
 
 orig="$(pwd)"

@@ -357,7 +357,10 @@ iconv support use --disable-iconv.",
         'desc': 'LCMS2 support',
         'func': check_pkg_config('lcms2', '>= 2.6'),
     }, {
-        'name': 'vapoursynth-core',
+        # Needs a --disable switch of its own: modern VapourSynth still ships a
+        # pkg-config file that satisfies ">= 24" but no longer installs the
+        # API 3 VapourSynth.h this code includes, so autodetection false-positives.
+        'name': '--vapoursynth-core',
         'desc': 'VapourSynth filter bridge (core)',
         'func': check_pkg_config('vapoursynth >= 24'),
     }, {
