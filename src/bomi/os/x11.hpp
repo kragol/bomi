@@ -64,6 +64,18 @@ private:
     QTimer m_timer;
 };
 
+// Used when there is no X11 connection, i.e. a native Wayland session. The
+// base class already implements fullscreen, frameless, move-by-drag and
+// snapping through Qt; only the four pure virtuals need filling in.
+class QtWindowAdapter : public WindowAdapter {
+public:
+    QtWindowAdapter(QWindow *w) : WindowAdapter(w) { }
+    auto isAlwaysOnTop() const -> bool final;
+    auto setAlwaysOnTop(bool onTop) -> void final;
+    auto setImeEnabled(bool /*enabled*/) -> void final { }
+    auto isImeEnabled() const -> bool final { return false; }
+};
+
 class HwAccX11 : public HwAcc {
 public:
     using GetErrorString = std::function<const char*(qint64)>;

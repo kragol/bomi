@@ -37,6 +37,19 @@ int main(int argc, char **argv) {
     if (gtk_disable_setlocale)
         gtk_disable_setlocale();
 #endif
+#ifdef Q_OS_LINUX
+    // bomi is an X11 client: it talks to the window manager over xcb for
+    // fullscreen, always-on-top, drag-to-move and screensaver inhibition, none
+    // of which have a Qt-level equivalent here. Qt 5 picks the wayland plugin
+    // on its own when qt5-wayland is installed and WAYLAND_DISPLAY is set, so
+    // default to XWayland instead. An explicit QT_QPA_PLATFORM still wins --
+    // OS::initialize() degrades rather than crashing if X11 is unavailable.
+    if (qEnvironmentVariableIsEmpty("QT_QPA_PLATFORM")
+            && !qEnvironmentVariableIsEmpty("WAYLAND_DISPLAY")
+            && !qEnvironmentVariableIsEmpty("DISPLAY")) {
+        qputenv("QT_QPA_PLATFORM", "xcb");
+    }
+#endif
     QApplication::setAttribute(Qt::AA_X11InitThreads);
     QApplication::setOrganizationName(u"xylosper"_q);
     QApplication::setOrganizationDomain(u"xylosper.net"_q);

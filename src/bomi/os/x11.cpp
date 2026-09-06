@@ -6,6 +6,8 @@
 #include "enum/codecid.hpp"
 #include <QDesktopWidget>
 #include <QMouseEvent>
+#include <QScreen>
+#include <QWindow>
 #include <QtDBus/QDBusConnection>
 #include <QtDBus/QDBusMessage>
 #include <QtDBus/QDBusInterface>
@@ -137,7 +139,26 @@ struct X11 : public QObject {
 
 static X11 *d = nullptr;
 
-auto initialize() -> void { _Renew(d); }
+// True when we actually have an X11 connection to talk to. False under a
+// native Wayland session (or any non-xcb platform), where QX11Info hands back
+// a null connection and every xcb_* call below would segfault.
+auto isX11Available() -> bool
+{
+    return QX11Info::isPlatformX11() && QX11Info::connection();
+}
+
+auto initialize() -> void
+{
+    if (!isX11Available()) {
+        _Info("Not running on X11 (platform '%%'). "
+              "Window-manager integration, screensaver inhibition and "
+              "hardware acceleration will be unavailable.",
+              QGuiApplication::platformName());
+        return;
+    }
+    _Renew(d);
+}
+
 auto finalize() -> void { _Delete(d); }
 
 X11::X11()
@@ -206,13 +227,31 @@ X11::~X11()
     ::close(statm);
 }
 
-auto getHwAcc() -> HwAcc* { return d->api; }
+auto getHwAcc() -> HwAcc* { return d ? d->api : nullptr; }
 
 template<class T>
 static inline QSharedPointer<T> _Reply(T *t) { return QSharedPointer<T>(t, free); }
 
+// Refresh rate of the screen the player is on, in Hz, or -1 if unknown.
+// Under XWayland randr describes the virtual X screen rather than the real
+// output, so ask Qt first and keep randr as the fallback.
+static auto screenRefreshRate() -> qreal
+{
+    auto window = qApp->topLevelWindows().value(0);
+    auto screen = window ? window->screen() : qApp->primaryScreen();
+    if (!screen)
+        return -1;
+    const auto hz = screen->refreshRate();
+    return hz > 0 ? hz : -1;
+}
+
 auto refreshRate() -> qreal
 {
+    const auto hz = screenRefreshRate();
+    if (hz > 0)
+        return hz;
+    if (!d)
+        return -1;
     auto sr = _Reply(xcb_randr_get_screen_resources_current_reply(
         d->connection,
         xcb_randr_get_screen_resources_current_unchecked(d->connection, d->root),
@@ -275,6 +314,8 @@ static auto methodFromName(const QString &name) -> ScreensaverMethod
 
 auto setScreensaverMethod(const QString &name) -> void
 {
+    if (!d)
+        return;
     bool was = d->ss.inhibit;
     if (was)
         setScreensaverEnabled(true);
@@ -298,6 +339,8 @@ auto screensaverMethods() -> QStringList
 
 auto setScreensaverEnabled(bool enabled) -> void
 {
+    if (!d)
+        return;
     const auto disabled = !enabled;
     auto &s = d->ss;
     if (s.inhibit == disabled)
@@ -323,7 +366,10 @@ auto setScreensaverEnabled(bool enabled) -> void
                 return getFreedesktop()->isValid();
             if (s.method == ScreensaverMethod::Xss)
                 return false;
-            if (getGnome()->isValid()) {
+            // Under a Wayland compositor org.freedesktop.ScreenSaver is the
+            // one that actually inhibits idle, so try it first there.
+            const bool wayland = qgetenv("XDG_SESSION_TYPE") == "wayland";
+            if (!wayland && getGnome()->isValid()) {
                 s.method = ScreensaverMethod::Gnome;
                 return true;
             }
@@ -331,11 +377,20 @@ auto setScreensaverEnabled(bool enabled) -> void
                 s.method = ScreensaverMethod::Freedesktop;
                 return true;
             }
+            if (wayland && getGnome()->isValid()) {
+                s.method = ScreensaverMethod::Gnome;
+                return true;
+            }
             return false;
         }();
         if (!dbus) {
             _Delete(s.iface);
             s.method = ScreensaverMethod::Xss;
+            if (qgetenv("XDG_SESSION_TYPE") == "wayland") {
+                _Warn("Falling back to XScreenSaver, which cannot inhibit a "
+                      "Wayland compositor's idle timer. The screen may blank "
+                      "during playback.");
+            }
         }
         _Info("Selected screensaver method: %%", methodName(s.method));
     }
@@ -471,8 +526,30 @@ auto X11WindowAdapter::setAlwaysOnTop(bool on) -> void
     d->sendState(winId(), on, _NET_WM_STATE_ABOVE, _NET_WM_STATE_STAYS_ON_TOP);
 }
 
+auto QtWindowAdapter::isAlwaysOnTop() const -> bool
+{
+    return window()->flags() & Qt::WindowStaysOnTopHint;
+}
+
+auto QtWindowAdapter::setAlwaysOnTop(bool on) -> void
+{
+    auto flags = window()->flags();
+    if (on)
+        flags |= Qt::WindowStaysOnTopHint;
+    else
+        flags &= ~Qt::WindowStaysOnTopHint;
+    const bool visible = window()->isVisible();
+    window()->setFlags(flags);
+    if (visible)
+        window()->setVisible(true);
+}
+
 auto createAdapter(QWindow *w) -> WindowAdapter*
 {
+    // Without X11 there is no _NET_WM_STATE to talk to; fall back to what Qt
+    // can do on its own.
+    if (!d)
+        return new QtWindowAdapter(w);
     return new X11WindowAdapter(w);
 }
 
@@ -562,7 +639,7 @@ auto totalMemory() -> double
 
 auto usingMemory() -> double
 {
-    if (!d->statm)
+    if (!d || !d->statm)
         return 0;
     // this is not thread safe!!
     Q_ASSERT(QThread::currentThread() == qApp->thread());
