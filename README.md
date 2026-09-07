@@ -18,6 +18,15 @@ It carries the changes needed to build and run on a current Linux distribution
 (tested on Arch with gcc 16, Qt 5.15 and Python 3.14) and to work under a
 Wayland desktop session.
 
+The history of this fork was rewritten once, on 2026-09-07. bm16ton's
+[`e28c64a2`](../../commit/e28c64a235eafba093d2bf5f5459cffe75af6427)
+had also committed the output of a Debian package build — `debian/bomi/`, a
+489-file copy of the built tree including a 25 MB compiled binary, plus five
+debhelper artifacts — and those 494 generated files were stripped from history.
+bm16ton remains the author of that commit and his remaining changes are
+untouched; the committer field records the rewrite. Commits inherited from
+`xylosper/bomi` are unaffected and keep their original hashes.
+
 ### A note on authorship
 
 **This port was written by AI.** Every change on top of `bm16ton/bomi` — the
