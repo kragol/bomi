@@ -51,6 +51,8 @@ depends=('alsa-lib' 'bzip2' 'gcc-libs' 'glib2' 'glibc' 'gnutls' 'jack'
 # x264 and libvpx take the same line for the same reason. It has no business in
 # optdepends -- that array is about the installed package, and no one running
 # bomi needs an assembler.
+# The pinned FFmpeg 4.0.1 predates NASM 3 by seven years but assembles cleanly
+# under it; verified with nasm 3.02 (HAVE_X86ASM=yes, 174 assembled objects).
 makedepends=('git' 'nasm' 'patch' 'pkgconf' 'qt5-tools' 'mesa')
 
 optdepends=('yt-dlp: streaming website support including YouTube'
