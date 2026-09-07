@@ -64,11 +64,12 @@ auto PlayEngine::Data::vf(const MrlState *s) const -> QByteArray
 {
     // Likewise for the vf chain. Deinterlacing is the one filter worth keeping
     // and it maps straight onto lavfi, which mpv drives itself.
-    OptionList vf(',');
+    // Not built through OptionList: it always appends '=', which would yield a
+    // malformed "yadif=" that mpv rejects.
     const auto &deint = s->d->deint.swdec;
-    if (deint.method != DeintMethod::None)
-        vf.add("yadif"_b, QByteArray());
-    return vf.get();
+    if (deint.method == DeintMethod::None)
+        return QByteArray();
+    return deint.doubler ? "yadif=mode=1"_b : "yadif"_b;
 }
 
 auto PlayEngine::Data::vo(const MrlState *s) const -> QByteArray

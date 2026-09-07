@@ -19,7 +19,7 @@ struct VideoPreview::Data {
     QSize displaySize{0, 0};
     double rate = 0.0, aspect = 0, percent = 0;
     Mpv mpv;
-    auto vo() const -> QByteArray { return "opengl-cb"_b; }
+    auto vo() const -> QByteArray { return "libmpv"_b; }
     auto hasVideo() -> bool { return id > 0 && !displaySize.isEmpty(); }
     auto sizeAspect() const -> double
     {
@@ -61,7 +61,8 @@ VideoPreview::VideoPreview(QQuickItem *parent)
     d->mpv.setOption("pause", "yes");
     d->mpv.setOption("keep-open", "always");
     d->mpv.setOption("vd-lavc-skiploopfilter", "all");
-    d->mpv.setOption("use-text-osd", "no");
+    // use-text-osd is gone; osd-level=0 and sid=no above already keep this
+    // preview instance free of any OSD.
     d->mpv.setOption("audio-display", "no");
     d->mpv.initialize(Log::Error);
     d->mpv.setUpdateCallback([=] () { _PostEvent(this, NewFrame); });
