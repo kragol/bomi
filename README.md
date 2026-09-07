@@ -186,10 +186,6 @@ where `$pkgdir` is the fake root system. `jack` and `cdda` support is also enabl
   Qt 5's `QFontDatabase` engine loading is not thread-safe. See the comment on
   `FontFamilyModel::fontData()` in `src/bomi/widget/fontcombobox.cpp` for the options if
   it ever becomes worth trading the preview away.
-* **The closed font combo box no longer shows the family in its own typeface.** Setting
-  the widget font made `QComboBox` relayout the whole drop-down on every selection
-  change, which measured every row in its own family. The entries in the drop-down still
-  preview correctly.
 * **Font drop-down rows all take the height of the first row.** No clipping has been
   observed, but a family with unusually tall metrics sorting first could cause it. The
   fix would be an item delegate returning a padded height.

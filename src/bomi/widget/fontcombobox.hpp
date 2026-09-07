@@ -13,6 +13,8 @@ public:
     void showPopup() override;
 signals:
     void currentFontChanged();
+protected:
+    void paintEvent(QPaintEvent *event) override;
 private:
     struct Data;
     Data *d;

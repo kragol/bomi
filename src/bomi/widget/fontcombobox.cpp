@@ -2,6 +2,8 @@
 #include "misc/simplelistmodel.hpp"
 #include <QFontDatabase>
 #include <QListView>
+#include <QStylePainter>
+#include <QStyleOptionComboBox>
 
 static QFontDatabase::WritingSystem writingSystemFromScript(QLocale::Script script)
 {
@@ -238,6 +240,23 @@ FontComboBox::FontComboBox(QWidget *parent)
         view->setLayoutMode(QListView::Batched);
     }
     setCurrentIndex(0);
+}
+
+void FontComboBox::paintEvent(QPaintEvent *)
+{
+    QStylePainter painter(this);
+    QStyleOptionComboBox opt;
+    initStyleOption(&opt);
+    painter.drawComplexControl(QStyle::CC_ComboBox, opt);
+    // Draw the label in the family it names. Doing it on the painter rather
+    // than through setFont() is the whole point: setFont() sends a FontChange,
+    // and QComboBox answers that by relaying out the entire drop-down, which
+    // measures every row in its own family and loads that many font engines.
+    // Only the one selected family is loaded here, and only to paint a label.
+    const auto font = currentFont();
+    opt.fontMetrics = QFontMetrics(font);
+    painter.setFont(font);
+    painter.drawControl(QStyle::CE_ComboBoxLabel, opt);
 }
 
 void FontComboBox::showPopup()
