@@ -160,10 +160,10 @@ struct PlayEngine::Data {
     auto vf(const MrlState *s) const -> QByteArray;
     auto vo(const MrlState *s) const -> QByteArray;
     auto updateVideoScaler() -> void;
-    auto videoSubOptions(const MrlState *s) const -> QByteArray;
+    auto setScalerProperties(const QByteArray &prefix, const QByteArray &opt) -> void;
     auto updateVideoSubOptions() -> void;
     auto updateVideoRendererFboFormat() -> void;
-    auto renderVideoFrame(Fbo *frame, Fbo *osd, const QMargins &m) -> void;
+    auto renderVideoFrame(Fbo *frame) -> void;
     auto displaySize() const { return info.video.output()->size(); }
     auto post(State state) -> void { _PostEvent(p, StateChange, state); }
     auto post(Waitings w, bool set) -> void { _PostEvent(p, WaitingChange, w, set); }

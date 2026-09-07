@@ -16,8 +16,8 @@ PlayEngine::PlayEngine()
     d->vr = new VideoRenderer;
     d->preview = new VideoPreview;
     d->vr->setOverlay(d->sr);
-    d->vr->setRenderFrameFunction([this] (Fbo *frame, Fbo* osd, const QMargins &m)
-        { d->renderVideoFrame(frame, osd, m); });
+    d->vr->setRenderFrameFunction([this] (Fbo *frame)
+        { d->renderVideoFrame(frame); });
     d->updateVideoRendererFboFormat();
     d->info.video.setScreen(d->vr);
 
@@ -32,8 +32,16 @@ PlayEngine::PlayEngine()
     connect(&d->params, &MrlState::video_aspect_ratio_changed, d->vr, &VideoRenderer::setAspectRatio);
     connect(&d->params, &MrlState::video_crop_ratio_changed, d->vr, &VideoRenderer::setCropRatio);
     connect(&d->params, &MrlState::video_rotation_changed, d->vr, &VideoRenderer::setRotation);
-    auto updateLetterBox = [=] (bool override)
-        { d->mpv.setAsync("ass-force-margins", d->vr->overlayOnLetterbox() && override); };
+    // Subtitle-on-letterbox. mpv does this natively: it letterboxes the video
+    // inside the framebuffer bomi hands it and, with these on, places subtitles
+    // in the resulting bars. ass-force-margins covers ASS, sub-use-margins the
+    // plain-text formats; both follow the SubtitleDisplay setting so this stays
+    // a user option rather than a fixed behaviour.
+    auto updateLetterBox = [=] (bool override) {
+        const bool onLetterbox = d->vr->overlayOnLetterbox();
+        d->mpv.setAsync("ass-force-margins", onLetterbox && override);
+        d->mpv.setAsync("sub-use-margins", onLetterbox);
+    };
     connect(&d->params, &MrlState::sub_display_changed, d->vr, [=] (auto sd) {
         d->vr->setOverlayOnLetterbox(sd == SubtitleDisplay::OnLetterbox);
         updateLetterBox(d->params.sub_override_ass_position());
@@ -209,8 +217,8 @@ PlayEngine::PlayEngine()
     const auto hwdec = OS::hwAcc()->name().toLatin1();
     d->mpv.setOption("hwdec", hwdec.isEmpty() ? "no" : hwdec.data());
     d->mpv.setOption("input-cursor", "yes");
-    d->mpv.setOption("softvol", "yes");
-    d->mpv.setOption("softvol-max", "1000.0");
+    // softvol is unconditional in modern mpv; only the ceiling is still an option.
+    d->mpv.setOption("volume-max", "1000.0");
     d->mpv.setOption("sub-auto", "no");
     d->mpv.setOption("osd-level", "0");
     d->mpv.setOption("ad-lavc-downmix", "no");
@@ -222,8 +230,17 @@ PlayEngine::PlayEngine()
     d->mpv.setOption("hr-seek", d->preciseSeeking ? "yes" : "absolute");
     d->mpv.setOption("audio-file-auto", "no");
     d->mpv.setOption("sub-auto", "no");
-    d->mpv.setOption("sub-text-margin-y", "0");
+    d->mpv.setOption("sub-margin-y", "0");
     d->mpv.setOption("audio-client-name", cApp.name());
+    // mpv now owns the aspect fit inside bomi's framebuffer, so it also owns
+    // frame timing: with vo=libmpv it has no window and cannot detect the
+    // display, hence display-fps-override below.
+    d->mpv.setOption("keepaspect", "yes");
+    d->mpv.setOption("video-sync", "display-resample");
+    const auto hz = OS::refreshRate();
+    if (hz > 0)
+        d->mpv.setOption("display-fps-override",
+                         QByteArray::number(hz, 'f', 3).constData());
 
     auto overrides = qgetenv("BOMI_MPV_OPTIONS").trimmed();
     if (!overrides.isEmpty()) {

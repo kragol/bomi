@@ -1,13 +1,10 @@
 #ifndef MPV_HELPER_HPP
 #define MPV_HELPER_HPP
 
-extern "C" {
-#include <options/m_option.h>
-}
-
-#ifdef bool
-#undef bool
-#endif
+// This used to pull in mpv's internal options/m_option.h to build the option
+// tables for bomi's af/vf filters. Those filters no longer exist -- modern mpv
+// has no filter chain to inject them into -- so all that is left is the address
+// marshalling used to pass pointers through mpv option strings.
 
 template<class T>
 SIA address_cast(const char *address, int base = 10)
@@ -25,33 +22,5 @@ SIA address_cast(U *ptr, int base = 10)
 {
     return T::number((quint64)(quintptr)(void*)ptr, base);
 }
-
-namespace mpv {
-
-template<class T>
-static inline const m_option_type_t *get_option_type();
-template<>
-inline const m_option_type_t *get_option_type<char*>()
-    { return &m_option_type_string; }
-template<>
-inline const m_option_type_t *get_option_type<int>()
-    { return &m_option_type_int; }
-
-static m_option null_option;
-
-SIA make_option(const char *name, int offset,
-                const m_option_type_t *type) -> m_option
-{
-    m_option opt = null_option;
-    opt.name = name;
-    opt.offset = offset;
-    opt.type = type;
-    return opt;
-}
-
-}
-
-#define MPV_OPTION(member) mpv::make_option(#member, \
-    offsetof(MPV_OPTION_BASE, member), mpv::get_option_type<decltype(MPV_OPTION_BASE::member)>())
 
 #endif // MPV_HELPER_HPP

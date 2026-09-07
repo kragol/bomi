@@ -153,7 +153,7 @@ auto VideoPreview::paint(OpenGLFramebufferObject *fbo) -> void
         auto w = window();
         if (w) {
             w->resetOpenGLState();
-            d->mpv.render(fbo, nullptr, QMargins());
+            d->mpv.render(fbo);
             w->resetOpenGLState();
         }
     }

@@ -1,6 +1,5 @@
 #include "videorenderer.hpp"
 #include "letterboxitem.hpp"
-#include "mpvosdrenderer.hpp"
 #include "opengl/opengltexture2d.hpp"
 #include "opengl/openglframebufferobject.hpp"
 #include "opengl/opengltexturebinder.hpp"
@@ -216,20 +215,15 @@ struct VideoRenderer::Data {
             *letterbox = {xy, letter};
         return rect;
     }
-    auto osdSizeHint() const -> QSize
-    {
-        if (onLetterbox)
-            return p->size().toSize();
-        return fboSizeHint();
-    }
+    auto osdSizeHint() const -> QSize { return fboSizeHint(); }
+    // mpv now owns the aspect fit: it is handed an item-sized framebuffer, draws
+    // the video letterboxed inside it, and places subtitles on the resulting
+    // bars when --sub-use-margins is on. Sizing this to the video instead would
+    // leave no bars for subtitles to land on.
     auto fboSizeHint() const -> QSize
     {
-        auto size = sourceSize;
-        if (portrait)
-            std::swap(size.rwidth(), size.rheight());
-        if (scaler)
-            size.scale(qCeil(vtx.width()), qCeil(vtx.height()), Qt::KeepAspectRatio);
-        return size;
+        auto size = p->size().toSize();
+        return size.isEmpty() ? QSize(1, 1) : size;
     }
 };
 
@@ -237,6 +231,9 @@ VideoRenderer::VideoRenderer(QQuickItem *parent)
     : Super(parent), d(new Data)
 {
     d->p = this;
+    // There is no separate OSD texture any more; this keeps the shader on its
+    // single-texture path (see type() and createShader()).
+    d->osd.visible = false;
     d->letterbox = new LetterboxItem(this);
     const QQmlProperty property(d->letterbox, u"anchors.centerIn"_q);
     property.write(QVariant::fromValue(this));
@@ -521,7 +518,7 @@ auto VideoRenderer::render(VideoShaderData *data) -> void
     auto w = window();
     if (w && d->render) {
         w->resetOpenGLState();
-        d->render(d->frame.fbo, data->osdVisible ? d->osd.fbo : nullptr, data->osdMargins);
+        d->render(d->frame.fbo);
         w->resetOpenGLState();
     }
 }
@@ -620,10 +617,10 @@ auto VideoRenderer::setScalerEnabled(bool on) -> void
 
 auto VideoRenderer::setOsdVisible(bool visible) -> void
 {
-    if (_Change(d->osd.visible, visible)) {
-        d->redraw = true;
-        reserve(UpdateAll);
-    }
+    // mpv composites the OSD into the video framebuffer itself, so there is no
+    // separate OSD texture to switch on. Kept as a no-op so callers and the
+    // single-texture shader path stay valid.
+    Q_UNUSED(visible);
 }
 
 auto VideoRenderer::updateAll() -> void

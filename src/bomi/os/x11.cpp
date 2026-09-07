@@ -33,9 +33,9 @@ extern "C" {
 #if HAVE_VDPAU
 #include <video/vdpau.h>
 #endif
-#include <video/img_format.h>
-#include <video/mp_image.h>
-#include <video/mp_image_pool.h>
+// mp_image and friends are mpv-internal and not installed with libmpv. They were
+// only needed by HwAcc::download(), the custom VA-API/VDPAU readback path, which
+// modern mpv's own hwdec supersedes.
 }
 
 #ifdef bool

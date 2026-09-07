@@ -20,13 +20,12 @@ public:
     auto operator () (ChannelLayout src,
                       ChannelLayout dest) const -> ChannelManipulation
         { return m_map[src][dest]; }
-    auto operator () (const mp_chmap &src,
-                      const mp_chmap &dest) const -> ChannelManipulation
-        { return m_map[toLayout(src)][toLayout(dest)]; }
+    // The mp_chmap overloads are gone with the audio filter that used them:
+    // mp_chmap lives in mpv's internal audio/chmap.h, which libmpv does not
+    // install. The map itself, its JSON form and the preferences UI are
+    // untouched, so the setting survives for when the audio chain comes back.
     auto toString() const -> QString;
     auto isEmpty() const -> bool { return m_map.isEmpty(); }
-    auto isIdentity(const mp_chmap &src, const mp_chmap &dest) const -> bool;
-    static auto toLayout(const mp_chmap &chmap) -> ChannelLayout;
     static auto fromString(const QString &text) -> ChannelLayoutMap;
     static auto default_() -> ChannelLayoutMap;
     static auto channelNames() -> const QVector<ChannelName>&;
@@ -41,7 +40,6 @@ private:
     friend class ChannelManipulationWidget;
 };
 
-auto _ChmapFromLayout(mp_chmap *chmap, ChannelLayout layout) -> bool;
 auto _ChmapNameFromLayout(ChannelLayout layout) -> QByteArray;
 
 Q_DECLARE_METATYPE(ChannelLayoutMap)
