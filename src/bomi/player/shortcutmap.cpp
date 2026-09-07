@@ -169,6 +169,9 @@ auto ShortcutMap::default_(const QString &id) -> QList<Key>
        map[u"video/interpolator/cycle"_q] << Qt::CTRL + Qt::Key_I;
        map[u"video/dithering/cycle"_q] << Qt::CTRL + Qt::Key_T;
        map[u"video/motion"_q] << Qt::CTRL + Qt::Key_M;
+       // Ctrl+S, the obvious mnemonic, is already video/snapshot/quick (and
+       // tool/playlist/save in the preset map). Ctrl+Y is free.
+       map[u"video/display-sync"_q] << Qt::CTRL + Qt::Key_Y;
 
        map[u"audio/track/cycle"_q] << Qt::CTRL + Qt::Key_A;
        map[u"audio/volume/increase"_q] << Qt::Key_Up;

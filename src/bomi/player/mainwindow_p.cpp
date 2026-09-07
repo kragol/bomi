@@ -725,6 +725,9 @@ auto MainWindow::Data::applyPref() -> void
     e.setResume_locked(p.remember_stopped());
     e.setPreciseSeeking_locked(p.precise_seeking());
     e.setDisplaySync_locked(p.video_display_sync());
+    // Keep the menu item (and so its shortcut's checked state) in step when the
+    // preference is changed from the dialog rather than the shortcut.
+    menu(u"video"_q)[u"display-sync"_q]->setChecked(p.video_display_sync());
     e.setCache_locked(cache());
     e.setSmbAuth_locked(smb());
     e.setPriority_locked(p.audio_priority(), p.sub_priority());

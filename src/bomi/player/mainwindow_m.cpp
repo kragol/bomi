@@ -586,6 +586,23 @@ auto MainWindow::Data::plugMenu() -> void
     PLUG_FLAG(video(u"hq-scaling"_q)[u"up"_q], video_hq_upscaling, setVideoHighQualityUpscaling);
     PLUG_FLAG(video[u"motion"_q], video_motion_interpolation, setMotionInterpolation);
 
+    // Display sync is a global preference, not per-file MrlState, so PLUG_FLAG
+    // does not apply. Wire it by hand against the same preference the Video
+    // Processing page edits, so the menu, the shortcut and the checkbox all
+    // move together. Handy for A/B testing playback smoothness while playing.
+    {
+        auto ds = video[u"display-sync"_q];
+        ds->setChecked(pref.video_display_sync());
+        connect(ds, &QAction::triggered, p, [this] (bool on) {
+            pref.setProperty("video_display_sync", on);
+            pref.save();
+            e.lock();
+            e.setDisplaySync_locked(on);
+            e.unlock();
+            showMessage(tr("Display Sync"), on);
+        });
+    }
+
     PLUG_ENUM_CHILD(video, video_dithering, setVideoDithering);
     PLUG_ENUM_CHILD(video, video_space, setColorSpace);
     PLUG_ENUM_CHILD(video, video_range, setColorRange);
