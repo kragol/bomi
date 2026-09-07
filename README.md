@@ -189,8 +189,20 @@ where `$pkgdir` is the fake root system. `jack` and `cdda` support is also enabl
 * **Font drop-down rows all take the height of the first row.** No clipping has been
   observed, but a family with unusually tall metrics sorting first could cause it. The
   fix would be an item delegate returning a padded height.
-* **Hardware decoding is untested.** Builds are configured with `--disable-vaapi
-  --disable-vdpau`; both paths are GLX-based and predate current drivers.
+* **Hardware decoding is off, deliberately.** Builds are configured with
+  `--disable-vaapi --disable-vdpau`. bomi's VA-API path hardcodes the GLX interop
+  (`vaGetDisplayGLX`), which the current NVIDIA VA driver — an EGL/NVDEC bridge — does not
+  implement, so only VDPAU is reachable. VDPAU still works on the NVIDIA blob, but Mesa
+  removed it in 25.3.0 and NVIDIA has deprecated it for NVDEC/NVENC, and the vendored mpv
+  is far too old to offer nvdec, CUDA, Vulkan or EGL VA-API instead. Software decoding
+  keeps up fine, so enabling it buys little.
+* **No display sync, so frame pacing is approximate.** `--video-sync` and `interpolation`
+  do not exist in the vendored mpv; upstream added them in 0.18 and this tree is
+  0.14/0.15. Playback is audio-synced, which judders whenever the frame interval does not
+  divide the refresh interval — choosing a display mode that divides evenly into your
+  content's frame rate helps more than anything in this codebase. bomi's own motion
+  interpolation (Preferences > Video Processing) is the built-in mitigation. A proper fix
+  means porting to a modern libmpv.
 
 ## Contacts
 
