@@ -140,11 +140,14 @@ auto PlayEngine::Data::updateVideoSubOptions() -> void
     mpv.setAsync("dither-depth", "auto"_b);
     mpv.setAsync("dither", dither);
     // fancy-downscaling was renamed; frame-queue-size and frame-drop-mode are
-    // gone, the latter folded into framedrop.
+    // both gone. frame-drop-mode was a vo_opengl queue policy, not mpv's global
+    // frame dropping, so it must NOT be mapped onto --framedrop: setting that
+    // to "no" with interpolation on makes playback run in slow motion rather
+    // than drop a frame when the VO cannot keep up. mpv's default ("vo") is
+    // right for both cases.
     mpv.setAsync("correct-downscaling", hqDown);
     mpv.setAsync("sigmoid-upscaling", sigmoid);
     mpv.setAsync("interpolation", interpolation);
-    mpv.setAsync("framedrop", interpolation ? "no"_b : "vo"_b);
     mpv.setAsync("fbo-format", rgba16 ? "rgba16"_b : "rgba"_b);
 }
 
@@ -663,6 +666,18 @@ auto PlayEngine::Data::observe() -> void
         { info.audio.decoder()->setChannels(QString::number(n) % "ch"_a, n); });
     mpv.observe("audio-device", [=] (MpvLatin1 &&d) { info.audio.setDevice(d); });
     mpv.observe("current-ao", [=] (MpvLatin1 &&ao) { info.audio.setDriver(ao); });
+
+    // VideoProcessor used to report this, but it is inert now, so ask mpv which
+    // backend it actually picked. "no" means it fell back to software.
+    mpv.observe("hwdec-current", [=] (MpvLatin1 &&cur) {
+        const QString api = cur;
+        const bool active = !api.isEmpty() && api != "no"_a;
+        auto hwacc = info.video.hwacc();
+        hwacc->setState(!hwdec ? PlayEngine::Deactivated
+                        : active ? PlayEngine::Activated
+                                 : PlayEngine::Unavailable);
+        hwacc->setDriver(active ? api : QString());
+    });
 
     // disc-mouse-on-button no longer exists; DVD menu hit-testing is unavailable.
     mouseOnButton = false;

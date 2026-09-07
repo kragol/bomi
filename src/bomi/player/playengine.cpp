@@ -160,19 +160,12 @@ PlayEngine::PlayEngine()
     connect(d->vp, &VideoProcessor::hwdecChanged, this, [=] (const QString &api)
     {
         auto &video = d->info.video;
+        // mpv reports the backend it actually chose, so trust that instead of
+        // bomi's old HwAcc enumeration.
         auto hwState = [&] () {
-            if (!d->hwdec) {
-                Q_ASSERT(api.isEmpty());
+            if (!d->hwdec)
                 return Deactivated;
-            }
-            if (!api.isEmpty()) {
-                Q_ASSERT(api == OS::hwAcc()->name());
-                return Activated;
-            }
-            const auto codec = CodecIdInfo::fromData(video.codec()->type());
-            if (OS::hwAcc()->supports(codec) && !d->hwCodecs.contains(codec))
-                return Deactivated;
-            return Unavailable;
+            return api.isEmpty() || api == "no"_a ? Unavailable : Activated;
         };
         auto hwacc = video.hwacc();
         hwacc->setState(hwState());
@@ -222,8 +215,9 @@ PlayEngine::PlayEngine()
     d->observe();
     d->request();
 
-    const auto hwdec = OS::hwAcc()->name().toLatin1();
-    d->mpv.setOption("hwdec", hwdec.isEmpty() ? "no" : hwdec.data());
+    // applyPref() turns this into "auto" when hardware decoding is enabled;
+    // OS::hwAcc() no longer enumerates anything, so it cannot answer this.
+    d->mpv.setOption("hwdec", "no");
     d->mpv.setOption("input-cursor", "yes");
     // softvol is unconditional in modern mpv; only the ceiling is still an option.
     d->mpv.setOption("volume-max", "1000.0");
@@ -609,12 +603,12 @@ auto PlayEngine::setHwAcc_locked(bool use, const QList<CodecId> &codecs) -> void
 {
     d->hwdec = use;
     d->hwCodecs = codecs;
-
-    QByteArray hwcdc;
-    for (auto c : codecs)
-        hwcdc += _EnumData(c).toLatin1() + ',';
-    hwcdc.chop(1);
-    d->mpv.setAsync("options/hwdec-codecs", use ? hwcdc : ""_b);
+    // Let mpv choose the backend and the codecs. bomi's HwAcc only ever knew
+    // VA-API and VDPAU, both gone here, and its CodecId enum predates VP9 and
+    // AV1 entirely -- pushing that list as hwdec-codecs silently excluded HEVC
+    // and everything newer. mpv's own default is
+    // h264,vc1,hevc,vp8,vp9,av1,prores,... so it is left alone.
+    d->mpv.setAsync("options/hwdec", use ? "auto"_b : "no"_b);
 }
 
 auto PlayEngine::avSync() const -> int
