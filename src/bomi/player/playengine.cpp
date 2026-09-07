@@ -203,6 +203,14 @@ PlayEngine::PlayEngine()
         d->info.video.decoder()->setBitrate(d->mpv.get<int>("video-bitrate"));
         d->info.video.setDelayedFrames(d->info.delayed);
         d->info.video.setDroppedFrames(d->mpv.get<int64_t>("frame-drop-count"));
+        // Display sync can drop back to audio sync on its own, so report what
+        // is actually happening rather than what was asked for. vsync-ratio is
+        // vsyncs per video frame and jitters when the ratio does not divide
+        // evenly; vo-delayed-frame-count counts vsyncs that ran long.
+        d->info.video.setDisplaySyncActive(d->mpv.get<bool>("display-sync-active"));
+        d->info.video.setVsyncRatio(d->mpv.get<double>("vsync-ratio"));
+        d->info.video.setLateFrames(d->mpv.get<int64_t>("vo-delayed-frame-count"));
+        d->info.video.setDisplayFps(d->mpv.get<double>("display-fps-override"));
     });
     connect(d->info.video.output(), &VideoFormatObject::sizeChanged,
             d->preview, &VideoPreview::setSizeHint);
@@ -236,7 +244,7 @@ PlayEngine::PlayEngine()
     // frame timing: with vo=libmpv it has no window and cannot detect the
     // display, hence display-fps-override below.
     d->mpv.setOption("keepaspect", "yes");
-    d->mpv.setOption("video-sync", "display-resample");
+    d->mpv.setOption("video-sync", d->displaySync ? "display-resample" : "audio");
     const auto hz = OS::refreshRate();
     if (hz > 0)
         d->mpv.setOption("display-fps-override",
@@ -725,6 +733,17 @@ auto PlayEngine::setPreciseSeeking_locked(bool on) -> void
 {
     if (_Change(d->preciseSeeking, on))
         d->mpv.setAsync("options/hr-seek", on ? "yes"_b : "absolute"_b);
+}
+
+auto PlayEngine::setDisplaySync_locked(bool on) -> void
+{
+    // "audio" is mpv's default: video is timed against the audio clock and no
+    // audio resampling happens. display-resample instead locks video to the
+    // display and stretches audio to match, which is what removes judder when
+    // the frame rate does not divide the refresh rate.
+    if (_Change(d->displaySync, on))
+        d->mpv.setAsync("options/video-sync",
+                        on ? "display-resample"_b : "audio"_b);
 }
 
 auto PlayEngine::setMrl(const Mrl &mrl) -> void

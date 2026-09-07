@@ -724,6 +724,7 @@ auto MainWindow::Data::applyPref() -> void
 
     e.setResume_locked(p.remember_stopped());
     e.setPreciseSeeking_locked(p.precise_seeking());
+    e.setDisplaySync_locked(p.video_display_sync());
     e.setCache_locked(cache());
     e.setSmbAuth_locked(smb());
     e.setPriority_locked(p.audio_priority(), p.sub_priority());

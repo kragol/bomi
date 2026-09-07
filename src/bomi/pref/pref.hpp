@@ -75,6 +75,10 @@ private:
     P0(bool, remember_stopped, true)
     P0(bool, resume_ignore_in_playlist, false)
     P0(bool, precise_seeking, false)
+    // Synchronise video to the display refresh rate (mpv --video-sync=
+    // display-resample) instead of to the audio clock. Off falls back to
+    // video-sync=audio, which is mpv's default and never resamples audio.
+    P0(bool, video_display_sync, true)
     P0(bool, remember_image, false)
     P0(bool, enable_generate_playlist, true)
     P0(QStringList, restore_properties, defaultRestoreProperties())
