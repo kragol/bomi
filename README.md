@@ -18,6 +18,15 @@ It carries the changes needed to build and run on a current Linux distribution
 (tested on Arch with gcc 16, Qt 5.15 and Python 3.14) and to work under a
 Wayland desktop session.
 
+### A note on authorship
+
+**This port was written by AI.** Every change on top of `bm16ton/bomi` — the
+toolchain and build fixes, the Wayland handling, the font drop-down fixes, the Arch
+packaging, the commit messages and this README — was produced by Claude (Anthropic)
+working from my prompts. I did not write a single line of it myself. It is built and
+used on my own machine, which is the entire extent of the testing, and no one has
+reviewed the code. Weigh that as you see fit before running it or merging from it.
+
 Two things are worth knowing before you dig in:
 
 * bomi is not an ordinary libmpv client. It vendors a patched mpv (client API
