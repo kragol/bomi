@@ -42,7 +42,10 @@ VideoPreview::VideoPreview(QQuickItem *parent)
     d->mpv.create();
 
     d->mpv.setObserver(this);
-    d->mpv.observe("vid", [=] (int id) {
+    // "vid" is a choice now ("auto"/"no"/number), so reading it as an integer
+    // fails. current-tracks/video/id is a plain id and unset when there is no
+    // video track, which is all this needs.
+    d->mpv.observe("current-tracks/video/id", [=] (int id) {
         if (_Change(d->id, id) && _Change(d->video, d->hasVideo()))
             emit hasVideoChanged(d->video);
     });

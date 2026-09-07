@@ -160,7 +160,10 @@ auto PlayEngine::Data::loadfile(const Mrl &mrl, bool resume, const QString &sub)
         opts.add("sub-file", sub.toUtf8(), true);
     if (!mrl.name().isEmpty() && mrl.isCueTrack())
         opts.addRaw("media-title", mrl.name().toUtf8());
-    mpv.tell("loadfile"_b, file.toUtf8(), "replace"_b, opts.get());
+    // mpv 0.38 inserted an insertion-index argument before the per-file option
+    // list. It is ignored by "replace", but omitting it makes mpv try to parse
+    // the option string as the index and reject the whole command.
+    mpv.tell("loadfile"_b, file.toUtf8(), "replace"_b, -1, opts.get());
 }
 
 auto PlayEngine::Data::updateMediaName(const QString &name) -> void
@@ -459,10 +462,9 @@ auto PlayEngine::Data::observe() -> void
     mpv.observeState("paused-for-cache", [=] (bool b) { post(Buffering, b); });
     mpv.observeState("seeking", [=] (bool s) { post(Seeking, s); });
 
-    mpv.observe("cache-used", [=] () { return t.caching ? mpv.get<int>("cache-used") : 0; },
-                [=] (int v) { info.cache.setUsed(v); });
-    mpv.observe("cache-size", [=] () { return t.caching ? mpv.get<int>("cache-size") : 0; },
-                [=] (int v) { info.cache.setSize(v); });
+    // cache-used and cache-size were removed. The nearest modern equivalents live
+    // in the demuxer-cache-state map rather than as scalar byte counts, so the
+    // cache readout stays at zero for now instead of reporting wrong units.
 
     mpv.observe("seekable", [=] () {
         return t.seekable >= 0 ? !!t.seekable : mpv.get<bool>("seekable");
@@ -510,12 +512,12 @@ auto PlayEngine::Data::observe() -> void
     auto length = [=] () {
         if (t.duration >= 0)
             return t.duration;
-        const int len = s2ms(mpv.get<double>("length"));
+        const int len = s2ms(mpv.get<double>("duration"));
         if (t.begin >= 0)
             return t.duration = s2ms(mpv.get<double>("time-start")) + len - t.begin;
         return len;
     };
-    mpv.observe("length", [=] () { return length(); }, [=] (int ms) {
+    mpv.observe("duration", [=] () { return length(); }, [=] (int ms) {
         if (!_Change(duration, ms))
             return;
         emit p->durationChanged(duration);
@@ -603,7 +605,7 @@ auto PlayEngine::Data::observe() -> void
     mpv.observe("media-title", [=] (MpvUtf8 &&t) { updateMediaName(t); });
 
     mpv.observe("video-codec", [=] (MpvLatin1 &&c) { info.video.codec()->parse(c); });
-    mpv.observe("fps", [=] (double fps) {
+    mpv.observe("container-fps", [=] (double fps) {
         info.video.decoder()->setFps(fps);
         info.video.filter()->setFps(fps);
         sr->setFPS(fps);
@@ -662,7 +664,8 @@ auto PlayEngine::Data::observe() -> void
     mpv.observe("audio-device", [=] (MpvLatin1 &&d) { info.audio.setDevice(d); });
     mpv.observe("current-ao", [=] (MpvLatin1 &&ao) { info.audio.setDriver(ao); });
 
-    mpv.observe("disc-mouse-on-button", [=] (bool on) { mouseOnButton = on; });
+    // disc-mouse-on-button no longer exists; DVD menu hit-testing is unavailable.
+    mouseOnButton = false;
 }
 
 auto PlayEngine::Data::request() -> void

@@ -199,7 +199,10 @@ auto Mpv::finalizeGL() -> void
 auto Mpv::hook(const QByteArray &when, std::function<void ()> &&run) -> void
 {
     Q_ASSERT(!d->hooks.contains(when));
-    tell("hook_add", when, d->hookId++, 0);
+    // hook_add is no longer an input command: hooks moved to the client API,
+    // and are answered with mpv_hook_continue() instead of a hook_ack command.
+    const auto err = mpv_hook_add(m_handle, d->hookId++, when.constData(), 0);
+    MPV_CHECK(err, "add hook %%", when);
     d->hooks[when] = std::move(run);
 }
 
@@ -272,12 +275,18 @@ auto Mpv::run() -> void
             auto message = static_cast<mpv_event_client_message*>(ev->data);
             if (message->num_args < 1)
                 break;
-            if (!qstrcmp(message->args[0], "hook_run") && message->num_args == 3) {
-                QByteArray when(message->args[2]);
-                Q_ASSERT(d->hooks.contains(when));
-                d->hooks[when]();
-                tell("hook_ack", when);
-            }
+            break;
+        } case MPV_EVENT_HOOK: {
+            // Hooks arrive as a dedicated event now, carrying the hook name and
+            // an id that must be passed back to let the core continue. Failing
+            // to answer would stall playback, so continue even if the hook is
+            // unknown to us.
+            auto hook = static_cast<mpv_event_hook*>(ev->data);
+            const QByteArray when(hook->name);
+            auto it = d->hooks.find(when);
+            if (it != d->hooks.end())
+                (*it)();
+            mpv_hook_continue(m_handle, hook->id);
             break;
         } case MPV_EVENT_SET_PROPERTY_REPLY: {
             QScopedPointer<QByteArray> name(reinterpret_cast<QByteArray*>(ev->reply_userdata));

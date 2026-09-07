@@ -34,12 +34,12 @@ PlayEngine::PlayEngine()
     connect(&d->params, &MrlState::video_rotation_changed, d->vr, &VideoRenderer::setRotation);
     // Subtitle-on-letterbox. mpv does this natively: it letterboxes the video
     // inside the framebuffer bomi hands it and, with these on, places subtitles
-    // in the resulting bars. ass-force-margins covers ASS, sub-use-margins the
+    // in the resulting bars. sub-ass-force-margins covers ASS, sub-use-margins the
     // plain-text formats; both follow the SubtitleDisplay setting so this stays
     // a user option rather than a fixed behaviour.
     auto updateLetterBox = [=] (bool override) {
         const bool onLetterbox = d->vr->overlayOnLetterbox();
-        d->mpv.setAsync("ass-force-margins", onLetterbox && override);
+        d->mpv.setAsync("sub-ass-force-margins", onLetterbox && override);
         d->mpv.setAsync("sub-use-margins", onLetterbox);
     };
     connect(&d->params, &MrlState::sub_display_changed, d->vr, [=] (auto sd) {
@@ -97,7 +97,7 @@ PlayEngine::PlayEngine()
         d->sr->setTopAligned(top);
     });
     connect(&d->params, &MrlState::sub_style_overriden_changed, this, [=] (bool o) {
-        d->mpv.setAsync("ass-style-override", o ? "force"_b : "yes"_b);
+        d->mpv.setAsync("sub-ass-override", o ? "force"_b : "yes"_b);
         d->mpv.update();
     });
     connect(&d->params, &MrlState::sub_scale_changed, this, [=] (double s) {
@@ -202,7 +202,7 @@ PlayEngine::PlayEngine()
     connect(&d->info.frameTimer, &QTimer::timeout, this, [=] () {
         d->info.video.decoder()->setBitrate(d->mpv.get<int>("video-bitrate"));
         d->info.video.setDelayedFrames(d->info.delayed);
-        d->info.video.setDroppedFrames(d->mpv.get<int64_t>("vo-drop-frame-count"));
+        d->info.video.setDroppedFrames(d->mpv.get<int64_t>("frame-drop-count"));
     });
     connect(d->info.video.output(), &VideoFormatObject::sizeChanged,
             d->preview, &VideoPreview::setSizeHint);
