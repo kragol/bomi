@@ -438,17 +438,16 @@ auto VideoRenderer::updatePolish() -> void
     Super::updatePolish();
     d->sizeChecker.stop();
     QRectF letter;
-    if (_Change(d->vtx, d->frameRect({0, 0, width(), height()}, d->offset, &letter))) {
+    if (_Change(d->vtx, d->frameRect({0, 0, width(), height()}, d->offset, &letter)))
         reserve(UpdateGeometry, false);
-        const auto p0 = d->vtx.topLeft();
-        const auto p1 = d->vtx.bottomRight();
-#define NORM(v, vv) (vv - p0.v()) / double(p1.v() - p0.v())
-        d->frame.rect.setTop(NORM(y, 0));
-        d->frame.rect.setBottom(NORM(y, height()));
-        d->frame.rect.setLeft(NORM(x, 0));
-        d->frame.rect.setRight(NORM(x, width()));
-#undef NORM
-    }
+    // The framebuffer is item-sized and mpv has already fitted the video inside
+    // it, so it is blitted 1:1 over the whole item. Mapping the item rect into
+    // vtx space -- bomi's own video rectangle -- the way the old video-sized
+    // framebuffer required would letterbox the picture a second time, squashing
+    // it and dragging the subtitles out of the bars with it. vtx is still
+    // computed above because screenRect(), mapToVideo() and the overlay
+    // geometry are expressed in it.
+    d->frame.rect = QRectF(0, 0, 1, 1);
     if (d->onLetterbox) {
         d->osd.rect = QRectF(0, 0, 1, 1);
         d->osd.margins.setTop(d->vtx.top());
