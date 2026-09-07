@@ -1,36 +1,130 @@
-# Maintainer: xylosper <darklin20@gmail.com>
+# Maintainer: kragol <4834960+kragol@users.noreply.github.com>
+# Contributor: Taegil Bae <esrevinu@gmail.com>
+# Contributor: xylosper <darklin20@gmail.com>
 # Contributor: willemw <willemw12@gmail.com>
 
-pkgname=bomi
-pkgver=0.9.11
+# makepkg fetches from _repo, so only *committed* work ends up in the package.
+# Point _repo at a local checkout (file:///path/to/bomi) if you want to package
+# work in progress -- commit it there first.
+_repo=https://github.com/kragol/bomi
+_branch=master
+
+# Interpreter used to run mpv's bundled waf, which predates Python 3.12 (it
+# needs imp and distutils). Leave empty to let ./configure autodetect -- it
+# looks for python3.9/3.10/3.11 on PATH and in pyenv. Set it explicitly if you
+# ever build in a clean chroot, where pyenv is not reachable.
+_python=
+
+_pkgbase=bomi
+pkgname=$_pkgbase-git
+pkgver=0.9.11.r41.g408e0569
 pkgrel=1
-pkgdesc="Powerful and easy-to-use GUI multimedia player based on mpv"
-arch=('i686' 'x86_64')
-url="http://$pkgname-player.github.io"
-license=('GPL')
-provides=('cmplayer')
-install=$pkgname.install
-depends=('qt5-base' 'qt5-declarative' 'qt5-x11extras' 'qt5-quickcontrols' 'qt5-svg'
-         'libdvdread' 'libdvdnav' 'libcdio-paranoia' 'libcdio' 'smbclient'
-         'alsa-lib' 'libpulse' 'jack' 'libchardet' 'libbluray'
-         'libva' 'libvdpau' 'libgl' 'fribidi' 'libass' 'ffmpeg')
-makedepends=('mesa' 'gcc' 'pkg-config' 'python' 'qt5-tools')
-optdepends=('libva-intel-driver: hardware acceleration support for Intel GPU'
-            'mesa-vdpau: hardware acceleration support for AMD/NVIDIA opensource driver'
-            'youtube-dl: streaming website support including YouTube'
+# The AUR bomi-git sits at 0.9.11.r65.*, and this fork's commit count restarts
+# lower, so without an epoch pacman would consider it a downgrade and never
+# offer it as an update.
+epoch=1
+pkgdesc="Powerful and easy-to-use GUI multimedia player based on mpv (kragol fork, git version)"
+arch=('x86_64')
+url="https://github.com/kragol/bomi"
+license=('GPL2')
+
+# Everything the built binary actually links against (readelf -d build/bomi).
+# libva/libvdpau are here even though bomi's own VA-API and VDPAU support is
+# switched off below: the in-tree FFmpeg is built with them enabled.
+depends=('alsa-lib' 'bzip2' 'gcc-libs' 'glib2' 'glibc' 'gnutls' 'jack'
+         'libcdio' 'libcdio-paranoia' 'libchardet' 'libdvdnav' 'libdvdread'
+         'libgl' 'libpulse' 'libva' 'libvdpau' 'libx11' 'libxcb'
+         'qt5-base' 'qt5-declarative' 'qt5-svg' 'qt5-x11extras'
+         'smbclient' 'systemd-libs' 'xcb-util-wm' 'xz' 'zlib'
+         # QtQuick.Controls 1.x, used by the skins; loaded at runtime, so it
+         # shows up in no ELF header.
+         'qt5-quickcontrols'
+         # Linked in through the static in-tree FFmpeg. Declared by soname so
+         # pacman blocks the upgrade instead of silently breaking bomi when one
+         # of these bumps -- rebuild this package when it does.
+         'libass.so' 'libbluray.so' 'libmp3lame.so' 'libvorbis.so'
+         'libvorbisenc.so' 'libvpx.so' 'libx264.so')
+
+# nasm is a hard makedepend even though ./build-ffmpeg falls back to
+# --disable-x86asm without it: the fallback silently yields a slower decoder,
+# and nothing in the finished package records which one you got. Arch's own
+# x264 and libvpx take the same line for the same reason. It has no business in
+# optdepends -- that array is about the installed package, and no one running
+# bomi needs an assembler.
+makedepends=('git' 'nasm' 'patch' 'pkgconf' 'qt5-tools' 'mesa')
+
+optdepends=('yt-dlp: streaming website support including YouTube'
             'libaacs: AACS decryption for Blu-ray support'
             'libbdplus: BD+ decryption for Blu-ray support')
-source=($pkgname-$pkgver.tar.gz::https://github.com/xylosper/bomi/archive/v$pkgver.tar.gz)
-md5sums=('543c592f588c68d6f0c3cf254c288f58')
-#options=(debug !strip)
+
+provides=("$_pkgbase")
+conflicts=("$_pkgbase" 'cmplayer')
+
+# !lto keeps makepkg from layering -flto=auto onto the vendored FFmpeg 4.0.1
+# and the 2016 mpv, neither of which is built or tested that way upstream.
+# bomi's own objects still get -flto from Qt's mkspec, which sets CONFIG+=ltcg
+# on this distribution -- that part matches a plain `make` and is left alone.
+# !debug because the vendored trees emit debug info makepkg cannot trace back
+# to sources.
+options=('!lto' '!debug')
+
+# The in-tree FFmpeg is pinned; see ./download-ffmpeg for why. It is fetched
+# here rather than by ./download-ffmpeg so that build() needs no network.
+_ffmpegver=4.0.1
+
+source=("$_pkgbase::git+$_repo#branch=$_branch"
+        "https://www.ffmpeg.org/releases/ffmpeg-$_ffmpegver.tar.gz")
+sha256sums=('SKIP'
+            'c61ef108430ccd02959e770a3e85a26c26723a60c998cfd0f29c204aa6776cca')
+
+pkgver() {
+  cd "$srcdir/$_pkgbase"
+  git describe --long --tags | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
+}
+
+prepare() {
+  # Where ./download-ffmpeg would have put it.
+  rm -rf "$srcdir/$_pkgbase/src/ffmpeg"
+  mv "$srcdir/ffmpeg-$_ffmpegver" "$srcdir/$_pkgbase/src/ffmpeg"
+}
 
 build() {
-  cd "$srcdir/$pkgname-$pkgver"
-  ./configure --prefix=/usr
+  cd "$srcdir/$_pkgbase"
+
+  # FFmpeg first, and only then ./configure: configure prepends
+  # build/lib/pkgconfig to PKG_CONFIG_PATH, so running it before the in-tree
+  # FFmpeg exists would configure bomi against the system FFmpeg, which the
+  # vendored mpv cannot link against.
+  ./build-ffmpeg
+
+  # --disable-vaapi/--disable-vdpau match the fork's tested configuration; both
+  # paths are GLX-based and predate the current drivers. See the known issues
+  # in README.md. The rest are autodetected by default -- pinning them keeps
+  # the package's dependencies from drifting with whatever is installed here.
+  ./configure \
+    --prefix=/usr \
+    --actiondir=/usr/share/solid/actions \
+    --enable-jack \
+    --enable-pulseaudio \
+    --enable-cdda \
+    --enable-samba \
+    --enable-systemd \
+    --disable-vaapi \
+    --disable-vdpau \
+    ${_python:+--python="$_python"}
+
   make
 }
 
 package() {
-  cd "$srcdir/$pkgname-$pkgver"
-  make DEST_DIR=$pkgdir install
+  cd "$srcdir/$_pkgbase"
+  # makepkg warns that usr/bin/bomi references $srcdir. That is FFmpeg's own
+  # configuration string, which records the --prefix it was built with and
+  # which bomi shows in its media information. Harmless, and not worth teaching
+  # ./build-ffmpeg a relative prefix to silence.
+  make DEST_DIR="$pkgdir" install
+
+  install -Dm644 COPYING.txt "$pkgdir/usr/share/licenses/$pkgname/COPYING.txt"
+  install -Dm644 GPL.txt "$pkgdir/usr/share/licenses/$pkgname/GPL.txt"
+  install -Dm644 MPL.txt "$pkgdir/usr/share/licenses/$pkgname/MPL.txt"
 }

@@ -177,6 +177,47 @@ package() {
 ```
 where `$pkgdir` is the fake root system. `jack` and `cdda` support is also enabled in this example.
 
+That snippet is upstream's and is incomplete for this fork: it never builds the in-tree
+FFmpeg, so `./configure` picks up the system one and nothing links.
+
+#### Arch Linux
+
+`arch/PKGBUILD` builds this fork as a `bomi-git` package. It fetches from this
+repository; point `_repo` at a local clone (`file:///path/to/bomi`) if you want to
+package work in progress, committing it there first. Then:
+
+```
+$ cd arch && makepkg -si
+```
+
+It carries an `epoch`, because the AUR `bomi-git` reports a higher commit count than
+this branch does and pacman would otherwise read the fork as a downgrade.
+
+Two things it works around, both explained in comments there: the in-tree FFmpeg
+tarball is a `source=` entry rather than a `./download-ffmpeg` call, since `build()`
+is supposed to run offline; and `./build-ffmpeg` has to run before `./configure`,
+not after.
+
+To have `pacman -Syu` offer rebuilds the way it does for repository packages, put the
+built package in a [local repository](https://wiki.archlinux.org/title/Pacman/Tips_and_tricks#Custom_local_repository):
+
+```
+$ repo-add ~/pkgrepo/local.db.tar.gz ~/pkgrepo/bomi-git-*.pkg.tar.zst
+```
+
+and point `/etc/pacman.conf` at it, above the official repositories (pacman does not
+expand `~`, so spell the path out):
+
+```ini
+[local]
+SigLevel = Optional TrustAll
+Server = file:///home/YOUR_USER/pkgrepo
+```
+
+Rebuilding after a `git pull` bumps `pkgver` from
+`git describe`, so the new build sorts above the installed one and shows up as a
+normal update.
+
 ## Known issues in this fork
 
 * **Scrolling the font drop-down is sluggish.** Every entry previews its own family, so
