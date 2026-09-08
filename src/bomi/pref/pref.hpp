@@ -75,6 +75,10 @@ private:
     P0(bool, remember_stopped, true)
     P0(bool, resume_ignore_in_playlist, false)
     P0(bool, precise_seeking, false)
+    // Synchronise video to the display refresh rate (mpv --video-sync=
+    // display-resample) instead of to the audio clock. Off falls back to
+    // video-sync=audio, which is mpv's default and never resamples audio.
+    P0(bool, video_display_sync, true)
     P0(bool, remember_image, false)
     P0(bool, enable_generate_playlist, true)
     P0(QStringList, restore_properties, defaultRestoreProperties())
@@ -123,7 +127,10 @@ private:
     P0(QList<WindowSize>, window_sizes, WindowSize::defaults())
 
     P0(bool, enable_hwaccel, true)
-    P0(QList<CodecId>, hwaccel_codecs, OS::hwAcc()->fullCodecList())
+    // Codec names as mpv spells them ("h264", "hevc", ...), not bomi's CodecId
+    // enum, which predates VP9 and AV1. The candidate list is asked of libmpv at
+    // runtime so it follows an mpv upgrade without rebuilding bomi.
+    P0(QStringList, hwaccel_codecs, defaultHwAccCodecs())
     P0(DeintOptionSet, deinterlacing, {})
 
     P0(bool, audio_filter_resync, true)
@@ -179,6 +186,10 @@ public:
     auto load() -> void;
 
     auto initialize() -> void;
+
+    // Public because the preferences widget builds its checkbox list from it:
+    // the codecs libmpv is willing to hardware-decode, queried at runtime.
+    static auto defaultHwAccCodecs() -> QStringList;
 private:
     static auto defaultSubtitleAutoload() -> Autoloader;
     static auto defaultAutioAutoload() -> Autoloader;

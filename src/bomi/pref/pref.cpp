@@ -1,6 +1,7 @@
 #include "pref.hpp"
 #include "player/app.hpp"
 #include "enum/codecid.hpp"
+#include <mpv/client.h>
 #include "misc/jsonstorage.hpp"
 #include "pref_helper.hpp"
 #include "configure.hpp"
@@ -71,6 +72,20 @@ auto Pref::load() -> void
         bool res = _JsonToQObject(json, this);
         if (!res)
             _Warn("Failed to read some fields from JSON object.");
+
+        // hwaccel_codecs used to hold bomi's CodecId enum names ("H264"), which
+        // mean nothing to mpv. Drop anything libmpv does not recognise, and if
+        // that empties a list which was not empty to begin with, it was legacy
+        // data rather than a deliberate "none" -- fall back to the default.
+        if (!m_hwaccel_codecs.isEmpty()) {
+            const auto known = defaultHwAccCodecs();
+            QStringList kept;
+            for (auto &c : m_hwaccel_codecs) {
+                if (known.contains(c))
+                    kept.append(c);
+            }
+            m_hwaccel_codecs = kept.isEmpty() ? known : kept;
+        }
 
         if (json.contains(u"seek_step1_sec"_q)) {
 #define RES_STEP(var, id) m_steps.var.set(json.value(u"" #id ""_q).toDouble(m_steps.var.get()))
@@ -162,6 +177,37 @@ auto Pref::defaultRestoreProperties() -> QStringList
             list.append(_L(property.name()));
     }
     return list;
+}
+
+auto Pref::defaultHwAccCodecs() -> QStringList
+{
+    // Ask libmpv which codecs it will consider for hardware decoding, rather
+    // than hard-coding a list that goes stale the moment mpv is upgraded --
+    // bomi links libmpv dynamically, so a build-time list would be worse than
+    // useless. mpv exposes this as the default value of --hwdec-codecs. A
+    // throwaway handle is used because this is needed before (and independently
+    // of) the playback engine; the result is cached for the process lifetime.
+    static const QStringList codecs = [] () -> QStringList {
+        QStringList ret;
+        auto mpv = mpv_create();
+        if (!mpv)
+            return ret;
+        mpv_set_option_string(mpv, "config", "no");
+        mpv_set_option_string(mpv, "terminal", "no");
+        mpv_set_option_string(mpv, "vo", "null");
+        mpv_set_option_string(mpv, "ao", "null");
+        if (mpv_initialize(mpv) >= 0) {
+            auto s = mpv_get_property_string(mpv,
+                        "option-info/hwdec-codecs/default-value");
+            if (s) {
+                ret = QString::fromLatin1(s).split(','_q, QString::SkipEmptyParts);
+                mpv_free(s);
+            }
+        }
+        mpv_terminate_destroy(mpv);
+        return ret;
+    }();
+    return codecs;
 }
 
 auto Pref::defaultSubtitleEncodingDetectionAccuracy() -> int

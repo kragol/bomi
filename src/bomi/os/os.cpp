@@ -142,11 +142,6 @@ auto HwAcc::setSupportedDeints(const QList<DeintMethod> &deints) -> void
     d->deints = deints;
 }
 
-auto HwAcc::download(mp_hwdec_ctx *, const mp_image *, mp_image_pool *) -> mp_image*
-{
-    return nullptr;
-}
-
 #ifndef Q_OS_WIN
 auto setImeEnabled(QWindow *w, bool enabled) -> void
 {

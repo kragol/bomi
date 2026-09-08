@@ -16,8 +16,8 @@ PlayEngine::PlayEngine()
     d->vr = new VideoRenderer;
     d->preview = new VideoPreview;
     d->vr->setOverlay(d->sr);
-    d->vr->setRenderFrameFunction([this] (Fbo *frame, Fbo* osd, const QMargins &m)
-        { d->renderVideoFrame(frame, osd, m); });
+    d->vr->setRenderFrameFunction([this] (Fbo *frame)
+        { d->renderVideoFrame(frame); });
     d->updateVideoRendererFboFormat();
     d->info.video.setScreen(d->vr);
 
@@ -32,8 +32,16 @@ PlayEngine::PlayEngine()
     connect(&d->params, &MrlState::video_aspect_ratio_changed, d->vr, &VideoRenderer::setAspectRatio);
     connect(&d->params, &MrlState::video_crop_ratio_changed, d->vr, &VideoRenderer::setCropRatio);
     connect(&d->params, &MrlState::video_rotation_changed, d->vr, &VideoRenderer::setRotation);
-    auto updateLetterBox = [=] (bool override)
-        { d->mpv.setAsync("ass-force-margins", d->vr->overlayOnLetterbox() && override); };
+    // Subtitle-on-letterbox. mpv does this natively: it letterboxes the video
+    // inside the framebuffer bomi hands it and, with these on, places subtitles
+    // in the resulting bars. sub-ass-force-margins covers ASS, sub-use-margins the
+    // plain-text formats; both follow the SubtitleDisplay setting so this stays
+    // a user option rather than a fixed behaviour.
+    auto updateLetterBox = [=] (bool override) {
+        const bool onLetterbox = d->vr->overlayOnLetterbox();
+        d->mpv.setAsync("sub-ass-force-margins", onLetterbox && override);
+        d->mpv.setAsync("sub-use-margins", onLetterbox);
+    };
     connect(&d->params, &MrlState::sub_display_changed, d->vr, [=] (auto sd) {
         d->vr->setOverlayOnLetterbox(sd == SubtitleDisplay::OnLetterbox);
         updateLetterBox(d->params.sub_override_ass_position());
@@ -89,7 +97,7 @@ PlayEngine::PlayEngine()
         d->sr->setTopAligned(top);
     });
     connect(&d->params, &MrlState::sub_style_overriden_changed, this, [=] (bool o) {
-        d->mpv.setAsync("ass-style-override", o ? "force"_b : "yes"_b);
+        d->mpv.setAsync("sub-ass-override", o ? "force"_b : "yes"_b);
         d->mpv.update();
     });
     connect(&d->params, &MrlState::sub_scale_changed, this, [=] (double s) {
@@ -152,19 +160,12 @@ PlayEngine::PlayEngine()
     connect(d->vp, &VideoProcessor::hwdecChanged, this, [=] (const QString &api)
     {
         auto &video = d->info.video;
+        // mpv reports the backend it actually chose, so trust that instead of
+        // bomi's old HwAcc enumeration.
         auto hwState = [&] () {
-            if (!d->hwdec) {
-                Q_ASSERT(api.isEmpty());
+            if (!d->hwdec)
                 return Deactivated;
-            }
-            if (!api.isEmpty()) {
-                Q_ASSERT(api == OS::hwAcc()->name());
-                return Activated;
-            }
-            const auto codec = CodecIdInfo::fromData(video.codec()->type());
-            if (OS::hwAcc()->supports(codec) && !d->hwCodecs.contains(codec))
-                return Deactivated;
-            return Unavailable;
+            return api.isEmpty() || api == "no"_a ? Unavailable : Activated;
         };
         auto hwacc = video.hwacc();
         hwacc->setState(hwState());
@@ -194,7 +195,15 @@ PlayEngine::PlayEngine()
     connect(&d->info.frameTimer, &QTimer::timeout, this, [=] () {
         d->info.video.decoder()->setBitrate(d->mpv.get<int>("video-bitrate"));
         d->info.video.setDelayedFrames(d->info.delayed);
-        d->info.video.setDroppedFrames(d->mpv.get<int64_t>("vo-drop-frame-count"));
+        d->info.video.setDroppedFrames(d->mpv.get<int64_t>("frame-drop-count"));
+        // Display sync can drop back to audio sync on its own, so report what
+        // is actually happening rather than what was asked for. vsync-ratio is
+        // vsyncs per video frame and jitters when the ratio does not divide
+        // evenly; vo-delayed-frame-count counts vsyncs that ran long.
+        d->info.video.setDisplaySyncActive(d->mpv.get<bool>("display-sync-active"));
+        d->info.video.setVsyncRatio(d->mpv.get<double>("vsync-ratio"));
+        d->info.video.setLateFrames(d->mpv.get<int64_t>("vo-delayed-frame-count"));
+        d->info.video.setDisplayFps(d->mpv.get<double>("display-fps-override"));
     });
     connect(d->info.video.output(), &VideoFormatObject::sizeChanged,
             d->preview, &VideoPreview::setSizeHint);
@@ -206,11 +215,12 @@ PlayEngine::PlayEngine()
     d->observe();
     d->request();
 
-    const auto hwdec = OS::hwAcc()->name().toLatin1();
-    d->mpv.setOption("hwdec", hwdec.isEmpty() ? "no" : hwdec.data());
+    // applyPref() turns this into "auto" when hardware decoding is enabled;
+    // OS::hwAcc() no longer enumerates anything, so it cannot answer this.
+    d->mpv.setOption("hwdec", "no");
     d->mpv.setOption("input-cursor", "yes");
-    d->mpv.setOption("softvol", "yes");
-    d->mpv.setOption("softvol-max", "1000.0");
+    // softvol is unconditional in modern mpv; only the ceiling is still an option.
+    d->mpv.setOption("volume-max", "1000.0");
     d->mpv.setOption("sub-auto", "no");
     d->mpv.setOption("osd-level", "0");
     d->mpv.setOption("ad-lavc-downmix", "no");
@@ -222,8 +232,17 @@ PlayEngine::PlayEngine()
     d->mpv.setOption("hr-seek", d->preciseSeeking ? "yes" : "absolute");
     d->mpv.setOption("audio-file-auto", "no");
     d->mpv.setOption("sub-auto", "no");
-    d->mpv.setOption("sub-text-margin-y", "0");
+    d->mpv.setOption("sub-margin-y", "0");
     d->mpv.setOption("audio-client-name", cApp.name());
+    // mpv now owns the aspect fit inside bomi's framebuffer, so it also owns
+    // frame timing: with vo=libmpv it has no window and cannot detect the
+    // display, hence display-fps-override below.
+    d->mpv.setOption("keepaspect", "yes");
+    d->mpv.setOption("video-sync", d->displaySync ? "display-resample" : "audio");
+    const auto hz = OS::refreshRate();
+    if (hz > 0)
+        d->mpv.setOption("display-fps-override",
+                         QByteArray::number(hz, 'f', 3).constData());
 
     auto overrides = qgetenv("BOMI_MPV_OPTIONS").trimmed();
     if (!overrides.isEmpty()) {
@@ -580,16 +599,17 @@ auto PlayEngine::setSmbAuth_locked(const SmbAuth &smb) -> void
     d->params.d->smb = smb;
 }
 
-auto PlayEngine::setHwAcc_locked(bool use, const QList<CodecId> &codecs) -> void
+auto PlayEngine::setHwAcc_locked(bool use, const QStringList &codecs) -> void
 {
     d->hwdec = use;
     d->hwCodecs = codecs;
-
-    QByteArray hwcdc;
-    for (auto c : codecs)
-        hwcdc += _EnumData(c).toLatin1() + ',';
-    hwcdc.chop(1);
-    d->mpv.setAsync("options/hwdec-codecs", use ? hwcdc : ""_b);
+    // mpv picks the backend itself; bomi's HwAcc only ever knew VA-API and
+    // VDPAU, both gone here. The codec names are mpv's own, taken from the
+    // candidate list libmpv reports at runtime, so nothing is silently excluded
+    // the way the old CodecId enum excluded HEVC and everything after it.
+    d->mpv.setAsync("options/hwdec", use ? "auto"_b : "no"_b);
+    if (use && !codecs.isEmpty())
+        d->mpv.setAsync("options/hwdec-codecs", codecs.join(','_q).toLatin1());
 }
 
 auto PlayEngine::avSync() const -> int
@@ -708,6 +728,17 @@ auto PlayEngine::setPreciseSeeking_locked(bool on) -> void
 {
     if (_Change(d->preciseSeeking, on))
         d->mpv.setAsync("options/hr-seek", on ? "yes"_b : "absolute"_b);
+}
+
+auto PlayEngine::setDisplaySync_locked(bool on) -> void
+{
+    // "audio" is mpv's default: video is timed against the audio clock and no
+    // audio resampling happens. display-resample instead locks video to the
+    // display and stretches audio to match, which is what removes judder when
+    // the frame rate does not divide the refresh rate.
+    if (_Change(d->displaySync, on))
+        d->mpv.setAsync("options/video-sync",
+                        on ? "display-resample"_b : "audio"_b);
 }
 
 auto PlayEngine::setMrl(const Mrl &mrl) -> void

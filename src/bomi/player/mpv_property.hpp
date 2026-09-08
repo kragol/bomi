@@ -1,7 +1,7 @@
 #ifndef MPV_PROPERTY_HPP
 #define MPV_PROPERTY_HPP
 
-#include <libmpv/client.h>
+#include <mpv/client.h>
 #include "tmp/type_traits.hpp"
 
 namespace detail {

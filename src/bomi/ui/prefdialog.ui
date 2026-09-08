@@ -1109,6 +1109,25 @@
           </widget>
          </item>
          <item>
+          <widget class="QGroupBox" name="frame_timing">
+           <property name="title">
+            <string>Frame Timing</string>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_frame_timing">
+            <item>
+             <widget class="QCheckBox" name="video_display_sync">
+              <property name="toolTip">
+               <string>Time video against the display refresh rate instead of the audio clock, resampling audio to match. This removes judder when the frame rate does not divide the refresh rate evenly. Turn it off to use the audio clock, which never resamples audio.</string>
+              </property>
+              <property name="text">
+               <string>Synchronise video to the display refresh rate</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
           <spacer name="verticalSpacer_7">
            <property name="orientation">
             <enum>Qt::Vertical</enum>
@@ -1177,19 +1196,6 @@
             <string>Codec to allow hardware-acceleration</string>
            </property>
           </widget>
-         </item>
-         <item>
-          <spacer name="verticalSpacer_12">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>20</width>
-             <height>352</height>
-            </size>
-           </property>
-          </spacer>
          </item>
         </layout>
        </widget>

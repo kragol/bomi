@@ -1,5 +1,5 @@
 #include "mpv.hpp"
-#include "video/mpvosdrenderer.hpp"
+#include "opengl/openglframebufferobject.hpp"
 #include <QOpenGLContext>
 #include <QLibrary>
 
@@ -29,8 +29,8 @@ auto Mpv::e2l(int error) -> Log::Level
 
 struct Mpv::Data {
     Mpv *p = nullptr;
-    mpv_opengl_cb_context *gl = nullptr;
-    MpvOsdRenderer osd;
+    mpv_render_context *gl = nullptr;
+    bool useGl = false;
     bool quit = false;
     QVector<PropertyObservation> observations;
     QVector<std::function<void(mpv_event*)>> events;
@@ -94,18 +94,21 @@ auto Mpv::initialize(Log::Level lv, bool ogl) -> void
     mpv_request_log_messages(m_handle, loglv.constData());
 
     fatal(mpv_initialize(m_handle), "Couldn't initialize mpv.");
-    if (ogl) {
-        auto ptr = mpv_get_sub_api(m_handle, MPV_SUB_API_OPENGL_CB);
-        d->gl = static_cast<mpv_opengl_cb_context*>(ptr);
-    }
+    // The render context needs a live GL context, which does not exist yet, so
+    // unlike the old MPV_SUB_API_OPENGL_CB handle it is created in initializeGL().
+    d->useGl = ogl;
 }
 
 auto Mpv::destroy() -> void
 {
     if (m_handle) {
+        // The render context holds a reference to the core; it must go first.
+        if (d->gl) {
+            mpv_render_context_free(d->gl);
+            d->gl = nullptr;
+        }
         mpv_terminate_destroy(m_handle);
         m_handle = nullptr;
-        d->gl = nullptr;
         d->reset();
     }
 }
@@ -119,34 +122,45 @@ auto Mpv::update() -> void
 auto Mpv::setUpdateCallback(std::function<void ()> &&cb) -> void
 {
     Q_ASSERT(cb);
-    auto update = [] (void *p) -> void { static_cast<Data*>(p)->update(); };
     d->update = std::move(cb);
-    mpv_opengl_cb_set_update_callback(d->gl, update, d);
+    // May be called before the GL context exists; initializeGL() registers it.
+    if (d->gl) {
+        auto update = [] (void *p) -> void { static_cast<Data*>(p)->update(); };
+        mpv_render_context_set_update_callback(d->gl, update, d);
+    }
 }
 
-auto Mpv::render(OpenGLFramebufferObject *frame, OpenGLFramebufferObject *osd, const QMargins &m) -> int
+auto Mpv::render(OpenGLFramebufferObject *frame) -> int
 {
-    int ret = 0;
-    if (frame) {
-        ret = mpv_opengl_cb_draw(d->gl, frame->id(), frame->width(), frame->height());
-    }
-    if (osd) {
-        d->osd.prepare(osd);
-        mpv_opengl_cb_render_osd(d->gl, osd->width(), osd->height(),
-                                 m.left(), m.top(), m.right(), m.bottom(),
-                                 1.0, MpvOsdRenderer::callback, &d->osd);
-        d->osd.end();
-    }
-    return ret;
+    if (!d->gl || !frame)
+        return 0;
+    mpv_opengl_fbo fbo;
+    fbo.fbo = static_cast<int>(frame->id());
+    fbo.w = frame->width();
+    fbo.h = frame->height();
+    fbo.internal_format = 0;
+    // flip_y stays 0: the old mpv_opengl_cb_draw() was given a positive height,
+    // which meant "do not flip", and bomi's compositing expects that same
+    // orientation.
+    int flip = 0;
+    mpv_render_param params[] = {
+        {MPV_RENDER_PARAM_OPENGL_FBO, &fbo},
+        {MPV_RENDER_PARAM_FLIP_Y, &flip},
+        {MPV_RENDER_PARAM_INVALID, nullptr}
+    };
+    return mpv_render_context_render(d->gl, params);
 }
 
 auto Mpv::frameSwapped() -> void
 {
-    mpv_opengl_cb_report_flip(d->gl, 0);
+    if (d->gl)
+        mpv_render_context_report_swap(d->gl);
 }
 
 auto Mpv::initializeGL(QOpenGLContext *ctx) -> void
 {
+    if (!d->useGl || d->gl)
+        return;
     auto getProcAddr = [] (void *ctx, const char *name) -> void* {
         auto gl = static_cast<QOpenGLContext*>(ctx);
         if (!gl)
@@ -158,21 +172,37 @@ auto Mpv::initializeGL(QOpenGLContext *ctx) -> void
 #endif
         return reinterpret_cast<void*>(res);
     };
-    auto err = mpv_opengl_cb_init_gl(d->gl, nullptr, getProcAddr, ctx);
-    Q_UNUSED(err); Q_ASSERT(err >= 0);
-    d->osd.initialize();
+    mpv_opengl_init_params gl_init;
+    gl_init.get_proc_address = getProcAddr;
+    gl_init.get_proc_address_ctx = ctx;
+    mpv_render_param params[] = {
+        {MPV_RENDER_PARAM_API_TYPE, const_cast<char*>(MPV_RENDER_API_TYPE_OPENGL)},
+        {MPV_RENDER_PARAM_OPENGL_INIT_PARAMS, &gl_init},
+        {MPV_RENDER_PARAM_INVALID, nullptr}
+    };
+    auto err = mpv_render_context_create(&d->gl, m_handle, params);
+    fatal(err, "Couldn't create the mpv render context.");
+    if (d->gl && d->update) {
+        auto update = [] (void *p) -> void { static_cast<Data*>(p)->update(); };
+        mpv_render_context_set_update_callback(d->gl, update, d);
+    }
 }
 
 auto Mpv::finalizeGL() -> void
 {
-    d->osd.finalize();
-    mpv_opengl_cb_uninit_gl(d->gl);
+    if (d->gl) {
+        mpv_render_context_free(d->gl);
+        d->gl = nullptr;
+    }
 }
 
 auto Mpv::hook(const QByteArray &when, std::function<void ()> &&run) -> void
 {
     Q_ASSERT(!d->hooks.contains(when));
-    tell("hook_add", when, d->hookId++, 0);
+    // hook_add is no longer an input command: hooks moved to the client API,
+    // and are answered with mpv_hook_continue() instead of a hook_ack command.
+    const auto err = mpv_hook_add(m_handle, d->hookId++, when.constData(), 0);
+    MPV_CHECK(err, "add hook %%", when);
     d->hooks[when] = std::move(run);
 }
 
@@ -245,12 +275,18 @@ auto Mpv::run() -> void
             auto message = static_cast<mpv_event_client_message*>(ev->data);
             if (message->num_args < 1)
                 break;
-            if (!qstrcmp(message->args[0], "hook_run") && message->num_args == 3) {
-                QByteArray when(message->args[2]);
-                Q_ASSERT(d->hooks.contains(when));
-                d->hooks[when]();
-                tell("hook_ack", when);
-            }
+            break;
+        } case MPV_EVENT_HOOK: {
+            // Hooks arrive as a dedicated event now, carrying the hook name and
+            // an id that must be passed back to let the core continue. Failing
+            // to answer would stall playback, so continue even if the hook is
+            // unknown to us.
+            auto hook = static_cast<mpv_event_hook*>(ev->data);
+            const QByteArray when(hook->name);
+            auto it = d->hooks.find(when);
+            if (it != d->hooks.end())
+                (*it)();
+            mpv_hook_continue(m_handle, hook->id);
             break;
         } case MPV_EVENT_SET_PROPERTY_REPLY: {
             QScopedPointer<QByteArray> name(reinterpret_cast<QByteArray*>(ev->reply_userdata));

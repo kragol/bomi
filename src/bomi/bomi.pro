@@ -8,15 +8,10 @@ PRECOMPILED_HEADER = stdafx.hpp
 precompile_header:!isEmpty(PRECOMPILED_HEADER): DEFINES += USING_PCH
 DESTDIR = $${PWD}/../../build
 LIB_DIR = $${DESTDIR}/lib
-INCLUDEPATH += ../mpv ../mpv/build kiss_fft
+INCLUDEPATH += kiss_fft
 LIBS += -L$${LIB_DIR} -lbz2 -lz
 
 include(configure.pro)
-
-# libmpv.a reaches the link line through LIBS as an absolute path, which qmake
-# does not turn into a prerequisite. Without this, rebuilding mpv leaves bomi
-# silently linked against the previous libmpv.a.
-PRE_TARGETDEPS += $${LIB_DIR}/libmpv.a
 !isEmpty(BOMI_RELEASE) {
 	CONFIG -= debug
     CONFIG += release
@@ -79,15 +74,11 @@ RESOURCES += rsclist.qrc
 
 HEADERS += \
 	stdafx.hpp \
-	audio/audiocontroller.hpp \
 	audio/channelmanipulation.hpp \
-	audio/audiomixer.hpp \
 	audio/audionormalizeroption.hpp \
 	video/videoformat.hpp \
 	video/deintoption.hpp \
 	video/letterboxitem.hpp \
-	video/ffmpegfilters.hpp \
-	video/softwaredeinterlacer.hpp \
 	video/videocolor.hpp \
 	video/deintcaps.hpp \
 	video/kernel3x3.hpp \
@@ -221,7 +212,6 @@ HEADERS += \
     enum/colorspace.hpp \
     player/mainwindow_p.hpp \
     enum/quicksnapshotsave.hpp \
-    video/mpimage.hpp \
     enum/mousebehavior.hpp \
     misc/speedmeasure.hpp \
 	player/avinfoobject.hpp \
@@ -237,16 +227,12 @@ HEADERS += \
     misc/youtubedl.hpp \
     quick/playlistthemeobject.hpp \
     misc/yledl.hpp \
-    audio/audioscaler.hpp \
-    audio/audiobuffer.hpp \
-    audio/audioanalyzer.hpp \
-    audio/audioconverter.hpp \
-    audio/audioresampler.hpp \
-    audio/audiofilter.hpp \
 	misc/osdstyle.hpp \
     quick/themeobject_helper.hpp \
     configure.hpp \
     audio/audioequalizer.hpp \
+    audio/audiocontroller.hpp \
+    video/videoprocessor.hpp \
 	dialog/audioequalizerdialog.hpp \
     quick/circularimageitem.hpp \
     quick/maskareaitem.hpp \
@@ -256,11 +242,8 @@ HEADERS += \
     enum/autoselectmode.hpp \
     player/mrlstate_p.hpp \
     subtitle/subtitlerenderer.hpp \
-    video/videoprocessor.hpp \
     player/mpv.hpp \
     video/interpolatorparams.hpp \
-    video/videofilter.hpp \
-    video/motioninterpolator.hpp \
     enum/processor.hpp \
     video/motionintrploption.hpp \
     enum/logoutput.hpp \
@@ -294,7 +277,6 @@ HEADERS += \
     enum/jrprotocol.hpp \
     enum/jrconnection.hpp \
     http-parser/http_parser.h \
-    video/mpvosdrenderer.hpp \
     misc/windowsize.hpp \
     enum/framebufferobjectformat.hpp \
     video/videopreview.hpp \
@@ -310,15 +292,11 @@ HEADERS += \
 
 SOURCES += \
 	stdafx.cpp \
-	audio/audiocontroller.cpp \
 	audio/channelmanipulation.cpp \
-	audio/audiomixer.cpp \
 	audio/audionormalizeroption.cpp \
 	video/videoformat.cpp \
 	video/deintoption.cpp \
 	video/letterboxitem.cpp \
-	video/ffmpegfilters.cpp \
-	video/softwaredeinterlacer.cpp \
 	video/videocolor.cpp \
 	video/deintcaps.cpp \
 	video/kernel3x3.cpp \
@@ -447,7 +425,6 @@ SOURCES += \
     player/mainwindow_m.cpp \
     player/playengine_p.cpp \
     enum/quicksnapshotsave.cpp \
-    video/mpimage.cpp \
     enum/mousebehavior.cpp \
     misc/speedmeasure.cpp \
 	player/avinfoobject.cpp \
@@ -462,14 +439,10 @@ SOURCES += \
     misc/youtubedl.cpp \
     quick/playlistthemeobject.cpp \
     misc/yledl.cpp \
-    audio/audioscaler.cpp \
-    audio/audiobuffer.cpp \
-    audio/audioanalyzer.cpp \
-    audio/audioconverter.cpp \
-    audio/audioresampler.cpp \
-    audio/audiofilter.cpp \
 	misc/osdstyle.cpp \
 	audio/audioequalizer.cpp \
+	audio/audiocontroller_disabled.cpp \
+	video/videoprocessor_disabled.cpp \
 	dialog/audioequalizerdialog.cpp \
     quick/circularimageitem.cpp \
     quick/maskareaitem.cpp \
@@ -477,11 +450,8 @@ SOURCES += \
     misc/autoloader.cpp \
     enum/autoselectmode.cpp \
     subtitle/subtitlerenderer.cpp \
-    video/videoprocessor.cpp \
     player/mpv.cpp \
     video/interpolatorparams.cpp \
-    video/videofilter.cpp \
-    video/motioninterpolator.cpp \
     enum/processor.cpp \
     video/motionintrploption.cpp \
     enum/logoutput.cpp \
@@ -512,7 +482,6 @@ SOURCES += \
     enum/jrprotocol.cpp \
     enum/jrconnection.cpp \
     http-parser/http_parser.c \
-    video/mpvosdrenderer.cpp \
     misc/windowsize.cpp \
     enum/framebufferobjectformat.cpp \
     video/videopreview.cpp \

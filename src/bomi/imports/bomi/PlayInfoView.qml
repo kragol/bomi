@@ -81,6 +81,20 @@ Item {
             readonly property string name: qsTr("Delayed Frames")
             content: formatBracket(name, video.delayedFrames, video.delayedTime.toFixed(3) + "ms")
         }
+        PlayInfoText {
+            readonly property string name: qsTr("Display Sync")
+            // Not "state": QQuickItem already has one, and redeclaring it stops
+            // the whole element from being instantiated.
+            readonly property string syncState: video.displaySyncActive ? qsTr("Active")
+                                                                        : qsTr("Inactive")
+            readonly property string hz: video.displayFps > 0
+                                         ? video.displayFps.toFixed(3) + "Hz, " : ""
+            readonly property string detail: hz + video.vsyncRatio.toFixed(3)
+                                             + qsTr(" vsync/frame, ")
+                                             + video.lateFrames + qsTr(" late")
+            content: video.displaySyncActive ? formatBracket(name, syncState, detail)
+                                             : name + ": " + syncState
+        }
 
         Component {
             id: toolText

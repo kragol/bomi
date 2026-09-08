@@ -109,9 +109,10 @@ struct PlayEngine::Data {
     bool hasImage = false, seekable = false, hasVideo = false;
     bool pauseAfterSkip = false, resume = false, hwdec = false;
     bool quit = false, preciseSeeking = false, mouseOnButton = false;
+    bool displaySync = true;
     bool filterResync = false, audioOnly = false, useIntrplDown = false;
 
-    QList<CodecId> hwCodecs;
+    QStringList hwCodecs;
 
     int avSync = 0, reload = -1, volumeScale = 0;
     int time_s = 0, begin_s = 0, end_s = 0, duration_s = 0;
@@ -160,10 +161,10 @@ struct PlayEngine::Data {
     auto vf(const MrlState *s) const -> QByteArray;
     auto vo(const MrlState *s) const -> QByteArray;
     auto updateVideoScaler() -> void;
-    auto videoSubOptions(const MrlState *s) const -> QByteArray;
+    auto setScalerProperties(const QByteArray &prefix, const QByteArray &opt) -> void;
     auto updateVideoSubOptions() -> void;
     auto updateVideoRendererFboFormat() -> void;
-    auto renderVideoFrame(Fbo *frame, Fbo *osd, const QMargins &m) -> void;
+    auto renderVideoFrame(Fbo *frame) -> void;
     auto displaySize() const { return info.video.output()->size(); }
     auto post(State state) -> void { _PostEvent(p, StateChange, state); }
     auto post(Waitings w, bool set) -> void { _PostEvent(p, WaitingChange, w, set); }

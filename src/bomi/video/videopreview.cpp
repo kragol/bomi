@@ -19,7 +19,7 @@ struct VideoPreview::Data {
     QSize displaySize{0, 0};
     double rate = 0.0, aspect = 0, percent = 0;
     Mpv mpv;
-    auto vo() const -> QByteArray { return "opengl-cb"_b; }
+    auto vo() const -> QByteArray { return "libmpv"_b; }
     auto hasVideo() -> bool { return id > 0 && !displaySize.isEmpty(); }
     auto sizeAspect() const -> double
     {
@@ -42,7 +42,10 @@ VideoPreview::VideoPreview(QQuickItem *parent)
     d->mpv.create();
 
     d->mpv.setObserver(this);
-    d->mpv.observe("vid", [=] (int id) {
+    // "vid" is a choice now ("auto"/"no"/number), so reading it as an integer
+    // fails. current-tracks/video/id is a plain id and unset when there is no
+    // video track, which is all this needs.
+    d->mpv.observe("current-tracks/video/id", [=] (int id) {
         if (_Change(d->id, id) && _Change(d->video, d->hasVideo()))
             emit hasVideoChanged(d->video);
     });
@@ -61,7 +64,8 @@ VideoPreview::VideoPreview(QQuickItem *parent)
     d->mpv.setOption("pause", "yes");
     d->mpv.setOption("keep-open", "always");
     d->mpv.setOption("vd-lavc-skiploopfilter", "all");
-    d->mpv.setOption("use-text-osd", "no");
+    // use-text-osd is gone; osd-level=0 and sid=no above already keep this
+    // preview instance free of any OSD.
     d->mpv.setOption("audio-display", "no");
     d->mpv.initialize(Log::Error);
     d->mpv.setUpdateCallback([=] () { _PostEvent(this, NewFrame); });
@@ -153,7 +157,7 @@ auto VideoPreview::paint(OpenGLFramebufferObject *fbo) -> void
         auto w = window();
         if (w) {
             w->resetOpenGLState();
-            d->mpv.render(fbo, nullptr, QMargins());
+            d->mpv.render(fbo);
             w->resetOpenGLState();
         }
     }

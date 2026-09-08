@@ -52,96 +52,35 @@ PlayEngine::Data::Data(PlayEngine *engine)
 
 auto PlayEngine::Data::af(const MrlState *s) const -> QByteArray
 {
-    OptionList af(':');
-    af.add("dummy:address"_b, ac);
-    af.add("use_scaler"_b, (int)s->audio_tempo_scaler());
-    af.add("use_normalizer"_b, (int)s->audio_volume_normalizer());
-    af.add("layout"_b, (int)s->audio_channel_layout());
-    return af.get();
+    // bomi's audio filter used to be injected into mpv's af chain by overriding
+    // af_info_dummy at link time. Modern mpv has no af chain, so the chain is
+    // empty for now; lavfi equivalents (dynaudnorm, pan, anequalizer, atempo)
+    // are the follow-up.
+    Q_UNUSED(s);
+    return QByteArray();
 }
 
 auto PlayEngine::Data::vf(const MrlState *s) const -> QByteArray
 {
-    OptionList vf(':');
-    vf.add("noformat:address"_b, vp);
-    vf.add("swdec_deint"_b, s->d->deint.swdec.toString().toLatin1());
-    vf.add("hwdec_deint"_b, s->d->deint.hwdec.toString().toLatin1());
-    vf.add("interpolate"_b, (int)s->video_motion_interpolation());
-    vf.add("color_space"_b, (int)s->video_space());
-    vf.add("color_range"_b, (int)s->video_range());
-    return vf.get();
+    // Likewise for the vf chain. Deinterlacing is the one filter worth keeping
+    // and it maps straight onto lavfi, which mpv drives itself.
+    // Not built through OptionList: it always appends '=', which would yield a
+    // malformed "yadif=" that mpv rejects.
+    const auto &deint = s->d->deint.swdec;
+    if (deint.method == DeintMethod::None)
+        return QByteArray();
+    return deint.doubler ? "yadif=mode=1"_b : "yadif"_b;
 }
 
 auto PlayEngine::Data::vo(const MrlState *s) const -> QByteArray
 {
-    return "opengl-cb:" + videoSubOptions(s);
+    // Everything that used to ride along as vo sub-options is set through
+    // properties now; the vo_cmdline command no longer exists.
+    Q_UNUSED(s);
+    return "libmpv"_b;
 }
 
 #include "misc/json.hpp"
-
-auto PlayEngine::Data::videoSubOptions(const MrlState *s) const -> QByteArray
-{
-    auto c_matrix = [s] () {
-        QMatrix4x4 matrix;
-        if (s->video_effects() & VideoEffect::Invert)
-            matrix = QMatrix4x4(-1, 0, 0, 1,
-                                0, -1, 0, 1,
-                                0, 0, -1, 1,
-                                0, 0,  0, 1);
-        auto eq = s->video_color();
-        if (s->video_effects() & VideoEffect::Gray)
-            eq.setSaturation(-100);
-        if (!eq.isZero())
-            matrix *= eq.matrix();
-        if (s->video_effects() & VideoEffect::Remap) {
-            const float a = 255.0 / (235.0 - 16.0);
-            const float b = -16.0 / 255.0 * a;
-            matrix *= QMatrix4x4(a, 0, 0, b,
-                                 0, a, 0, b,
-                                 0, 0, a, b,
-                                 0, 0, 0, 1);
-        }
-        return matrix;
-    };
-
-    static const QByteArray shader =
-            "const mat4 c_matrix = mat4(__C_MATRIX__); color = c_matrix * color;";
-    auto customShader = [] (const QMatrix4x4 &c_matrix) -> QByteArray {
-        QByteArray mat;
-        for (int c = 0; c < 4; ++c) {
-            mat += "vec4(";
-            for (int r = 0; r < 4; ++r) {
-                mat += QByteArray::number(c_matrix(r, c), 'e');
-                mat += ',';
-            }
-            mat[mat.size()-1] = ')';
-            mat += ',';
-        }
-        mat.chop(1);
-        auto cs = shader;
-        cs.replace("__C_MATRIX__", mat);
-        return '%' + QByteArray::number(cs.length()) + '%' + cs;
-    };
-
-    OptionList opts(':');
-    opts.add("scale", s->d->intrpl[s->video_interpolator()].toMpvOption("scale"));
-    opts.add("cscale", s->d->chroma[s->video_chroma_upscaler()].toMpvOption("cscale"));
-    if (useIntrplDown)
-        opts.add("dscale", s->d->intrplDown[s->video_interpolator_down()].toMpvOption("dscale"));
-    opts.add("dither-depth", "auto"_b);
-    opts.add("dither", _EnumData(s->video_dithering()));
-    opts.add("frame-queue-size", s->video_motion_interpolation() || vp->isSkipping() ? 1 : 3);
-    opts.add("frame-drop-mode", s->video_motion_interpolation() ? "block"_b : "clear"_b);
-    opts.add("fancy-downscaling", s->video_hq_downscaling());
-    opts.add("sigmoid-upscaling", s->video_hq_upscaling() && OGL::is16bitFramebufferFormatSupported());
-    opts.add("interpolation", s->video_motion_interpolation());
-    const bool rgba16 = vr->framebufferObjectFormat() == OGL::RGBA16_UNorm;
-    opts.add("fbo-format", rgba16 ? "rgba16"_b : "rgba"_b);
-    const auto cmat = c_matrix();
-    if (!cmat.isIdentity())
-        opts.add("custom-shader", customShader(cmat));
-    return opts.get();
-}
 
 auto PlayEngine::Data::updateVideoScaler() -> void
 {
@@ -158,12 +97,58 @@ auto PlayEngine::Data::updateVideoRendererFboFormat() -> void
     vr->setFramebufferObjectFormat(gl);
 }
 
+// bomi's scaler descriptions come out of toMpvOption() as a value followed by
+// colon-separated sub-options ("bicubic:scale-param1=0.3"), which used to be
+// pasted straight into the vo command line. As properties the head is the
+// scaler name and each tail entry is a property of its own.
+auto PlayEngine::Data::setScalerProperties(const QByteArray &prefix,
+                                           const QByteArray &opt) -> void
+{
+    const auto parts = opt.split(':');
+    if (parts.isEmpty() || parts.first().isEmpty())
+        return;
+    mpv.setAsync(QByteArray(prefix), parts.first());
+    for (int i = 1; i < parts.size(); ++i) {
+        const int eq = parts[i].indexOf('=');
+        if (eq > 0)
+            mpv.setAsync(parts[i].left(eq), parts[i].mid(eq + 1));
+    }
+}
+
 auto PlayEngine::Data::updateVideoSubOptions() -> void
 {
+    // vo_cmdline is gone in modern mpv; each former vo sub-option is a property.
     mutex.lock();
-    auto opts = videoSubOptions(&params);
+    const auto s = &params;
+    const auto scale = s->d->intrpl[s->video_interpolator()].toMpvOption("scale");
+    const auto cscale = s->d->chroma[s->video_chroma_upscaler()].toMpvOption("cscale");
+    QByteArray dscale;
+    if (useIntrplDown)
+        dscale = s->d->intrplDown[s->video_interpolator_down()].toMpvOption("dscale");
+    const auto dither = _EnumData(s->video_dithering());
+    const bool interpolation = s->video_motion_interpolation();
+    const bool hqDown = s->video_hq_downscaling();
+    const bool sigmoid = s->video_hq_upscaling()
+                         && OGL::is16bitFramebufferFormatSupported();
+    const bool rgba16 = vr->framebufferObjectFormat() == OGL::RGBA16_UNorm;
     mutex.unlock();
-    mpv.tellAsync("vo_cmdline", videoSubOptions(&params));
+
+    setScalerProperties("scale"_b, scale);
+    setScalerProperties("cscale"_b, cscale);
+    if (!dscale.isEmpty())
+        setScalerProperties("dscale"_b, dscale);
+    mpv.setAsync("dither-depth", "auto"_b);
+    mpv.setAsync("dither", dither);
+    // fancy-downscaling was renamed; frame-queue-size and frame-drop-mode are
+    // both gone. frame-drop-mode was a vo_opengl queue policy, not mpv's global
+    // frame dropping, so it must NOT be mapped onto --framedrop: setting that
+    // to "no" with interpolation on makes playback run in slow motion rather
+    // than drop a frame when the VO cannot keep up. mpv's default ("vo") is
+    // right for both cases.
+    mpv.setAsync("correct-downscaling", hqDown);
+    mpv.setAsync("sigmoid-upscaling", sigmoid);
+    mpv.setAsync("interpolation", interpolation);
+    mpv.setAsync("fbo-format", rgba16 ? "rgba16"_b : "rgba"_b);
 }
 
 auto PlayEngine::Data::loadfile(const Mrl &mrl, bool resume, const QString &sub) -> void
@@ -178,7 +163,10 @@ auto PlayEngine::Data::loadfile(const Mrl &mrl, bool resume, const QString &sub)
         opts.add("sub-file", sub.toUtf8(), true);
     if (!mrl.name().isEmpty() && mrl.isCueTrack())
         opts.addRaw("media-title", mrl.name().toUtf8());
-    mpv.tell("loadfile"_b, file.toUtf8(), "replace"_b, opts.get());
+    // mpv 0.38 inserted an insertion-index argument before the per-file option
+    // list. It is ignored by "replace", but omitting it makes mpv try to parse
+    // the option string as the index and reject the whole command.
+    mpv.tell("loadfile"_b, file.toUtf8(), "replace"_b, -1, opts.get());
 }
 
 auto PlayEngine::Data::updateMediaName(const QString &name) -> void
@@ -477,10 +465,9 @@ auto PlayEngine::Data::observe() -> void
     mpv.observeState("paused-for-cache", [=] (bool b) { post(Buffering, b); });
     mpv.observeState("seeking", [=] (bool s) { post(Seeking, s); });
 
-    mpv.observe("cache-used", [=] () { return t.caching ? mpv.get<int>("cache-used") : 0; },
-                [=] (int v) { info.cache.setUsed(v); });
-    mpv.observe("cache-size", [=] () { return t.caching ? mpv.get<int>("cache-size") : 0; },
-                [=] (int v) { info.cache.setSize(v); });
+    // cache-used and cache-size were removed. The nearest modern equivalents live
+    // in the demuxer-cache-state map rather than as scalar byte counts, so the
+    // cache readout stays at zero for now instead of reporting wrong units.
 
     mpv.observe("seekable", [=] () {
         return t.seekable >= 0 ? !!t.seekable : mpv.get<bool>("seekable");
@@ -528,12 +515,12 @@ auto PlayEngine::Data::observe() -> void
     auto length = [=] () {
         if (t.duration >= 0)
             return t.duration;
-        const int len = s2ms(mpv.get<double>("length"));
+        const int len = s2ms(mpv.get<double>("duration"));
         if (t.begin >= 0)
             return t.duration = s2ms(mpv.get<double>("time-start")) + len - t.begin;
         return len;
     };
-    mpv.observe("length", [=] () { return length(); }, [=] (int ms) {
+    mpv.observe("duration", [=] () { return length(); }, [=] (int ms) {
         if (!_Change(duration, ms))
             return;
         emit p->durationChanged(duration);
@@ -621,7 +608,7 @@ auto PlayEngine::Data::observe() -> void
     mpv.observe("media-title", [=] (MpvUtf8 &&t) { updateMediaName(t); });
 
     mpv.observe("video-codec", [=] (MpvLatin1 &&c) { info.video.codec()->parse(c); });
-    mpv.observe("fps", [=] (double fps) {
+    mpv.observe("container-fps", [=] (double fps) {
         info.video.decoder()->setFps(fps);
         info.video.filter()->setFps(fps);
         sr->setFPS(fps);
@@ -680,7 +667,20 @@ auto PlayEngine::Data::observe() -> void
     mpv.observe("audio-device", [=] (MpvLatin1 &&d) { info.audio.setDevice(d); });
     mpv.observe("current-ao", [=] (MpvLatin1 &&ao) { info.audio.setDriver(ao); });
 
-    mpv.observe("disc-mouse-on-button", [=] (bool on) { mouseOnButton = on; });
+    // VideoProcessor used to report this, but it is inert now, so ask mpv which
+    // backend it actually picked. "no" means it fell back to software.
+    mpv.observe("hwdec-current", [=] (MpvLatin1 &&cur) {
+        const QString api = cur;
+        const bool active = !api.isEmpty() && api != "no"_a;
+        auto hwacc = info.video.hwacc();
+        hwacc->setState(!hwdec ? PlayEngine::Deactivated
+                        : active ? PlayEngine::Activated
+                                 : PlayEngine::Unavailable);
+        hwacc->setDriver(active ? api : QString());
+    });
+
+    // disc-mouse-on-button no longer exists; DVD menu hit-testing is unavailable.
+    mouseOnButton = false;
 }
 
 auto PlayEngine::Data::request() -> void
@@ -873,17 +873,21 @@ auto PlayEngine::Data::takeSnapshot() -> void
         emit p->snapshotTaken();
         return;
     }
-    Fbo frame(size), osd(size);
-    mpv.render(&frame, &osd, QMargins());
+    Fbo frame(size);
+    mpv.render(&frame);
+    // mpv composites OSD/subtitles into the same framebuffer as the video, so
+    // the two can no longer be captured separately. The frame therefore always
+    // carries whatever OSD was visible, and the separate OSD layer is empty.
     ss.frame = frame.texture().toImage(QImage::Format_ARGB32);
-    ss.osd = osd.texture().toImage(QImage::Format_ARGB32_Premultiplied);
+    ss.osd = QImage(size, QImage::Format_ARGB32_Premultiplied);
+    ss.osd.fill(Qt::transparent);
     ss.time = mpv.get<double>("time-pos") * 1e3;
     emit p->snapshotTaken();
 }
 
-auto PlayEngine::Data::renderVideoFrame(Fbo *frame, Fbo *osd, const QMargins &m) -> void
+auto PlayEngine::Data::renderVideoFrame(Fbo *frame) -> void
 {
-    info.delayed = mpv.render(frame, osd, m);
+    info.delayed = mpv.render(frame);
     frames.measure.push(++frames.drawn);
 
     _Trace("PlayEngine::Data::renderVideoFrame(): "

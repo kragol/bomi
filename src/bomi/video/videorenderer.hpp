@@ -8,7 +8,9 @@
 
 class OpenGLFramebufferObject;          enum class Rotation;
 using Fbo = OpenGLFramebufferObject;
-using RenderFrameFunc = std::function<void(Fbo*,Fbo*,const QMargins&)>;
+// mpv draws video and OSD/subtitles into one window-sized framebuffer now, so
+// there is no second OSD target and no margins to hand back.
+using RenderFrameFunc = std::function<void(Fbo*)>;
 
 struct VideoFrameOsdVertex {
     OGL::CoordAttr position, frameTexCoord, osdTexCoord;

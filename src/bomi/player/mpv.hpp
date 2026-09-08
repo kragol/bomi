@@ -5,8 +5,8 @@
 #include "tmp/type_traits.hpp"
 #include "misc/log.hpp"
 #include "misc/dataevent.hpp"
-#include <libmpv/client.h>
-#include <libmpv/opengl_cb.h>
+#include <mpv/client.h>
+#include <mpv/render_gl.h>
 #include <functional>
 
 class QOpenGLContext;
@@ -89,8 +89,12 @@ public:
         { request(id, [=] (mpv_event*) -> void { proc(); }); }
     auto setUpdateCallback(std::function<void(void)> &&cb) -> void;
     auto update() -> void;
-    auto render(OpenGLFramebufferObject *frame, OpenGLFramebufferObject *osd,
-                const QMargins &m) -> int;
+    // mpv renders video *and* OSD/subtitles into this single framebuffer. The
+    // caller must size it like the window, not like the video, so that mpv does
+    // the aspect fit itself and subtitles can land on the resulting letterbox
+    // bars (--sub-use-margins). The old second OSD framebuffer is gone with the
+    // opengl-cb API's bomi-only mpv_opengl_cb_render_osd() patch.
+    auto render(OpenGLFramebufferObject *frame) -> int;
     auto initializeGL(QOpenGLContext *ctx) -> void;
     auto finalizeGL() -> void;
     auto frameSwapped() -> void;

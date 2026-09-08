@@ -3,13 +3,7 @@
 
 #include "global.hpp"
 
-extern "C" {
-#include <audio/chmap.h>
-}
-
-#ifdef bool
-#undef bool
-#endif
+#include "enum/speakerid.hpp"
 
 enum class ChannelLayout;               enum class SpeakerId;
 

@@ -4,8 +4,6 @@
 #include <QWindow>
 
 enum class DeintMethod;                 enum class CodecId;
-struct mp_image_pool;                   struct mp_image;
-struct mp_hwdec_ctx;
 
 namespace OS {
 
@@ -101,8 +99,8 @@ public:
     auto api() const -> Api;
     auto name() const -> QString;
     auto description() const -> QString;
-    virtual auto download(mp_hwdec_ctx *ctx, const mp_image *mpi,
-                          mp_image_pool *pool) -> mp_image*;
+    // download() is gone with the custom VA-API/VDPAU readback path: it took
+    // mpv-internal mp_image types, and modern mpv's own hwdec replaces it.
     static auto fullCodecList() -> QList<CodecId>;
     static auto name(Api api) -> QString;
     static auto description(Api api) -> QString;
