@@ -127,7 +127,10 @@ private:
     P0(QList<WindowSize>, window_sizes, WindowSize::defaults())
 
     P0(bool, enable_hwaccel, true)
-    P0(QList<CodecId>, hwaccel_codecs, OS::hwAcc()->fullCodecList())
+    // Codec names as mpv spells them ("h264", "hevc", ...), not bomi's CodecId
+    // enum, which predates VP9 and AV1. The candidate list is asked of libmpv at
+    // runtime so it follows an mpv upgrade without rebuilding bomi.
+    P0(QStringList, hwaccel_codecs, defaultHwAccCodecs())
     P0(DeintOptionSet, deinterlacing, {})
 
     P0(bool, audio_filter_resync, true)
@@ -183,6 +186,10 @@ public:
     auto load() -> void;
 
     auto initialize() -> void;
+
+    // Public because the preferences widget builds its checkbox list from it:
+    // the codecs libmpv is willing to hardware-decode, queried at runtime.
+    static auto defaultHwAccCodecs() -> QStringList;
 private:
     static auto defaultSubtitleAutoload() -> Autoloader;
     static auto defaultAutioAutoload() -> Autoloader;

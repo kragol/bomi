@@ -1,41 +1,66 @@
 #include "prefwidgets.hpp"
 #include "enum/codecid.hpp"
 #include "os/os.hpp"
+#include "pref.hpp"
+#include <QListWidget>
 
 HwAccCodecBox::HwAccCodecBox(QWidget *parent)
     : QGroupBox(parent)
 {
-    auto vbox = new QVBoxLayout;
-    auto api = OS::hwAcc();
-    auto signal = &HwAccCodecBox::valueChanged;
-    for (const auto codec : api->fullCodecList()) {
-        auto box = m_checks[codec] = new QCheckBox;
-        const auto supported = api->supports(codec);
-        const QString desc = CodecIdInfo::description(codec);
-        if (supported)
-            box->setText(desc);
-        else
-            box->setText(desc % " ("_a % tr("Not supported") % ')'_q);
-        box->setEnabled(supported);
-        vbox->addWidget(box);
-        PLUG_CHANGED(box);
+    // The candidates come from libmpv at runtime (see Pref::defaultHwAccCodecs),
+    // so this follows an mpv upgrade rather than bomi's own CodecId enum, which
+    // never knew VP9 or AV1. Whether a codec can actually be accelerated depends
+    // on the GPU and driver and is only known once decoding starts, so no
+    // "not supported" marking is attempted here -- the play info panel reports
+    // what mpv ended up using.
+    //
+    // A checkable QListWidget rather than a column of QCheckBoxes: the list
+    // grows whenever mpv gains a codec, and this scrolls on its own once it
+    // outgrows the box. Note that putting a QScrollArea inside this promoted
+    // group box instead leaves the whole preferences dialog unpainted.
+    m_list = new QListWidget;
+    m_list->setSelectionMode(QAbstractItemView::NoSelection);
+    // Tall enough that today's ten codecs fit without scrolling, capped so a
+    // much longer list from a future mpv cannot push the dialog off-screen.
+    m_list->setMaximumHeight(330);
+    // Codec names are short; without this they get elided to "h2..." because the
+    // view sizes items before the group box has been given its final width.
+    m_list->setTextElideMode(Qt::ElideNone);
+    m_list->setResizeMode(QListView::Adjust);
+    m_list->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    for (const auto &codec : Pref::defaultHwAccCodecs()) {
+        auto item = new QListWidgetItem(codec, m_list);
+        item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+        item->setCheckState(Qt::Unchecked);
     }
-    setLayout(vbox);
+    connect(m_list, &QListWidget::itemChanged,
+            this, &HwAccCodecBox::valueChanged);
+
+    auto outer = new QVBoxLayout;
+    outer->addWidget(m_list);
+    setLayout(outer);
+    // Hug the list instead of stretching to fill the page.
+    setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Maximum);
 }
 
-auto HwAccCodecBox::value() const -> QList<CodecId>
+auto HwAccCodecBox::value() const -> QStringList
 {
-    QList<CodecId> list;
-    for (auto it = m_checks.begin(); it != m_checks.end(); ++it)
-        if (it.value()->isChecked())
-            list.push_back(it.key());
+    QStringList list;
+    for (int i = 0; i < m_list->count(); ++i) {
+        auto item = m_list->item(i);
+        if (item->checkState() == Qt::Checked)
+            list.push_back(item->text());
+    }
     return list;
 }
 
-auto HwAccCodecBox::setValue(const QList<CodecId> &list) -> void
+auto HwAccCodecBox::setValue(const QStringList &list) -> void
 {
-    for (auto it = m_checks.begin(); it != m_checks.end(); ++it)
-        it.value()->setChecked(list.contains(it.key()));
+    for (int i = 0; i < m_list->count(); ++i) {
+        auto item = m_list->item(i);
+        item->setCheckState(list.contains(item->text()) ? Qt::Checked
+                                                        : Qt::Unchecked);
+    }
 }
 
 /******************************************************************************/

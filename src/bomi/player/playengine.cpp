@@ -599,16 +599,17 @@ auto PlayEngine::setSmbAuth_locked(const SmbAuth &smb) -> void
     d->params.d->smb = smb;
 }
 
-auto PlayEngine::setHwAcc_locked(bool use, const QList<CodecId> &codecs) -> void
+auto PlayEngine::setHwAcc_locked(bool use, const QStringList &codecs) -> void
 {
     d->hwdec = use;
     d->hwCodecs = codecs;
-    // Let mpv choose the backend and the codecs. bomi's HwAcc only ever knew
-    // VA-API and VDPAU, both gone here, and its CodecId enum predates VP9 and
-    // AV1 entirely -- pushing that list as hwdec-codecs silently excluded HEVC
-    // and everything newer. mpv's own default is
-    // h264,vc1,hevc,vp8,vp9,av1,prores,... so it is left alone.
+    // mpv picks the backend itself; bomi's HwAcc only ever knew VA-API and
+    // VDPAU, both gone here. The codec names are mpv's own, taken from the
+    // candidate list libmpv reports at runtime, so nothing is silently excluded
+    // the way the old CodecId enum excluded HEVC and everything after it.
     d->mpv.setAsync("options/hwdec", use ? "auto"_b : "no"_b);
+    if (use && !codecs.isEmpty())
+        d->mpv.setAsync("options/hwdec-codecs", codecs.join(','_q).toLatin1());
 }
 
 auto PlayEngine::avSync() const -> int

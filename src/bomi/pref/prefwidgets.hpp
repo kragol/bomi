@@ -5,18 +5,19 @@
 #include "player/mrlstate.hpp"
 
 enum class CodecId;
+class QListWidget;
 
 class HwAccCodecBox : public QGroupBox {
     Q_OBJECT
-    Q_PROPERTY(QList<CodecId> value READ value WRITE setValue NOTIFY valueChanged)
+    Q_PROPERTY(QStringList value READ value WRITE setValue NOTIFY valueChanged)
 public:
     HwAccCodecBox(QWidget *parent = nullptr);
-    auto value() const -> QList<CodecId>;
-    auto setValue(const QList<CodecId> &list) -> void;
+    auto value() const -> QStringList;
+    auto setValue(const QStringList &list) -> void;
 signals:
     void valueChanged();
 private:
-    QMap<CodecId, QCheckBox*> m_checks;
+    QListWidget *m_list = nullptr;
 };
 
 class DataButtonGroup : public QButtonGroup {

@@ -150,7 +150,7 @@ public:
     auto setTrackSelected(StreamType type, int id, bool s) -> void;
 
     auto lock() -> void;
-    auto setHwAcc_locked(bool use, const QList<CodecId> &codecs) -> void;
+    auto setHwAcc_locked(bool use, const QStringList &codecs) -> void;
     auto setSubtitleStyle_locked(const OsdStyle &style) -> void;
     auto setAutoselectMode_locked(bool enable, AutoselectMode mode,
                                   const QString &ext, bool preferExternal) -> void;

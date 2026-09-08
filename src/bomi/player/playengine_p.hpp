@@ -112,7 +112,7 @@ struct PlayEngine::Data {
     bool displaySync = true;
     bool filterResync = false, audioOnly = false, useIntrplDown = false;
 
-    QList<CodecId> hwCodecs;
+    QStringList hwCodecs;
 
     int avSync = 0, reload = -1, volumeScale = 0;
     int time_s = 0, begin_s = 0, end_s = 0, duration_s = 0;
