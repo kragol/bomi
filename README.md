@@ -248,20 +248,92 @@ normal update.
 * **Font drop-down rows all take the height of the first row.** No clipping has been
   observed, but a family with unusually tall metrics sorting first could cause it. The
   fix would be an item delegate returning a padded height.
-* **Hardware decoding is off, deliberately.** Builds are configured with
-  `--disable-vaapi --disable-vdpau`. bomi's VA-API path hardcodes the GLX interop
-  (`vaGetDisplayGLX`), which the current NVIDIA VA driver — an EGL/NVDEC bridge — does not
-  implement, so only VDPAU is reachable. VDPAU still works on the NVIDIA blob, but Mesa
-  removed it in 25.3.0 and NVIDIA has deprecated it for NVDEC/NVENC, and the vendored mpv
-  is far too old to offer nvdec, CUDA, Vulkan or EGL VA-API instead. Software decoding
-  keeps up fine, so enabling it buys little.
-* **No display sync, so frame pacing is approximate.** `--video-sync` and `interpolation`
-  do not exist in the vendored mpv; upstream added them in 0.18 and this tree is
-  0.14/0.15. Playback is audio-synced, which judders whenever the frame interval does not
-  divide the refresh interval — choosing a display mode that divides evenly into your
-  content's frame rate helps more than anything in this codebase. bomi's own motion
-  interpolation (Preferences > Video Processing) is the built-in mitigation. A proper fix
-  means porting to a modern libmpv.
+## Known issues after the libmpv port
+
+The `libmpv-port` branch links the system libmpv instead of the vendored mpv ~0.15.
+Hardware decoding and display sync work as a result, but bomi ran its own audio and
+video filters *inside* mpv's filter chains, and modern mpv has no such chains. Those
+filters are disabled rather than removed: the sources are still in the tree, just out
+of the build. The items below are what that costs, and what is still wrong.
+
+### Software decoding is sluggish, and that is bomi's fault
+
+With hardware decoding off, playback of demanding content collapses: a 4K HEVC 10-bit
+file plays at 8–10fps with bomi burning **843–918% CPU**, where plain `mpv` — same
+libmpv, same file, `hwdec=no` — uses **188%**, and a minimal render-API harness with
+bomi's exact settings uses **220%** while rendering 535 times a second. So neither
+libmpv nor ffmpeg is slow; the cost is in bomi.
+
+Almost all of that CPU is *decoding*: mpv's video output is starved, logs
+`mpv_render_context_render() not being called or stuck`, drifts 200–500ms out of A/V
+sync, and races the decoder to catch up. The render path is too indirect — mpv's
+update callback posts a Qt event to the **GUI thread**, which schedules a scene-graph
+update, which eventually renders on the render thread — and cannot service a VO that
+wants ~143 presentations a second.
+
+Hardware decoding **masks** this (25–28% CPU, smooth) but does not fix it. Anything
+falling back to software decoding hits the same wall.
+
+The fix is to drive rendering from the scene-graph render thread, gated on
+`mpv_render_context_update()`, instead of round-tripping the GUI thread. Once that
+holds, `MPV_RENDER_PARAM_ADVANCED_CONTROL` becomes safe — it currently deadlocks bomi
+— which would also restore direct rendering, logged today as `DR failed - disabling`,
+so every decoded 4K frame is copied needlessly.
+
+### Controls that are still shown but do nothing
+
+* **All video colour adjustment.** Brightness, contrast, saturation, hue, the
+  per-channel red/green/blue sliders, and the Invert / Grayscale / Remap effects. bomi
+  applied these as a 4×4 colour matrix injected into `vo_opengl` as a custom shader
+  via the `vo_cmdline` command, and neither survives in modern mpv. Brightness,
+  contrast, saturation and hue map directly onto mpv properties; the rest needs a
+  user shader (`--glsl-shaders`, `//!HOOK` format). Horizontal/vertical flip still
+  works.
+* **The audio filter chain.** Volume normalizer, soft clip, channel manipulation,
+  equalizer and tempo scaler. `AudioController` is an inert stub. lavfi has
+  equivalents for all of them (`dynaudnorm`, `pan`, `anequalizer`, `atempo`), to be
+  driven through mpv's `--af`.
+* **The spectrum visualizer.** The hardest to bring back: libmpv exposes no way to tap
+  decoded PCM, so it would need an out-of-band route.
+* **Motion smoothing** is now mpv's GPU frame interpolation, not bomi's own CPU
+  interpolator, which is inert.
+* **Deinterlacing** is mpv's `yadif` only. Bob, LinearBob and CubicBob all map onto
+  it; bomi's own implementations are inert.
+* **Video scaling** is mpv's, not bomi's custom GL kernels — generally better, but a
+  behaviour change.
+
+### Smaller regressions
+
+* **Snapshots cannot separate video from subtitles.** mpv composites OSD and subtitles
+  into the same framebuffer as the video, so "save without subtitles" captures them
+  anyway.
+* **The cache readout always says Unavailable.** `cache-used` and `cache-size` were
+  removed from mpv; the equivalent lives in the `demuxer-cache-state` map and has not
+  been rewired. Caching itself is unaffected.
+* **DVD menu hit-testing is gone** with the `disc-mouse-on-button` property.
+* **`display-fps-override` is set once at startup.** Correct for one display; moving
+  the window to a second monitor at a different refresh rate will not re-sync it. Run
+  one display at a time, or see the plan for the dynamic version.
+* **`vsync-ratio` in the play info panel looks wrong** — it reads 1.4–3.0 where ~6
+  would be expected for 24fps content on a 143.84Hz output. It may be counting render
+  callbacks rather than vsyncs under `vo=libmpv`. Worth understanding before trusting
+  the display-sync figures.
+
+### Cleanup still owed
+
+`src/mpv` and `src/ffmpeg` (174M) remain in the tree but are no longer built or
+included; they are kept only so the port stays bisectable. `OS::HwAcc` is a vestigial
+stub that no longer enumerates anything but is still referenced by the preferences
+code.
+
+The Requirements and Compilation sections above still describe the in-tree ffmpeg and
+mpv build, which this branch no longer does: it needs `libmpv >= 2.0` from the system
+and builds against whatever ffmpeg that libmpv uses. Those sections need rewriting
+before the port is merged.
+
+Build with `make` from the top level, not `make release` inside `src/bomi` — the
+latter produces a binary with no skins or imports, which loads no QML at all and looks
+like a renderer bug rather than a build mistake.
 
 ## Contacts
 
