@@ -20,9 +20,9 @@ HwAccCodecBox::HwAccCodecBox(QWidget *parent)
     // group box instead leaves the whole preferences dialog unpainted.
     m_list = new QListWidget;
     m_list->setSelectionMode(QAbstractItemView::NoSelection);
-    // Tall enough that today's ten codecs fit without scrolling, capped so a
-    // much longer list from a future mpv cannot push the dialog off-screen.
-    m_list->setMaximumHeight(330);
+    // Height is set from the item count further down: QListWidget's own
+    // sizeHint is a fixed ~190px regardless of content, so left alone it shows
+    // about six rows and scrolls the rest for no reason.
     // Codec names are short; without this they get elided to "h2..." because the
     // view sizes items before the group box has been given its final width.
     m_list->setTextElideMode(Qt::ElideNone);
@@ -36,11 +36,20 @@ HwAccCodecBox::HwAccCodecBox(QWidget *parent)
     connect(m_list, &QListWidget::itemChanged,
             this, &HwAccCodecBox::valueChanged);
 
+    // The preferences dialog is resizable, so the list takes whatever vertical
+    // space the page has and grows with it, scrolling only when the codecs do
+    // not fit. Its own sizeHint is a fixed ~190px regardless of content, so a
+    // minimum is set from the item count to avoid opening needlessly scrolled.
+    m_list->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
+    if (m_list->count() > 0) {
+        const int row = qMax(m_list->sizeHintForRow(0), 16);
+        const int frame = 2 * m_list->frameWidth() + 4;
+        m_list->setMinimumHeight(qMin(m_list->count(), 12) * row + frame);
+    }
+
     auto outer = new QVBoxLayout;
     outer->addWidget(m_list);
     setLayout(outer);
-    // Hug the list instead of stretching to fill the page.
-    setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Maximum);
 }
 
 auto HwAccCodecBox::value() const -> QStringList
