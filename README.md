@@ -282,13 +282,6 @@ so every decoded 4K frame is copied needlessly.
 
 ### Controls that are still shown but do nothing
 
-* **All video colour adjustment.** Brightness, contrast, saturation, hue, the
-  per-channel red/green/blue sliders, and the Invert / Grayscale / Remap effects. bomi
-  applied these as a 4×4 colour matrix injected into `vo_opengl` as a custom shader
-  via the `vo_cmdline` command, and neither survives in modern mpv. Brightness,
-  contrast, saturation and hue map directly onto mpv properties; the rest needs a
-  user shader (`--glsl-shaders`, `//!HOOK` format). Horizontal/vertical flip still
-  works.
 * **The audio filter chain.** Volume normalizer, soft clip, channel manipulation,
   equalizer and tempo scaler. `AudioController` is an inert stub. lavfi has
   equivalents for all of them (`dynaudnorm`, `pan`, `anequalizer`, `atempo`), to be

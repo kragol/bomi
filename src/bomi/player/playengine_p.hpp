@@ -113,6 +113,10 @@ struct PlayEngine::Data {
     bool filterResync = false, audioOnly = false, useIntrplDown = false;
 
     QStringList hwCodecs;
+    // Colour adjustment shader files handed to mpv, oldest first, and a serial
+    // for naming them; see updateColorShader().
+    QStringList colorShaders;
+    int colorShaderSerial = 0;
 
     int avSync = 0, reload = -1, volumeScale = 0;
     int time_s = 0, begin_s = 0, end_s = 0, duration_s = 0;
@@ -163,6 +167,8 @@ struct PlayEngine::Data {
     auto updateVideoScaler() -> void;
     auto setScalerProperties(const QByteArray &prefix, const QByteArray &opt) -> void;
     auto updateVideoSubOptions() -> void;
+    auto updateColorShader(const QMatrix4x4 &matrix) -> void;
+    auto removeColorShaders(int keep) -> void;
     auto updateVideoRendererFboFormat() -> void;
     auto renderVideoFrame(Fbo *frame) -> void;
     auto displaySize() const { return info.video.output()->size(); }

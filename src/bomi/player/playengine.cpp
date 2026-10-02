@@ -282,6 +282,7 @@ PlayEngine::~PlayEngine()
     qDeleteAll(d->info.editions);
     d->params.m_mutex = nullptr;
     d->mpv.destroy();
+    d->removeColorShaders(0);
     d->vr->setOverlay(nullptr);
     delete d->ac;
     delete d->sr;

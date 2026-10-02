@@ -40,11 +40,13 @@ const YCbCrRange ranges[5] = {
 {  0.f/255.f, 255.f/255.f,  0.f/255.f, 255.f/255.f}  // Extended
 };
 
+// {kb, kr}, indexed by ColorSpace. The rows used to be in a different order
+// from the enum, so ColorSpace::BT601 silently picked the BT.709 weights.
 const float specs[6][2] = {
 {0.0000, 0.0000}, // Auto
+{0.0870, 0.2120}, // SMPTE240M
 {0.1140, 0.2990}, // BT601
-{0.0722, 0.2126}, // BT709
-{0.0870, 0.2120}  // SMPTE240M
+{0.0722, 0.2126}  // BT709
 };
 
 auto VideoColor::matYCbCrToRgb(ColorSpace c, ColorRange r) const -> QMatrix4x4
@@ -123,8 +125,10 @@ auto VideoColor::matrix() const -> QMatrix4x4
 {
     if (isZero())
         return QMatrix4x4();
-    const auto rgbFromYCbCr = matYCbCrToRgb(ColorSpace::BT601, ColorRange::Full);
-    const auto toYCbCr = matRgbToYCbCr(ColorSpace::BT601, ColorRange::Full);
+    // BT.709 is what bomi has always used here (see specs), and it suits the
+    // display primaries the matrix now runs in.
+    const auto rgbFromYCbCr = matYCbCrToRgb(ColorSpace::BT709, ColorRange::Full);
+    const auto toYCbCr = matRgbToYCbCr(ColorSpace::BT709, ColorRange::Full);
     return matRgbChannel()*rgbFromYCbCr*toYCbCr;
 }
 

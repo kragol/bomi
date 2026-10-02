@@ -1,6 +1,9 @@
 #include "playengine_p.hpp"
 #include <QQmlEngine>
 #include <QTextCodec>
+#include <QMatrix4x4>
+#include <QDir>
+#include <QCoreApplication>
 
 template<class T>
 SIA findEnum(const QString &mpv) -> T
@@ -115,6 +118,87 @@ auto PlayEngine::Data::setScalerProperties(const QByteArray &prefix,
     }
 }
 
+// Colour adjustment and the Invert/Grayscale/Remap effects, folded into one
+// matrix acting on RGB, exactly as bomi built it for vo_opengl's custom shader.
+SIA colorMatrix(const MrlState *s) -> QMatrix4x4
+{
+    QMatrix4x4 matrix;
+    if (s->video_effects() & VideoEffect::Invert)
+        matrix = QMatrix4x4(-1, 0, 0, 1,
+                            0, -1, 0, 1,
+                            0, 0, -1, 1,
+                            0, 0,  0, 1);
+    auto eq = s->video_color();
+    if (s->video_effects() & VideoEffect::Gray)
+        eq.setSaturation(-100);
+    if (!eq.isZero())
+        matrix *= eq.matrix();
+    if (s->video_effects() & VideoEffect::Remap) {
+        const float a = 255.0 / (235.0 - 16.0);
+        const float b = -16.0 / 255.0 * a;
+        matrix *= QMatrix4x4(a, 0, 0, b,
+                             0, a, 0, b,
+                             0, 0, a, b,
+                             0, 0, 0, 1);
+    }
+    return matrix;
+}
+
+// vo_opengl's custom-shader sub-option is gone, so the matrix now goes in as a
+// user shader. It hooks OUTPUT, after colour management: the matrix assumes
+// display-referred SDR RGB in 0..1, and for HDR sources that only holds once
+// mpv has tone-mapped them.
+//
+// mpv caches user shader files by path for the life of the renderer, so each
+// change needs a file of its own; rewriting one file in place would be ignored.
+auto PlayEngine::Data::updateColorShader(const QMatrix4x4 &matrix) -> void
+{
+    if (matrix.isIdentity()) {
+        if (!colorShaders.isEmpty())
+            mpv.setAsync("glsl-shaders", QByteArray());
+        removeColorShaders(0);
+        return;
+    }
+    QByteArray mat;
+    for (int c = 0; c < 4; ++c) {
+        mat += "vec4(";
+        for (int r = 0; r < 4; ++r) {
+            mat += QByteArray::number(matrix(r, c), 'e');
+            mat += ',';
+        }
+        mat[mat.size()-1] = ')';
+        mat += ',';
+    }
+    mat.chop(1);
+    const QString path = QDir::tempPath() % "/bomi-"_a
+            % QString::number(QCoreApplication::applicationPid()) % "-color-"_a
+            % QString::number(++colorShaderSerial) % ".glsl"_a;
+    QFile file(path);
+    if (!file.open(QFile::WriteOnly | QFile::Truncate)) {
+        _Error("Cannot write colour shader %%.", path);
+        return;
+    }
+    file.write("//!HOOK OUTPUT\n"
+               "//!BIND HOOKED\n"
+               "//!DESC bomi colour adjustment\n"
+               "vec4 hook() {\n"
+               "    const mat4 m = mat4(" + mat + ");\n"
+               "    vec4 color = HOOKED_texOff(0);\n"
+               "    return vec4((m * vec4(color.rgb, 1.0)).rgb, color.a);\n"
+               "}\n");
+    file.close();
+    colorShaders.push_back(path);
+    mpv.setAsync("glsl-shaders", QFile::encodeName(path));
+    // mpv may not have read the previous file yet, so keep it one more round.
+    removeColorShaders(2);
+}
+
+auto PlayEngine::Data::removeColorShaders(int keep) -> void
+{
+    while (colorShaders.size() > keep)
+        QFile::remove(colorShaders.takeFirst());
+}
+
 auto PlayEngine::Data::updateVideoSubOptions() -> void
 {
     // vo_cmdline is gone in modern mpv; each former vo sub-option is a property.
@@ -131,6 +215,7 @@ auto PlayEngine::Data::updateVideoSubOptions() -> void
     const bool sigmoid = s->video_hq_upscaling()
                          && OGL::is16bitFramebufferFormatSupported();
     const bool rgba16 = vr->framebufferObjectFormat() == OGL::RGBA16_UNorm;
+    const auto color = colorMatrix(s);
     mutex.unlock();
 
     setScalerProperties("scale"_b, scale);
@@ -149,6 +234,7 @@ auto PlayEngine::Data::updateVideoSubOptions() -> void
     mpv.setAsync("sigmoid-upscaling", sigmoid);
     mpv.setAsync("interpolation", interpolation);
     mpv.setAsync("fbo-format", rgba16 ? "rgba16"_b : "rgba"_b);
+    updateColorShader(color);
 }
 
 auto PlayEngine::Data::loadfile(const Mrl &mrl, bool resume, const QString &sub) -> void
