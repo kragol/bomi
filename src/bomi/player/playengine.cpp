@@ -944,11 +944,11 @@ auto PlayEngine::videoZoom() const -> double
 auto PlayEngine::setDeintMode(DeintMode mode) -> void
 {
     if (d->params.set_video_deinterlacing(mode)) {
-        if (isPaused()) {
-            d->mpv.setAsync("deinterlace", !!(int)mode);
+        // Auto means "interlaced frames only", which is mpv's auto, not yes.
+        const auto deint = mode != DeintMode::None ? "auto"_b : "no"_b;
+        d->mpv.setAsync("deinterlace", deint);
+        if (isPaused())
             d->refresh();
-        } else
-            d->mpv.setAsync("deinterlace", !!(int)mode);
     }
 }
 

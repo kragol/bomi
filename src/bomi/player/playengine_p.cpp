@@ -65,14 +65,12 @@ auto PlayEngine::Data::af(const MrlState *s) const -> QByteArray
 
 auto PlayEngine::Data::vf(const MrlState *s) const -> QByteArray
 {
-    // Likewise for the vf chain. Deinterlacing is the one filter worth keeping
-    // and it maps straight onto lavfi, which mpv drives itself.
-    // Not built through OptionList: it always appends '=', which would yield a
-    // malformed "yadif=" that mpv rejects.
-    const auto &deint = s->d->deint.swdec;
-    if (deint.method == DeintMethod::None)
-        return QByteArray();
-    return deint.doubler ? "yadif=mode=1"_b : "yadif"_b;
+    // Likewise for the vf chain. Deinterlacing is not done here: putting yadif in
+    // vf ran it on every frame, progressive ones included, which on 4K software
+    // decoding cost several cores. mpv's own --deinterlace (see loadfile()) only
+    // touches frames flagged as interlaced in auto mode, as bomi's did.
+    Q_UNUSED(s);
+    return QByteArray();
 }
 
 auto PlayEngine::Data::vo(const MrlState *s) const -> QByteArray
@@ -421,7 +419,8 @@ auto PlayEngine::Data::onLoad() -> void
 
     mpv.setAsync("options/vo", vo(local));
     mpv.setAsync("options/vf", vf(local));
-    mpv.setAsync("options/deinterlace", deint ? "yes"_b : "no"_b);
+    // DeintMode::Auto meant "deinterlace interlaced frames", which is mpv's auto.
+    mpv.setAsync("options/deinterlace", deint ? "auto"_b : "no"_b);
 
     mpv.setAsync("options/af", af(local));
     mpv.setAsync("options/volume", volume(local));
