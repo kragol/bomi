@@ -32,9 +32,10 @@ clean:
 	rm -f build-stamp
 
 	# Add here commands to clean up after the build process.
-#	[ ! -f Makefile ] || make clean
-	#cd src/mpv; ./waf distclean
-#	rm -rf build
+	# make clean already runs waf distclean, ignoring failure: the bundled waf
+	# needs a python command older than 3.12, which current Debian lacks.
+	[ ! -f Makefile ] || make clean
+	rm -rf build
 
 	dh_clean
 
