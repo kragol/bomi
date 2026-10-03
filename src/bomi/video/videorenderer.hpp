@@ -11,6 +11,8 @@ using Fbo = OpenGLFramebufferObject;
 // mpv draws video and OSD/subtitles into one window-sized framebuffer now, so
 // there is no second OSD target and no margins to hand back.
 using RenderFrameFunc = std::function<void(Fbo*)>;
+// Asked on the render thread after requestFrame(); true if a new frame is due.
+using FrameUpdateFunc = std::function<bool()>;
 
 struct VideoFrameOsdVertex {
     OGL::CoordAttr position, frameTexCoord, osdTexCoord;
@@ -55,7 +57,9 @@ public:
     auto setCropRatio(double ratio) -> void;
     auto setRotation(Rotation r) -> void;
     auto setRenderFrameFunction(const RenderFrameFunc &func) -> void;
+    auto setFrameUpdateFunction(const FrameUpdateFunc &func) -> void;
     auto updateForNewFrame(const QSize &displaySize) -> void;
+    auto requestFrame(const QSize &displaySize) -> void;
     auto setFramebufferObjectFormat(OGL::TextureFormat format) -> void;
     auto framebufferObjectFormat() const -> OGL::TextureFormat;
     auto isPortrait() const -> bool;
@@ -88,6 +92,7 @@ private:
     struct VideoShaderData;
     struct VideoShaderIface;
     struct Node;
+    struct Waker;
 
     auto render(VideoShaderData *data) -> void;
 

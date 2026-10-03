@@ -271,8 +271,9 @@ PlayEngine::PlayEngine()
     d->mpv.initialize(Log::maximumLevel());
     _Debug("Initialized");
     d->hook();
+    d->vr->setFrameUpdateFunction([this] () { return d->mpv.renderUpdate(); });
     d->mpv.setUpdateCallback([=] ()
-        { d->vr->updateForNewFrame(d->info.video.output()->size()); });
+        { d->vr->requestFrame(d->info.video.output()->size()); });
     d->updateVideoScaler();
 }
 

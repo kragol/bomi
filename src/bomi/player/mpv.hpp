@@ -95,6 +95,7 @@ public:
     // bars (--sub-use-margins). The old second OSD framebuffer is gone with the
     // opengl-cb API's bomi-only mpv_opengl_cb_render_osd() patch.
     auto render(OpenGLFramebufferObject *frame) -> int;
+    auto renderUpdate() -> bool;
     auto initializeGL(QOpenGLContext *ctx) -> void;
     auto finalizeGL() -> void;
     auto frameSwapped() -> void;

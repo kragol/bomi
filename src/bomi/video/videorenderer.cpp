@@ -8,6 +8,9 @@
 #include "enum/rotation.hpp"
 #include <QQmlProperty>
 #include <QQuickWindow>
+#include <QMutex>
+#include <QCoreApplication>
+#include <atomic>
 
 DECLARE_LOG_CONTEXT(Video)
 
@@ -133,6 +136,22 @@ private:
     VideoRenderer *r;
 };
 
+// Lives on the scene-graph render thread. A posted event wakes that thread, and
+// QQuickWindow::update() called from it asks for a repaint without a sync, so a
+// new mpv frame never waits for the GUI thread.
+struct VideoRenderer::Waker : public QObject {
+    Waker(QQuickWindow *w): w(w) { }
+    auto event(QEvent *event) -> bool final
+    {
+        if (event->type() != QEvent::User)
+            return QObject::event(event);
+        w->update();
+        return true;
+    }
+private:
+    QQuickWindow *w;
+};
+
 struct VideoRenderer::Data {
     VideoRenderer *p = nullptr;
     double crop = -1.0, aspect = -1.0, dar = 0.0;
@@ -150,6 +169,13 @@ struct VideoRenderer::Data {
     QSize sourceSize{0, 1};
     QTimer sizeChecker;
     RenderFrameFunc render = nullptr;
+    FrameUpdateFunc frameUpdate = nullptr;
+
+    // Written by mpv's update callback, read on the render thread.
+    std::atomic<bool> framePending{false};
+    std::atomic<quint64> displaySize{0};
+    QMutex wakerLock;
+    Waker *waker = nullptr;
 
     static auto isSameRatio(double r1, double r2) -> bool
         {return (r1 < 0.0 && r2 < 0.0) || qFuzzyCompare(r1, r2);}
@@ -274,9 +300,30 @@ auto VideoRenderer::setRenderFrameFunction(const RenderFrameFunc &func) -> void
     d->render = func;
 }
 
+auto VideoRenderer::setFrameUpdateFunction(const FrameUpdateFunc &func) -> void
+{
+    d->frameUpdate = func;
+}
+
 auto VideoRenderer::updateForNewFrame(const QSize &displaySize) -> void
 {
     _PostEvent(Qt::HighEventPriority, this, NewFrame, displaySize);
+}
+
+// Called from mpv's update callback, on an mpv thread. Only a change of video
+// size needs the GUI thread (geometry and polish); a plain new frame goes
+// straight to the render thread.
+auto VideoRenderer::requestFrame(const QSize &displaySize) -> void
+{
+    const quint64 packed = (quint64(quint32(displaySize.width())) << 32)
+                           | quint32(displaySize.height());
+    if (d->displaySize.exchange(packed) != packed)
+        updateForNewFrame(displaySize);
+    if (d->framePending.exchange(true))
+        return; // a wake-up is already on its way
+    QMutexLocker locker(&d->wakerLock);
+    if (d->waker)
+        QCoreApplication::postEvent(d->waker, new QEvent(QEvent::User), Qt::HighEventPriority);
 }
 
 auto VideoRenderer::setOverlayOnLetterbox(bool letterbox) -> void
@@ -302,11 +349,19 @@ auto VideoRenderer::initializeGL() -> void
     const quint32 p = 0x0;
     d->frame.fallback.initialize(1, 1, OGL::BGRA, &p);
     d->osd.fallback = d->frame.fallback;
+    QMutexLocker locker(&d->wakerLock);
+    if (!d->waker && window())
+        d->waker = new Waker(window());
 }
 
 auto VideoRenderer::finalizeGL() -> void
 {
     Super::finalizeGL();
+    {
+        QMutexLocker locker(&d->wakerLock);
+        delete d->waker;
+        d->waker = nullptr;
+    }
     d->frame.fallback.destroy();
     _Delete(d->frame.fbo);
 }
@@ -511,7 +566,12 @@ auto VideoRenderer::createNode() const -> QSGGeometryNode*
 
 auto VideoRenderer::render(VideoShaderData *data) -> void
 {
-    if (!data->redraw)
+    // Clear the flag before asking mpv, so an update callback arriving during
+    // frameUpdate() sets it again and schedules another pass, as mpv requires.
+    bool newFrame = false;
+    if (d->framePending.exchange(false) && d->frameUpdate)
+        newFrame = d->frameUpdate();
+    if (!data->redraw && !newFrame)
         return;
     data->redraw = false;
     auto w = window();

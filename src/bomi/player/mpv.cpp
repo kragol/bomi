@@ -151,6 +151,15 @@ auto Mpv::render(OpenGLFramebufferObject *frame) -> int
     return mpv_render_context_render(d->gl, params);
 }
 
+// Must run on the render thread after each update callback. Returns whether mpv
+// has a new frame for render().
+auto Mpv::renderUpdate() -> bool
+{
+    if (!d->gl)
+        return false;
+    return mpv_render_context_update(d->gl) & MPV_RENDER_UPDATE_FRAME;
+}
+
 auto Mpv::frameSwapped() -> void
 {
     if (d->gl)
