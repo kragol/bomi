@@ -269,8 +269,8 @@ retried since.
 
 ### Controls that are still shown but do nothing
 
-* **Channel manipulation** (Preferences > Audio). Not ported, by decision: mpv's own
-  downmix is used, and the custom speaker mapping is ignored. The equalizer,
+* **Channel manipulation** (Preferences > Audio). Not ported yet, and low priority:
+  mpv's own downmix is used, and the custom speaker mapping is ignored. The equalizer,
   normalizer, soft clip, amplifier and tempo scaler are back as a lavfi graph in
   mpv's `--af`. `AudioController` remains an inert stub.
 * **The spectrum visualizer.** The hardest to bring back: libmpv exposes no way to tap

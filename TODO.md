@@ -33,11 +33,6 @@ background and measurements behind each item.
 
 ## Inert controls
 
-- [ ] **Remove the channel manipulation preferences.** Decided not to port it
-  (2026-10-04): mpv's default downmix is good enough, as in other mpv-based
-  players. The page in Preferences > Audio is inert, along with `ChannelLayoutMap`,
-  `ChannelManipulationWidget` and `PlayEngine::setChannelLayoutMap_locked()`. The
-  output channel layout selection (`audio-channels`) still works and stays.
 - [ ] **Normalizer gain readout** (play info panel) is empty: `dynaudnorm` does not
   report its gain. Drop the readout, or estimate it (for example `astats` before and
   after).
@@ -52,6 +47,12 @@ background and measurements behind each item.
   `bwdif`/`yadif` filter that only runs on interlaced frames.
 - [ ] **bomi's own motion interpolator and GL scaler kernels** are inert, replaced by
   mpv's equivalents. Remove the dead code and any preferences that only drove it.
+
+- [ ] **Channel manipulation → `pan`** (very low priority: not needed for the
+  maintainer's own use, where mpv's default downmix is fine, but kept as a feature
+  rather than removed). Translate `ChannelLayoutMap` (source → destination speaker
+  mixing per layout pair) into a `pan` filter in `af()`. Until then the setting in
+  Preferences > Audio is ignored.
 
 ## Smaller regressions
 
