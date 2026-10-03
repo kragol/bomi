@@ -269,10 +269,10 @@ retried since.
 
 ### Controls that are still shown but do nothing
 
-* **Channel manipulation** (Preferences > Audio). The equalizer, normalizer, soft
-  clip, amplifier and tempo scaler are back as a lavfi graph in mpv's `--af`; the
-  custom speaker mapping still needs translating into a `pan` filter.
-  `AudioController` remains an inert stub.
+* **Channel manipulation** (Preferences > Audio). Not ported, by decision: mpv's own
+  downmix is used, and the custom speaker mapping is ignored. The equalizer,
+  normalizer, soft clip, amplifier and tempo scaler are back as a lavfi graph in
+  mpv's `--af`. `AudioController` remains an inert stub.
 * **The spectrum visualizer.** The hardest to bring back: libmpv exposes no way to tap
   decoded PCM, so it would need an out-of-band route.
 * **Motion smoothing** is now mpv's GPU frame interpolation, not bomi's own CPU

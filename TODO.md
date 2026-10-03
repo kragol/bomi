@@ -33,9 +33,11 @@ background and measurements behind each item.
 
 ## Inert controls
 
-- [ ] **Channel manipulation → `pan`.** Translate `ChannelLayoutMap` (source →
-  destination speaker mixing per layout pair) into a `pan` filter in `af()`. The
-  rest of the audio chain is done (see below).
+- [ ] **Remove the channel manipulation preferences.** Decided not to port it
+  (2026-10-04): mpv's default downmix is good enough, as in other mpv-based
+  players. The page in Preferences > Audio is inert, along with `ChannelLayoutMap`,
+  `ChannelManipulationWidget` and `PlayEngine::setChannelLayoutMap_locked()`. The
+  output channel layout selection (`audio-channels`) still works and stays.
 - [ ] **Normalizer gain readout** (play info panel) is empty: `dynaudnorm` does not
   report its gain. Drop the readout, or estimate it (for example `astats` before and
   after).
