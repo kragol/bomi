@@ -6,14 +6,12 @@ background and measurements behind each item.
 
 ## Performance
 
-- [ ] **Render from the scene-graph render thread.** mpv's update callback currently
-  posts a Qt event to the GUI thread, which schedules a scene-graph update, which
-  eventually renders. That starves mpv's VO. Software decoding of 4K HEVC 10-bit runs
-  at 843–918% CPU and 8–10fps, against 188% for plain mpv on the same libmpv. Drive
-  rendering from the render thread instead, gated on `mpv_render_context_update()`.
-- [ ] **Enable `MPV_RENDER_PARAM_ADVANCED_CONTROL`** once the item above is done. It
-  deadlocks bomi today. It brings back direct rendering (logged now as
-  `DR failed - disabling`), so decoded 4K frames are no longer copied.
+- [ ] **Enable `MPV_RENDER_PARAM_ADVANCED_CONTROL`.** Brings back direct rendering
+  (logged now as `DR failed - disabling`), so decoded frames are no longer copied.
+  It deadlocked on the old GUI-thread render path. The render-thread path it needs
+  is now in place (`547add1f`), but it has not been retried. Watch two things: a
+  hidden or minimised window (Qt stops rendering, so `mpv_render_context_update()`
+  stops being called), and `update()` needing a current GL context in this mode.
 
 ## Inert controls
 
@@ -29,8 +27,10 @@ background and measurements behind each item.
   audio-output tap). Hardest item on the list.
 - [ ] **"Disable Filters"** (Video > Filter) does nothing. It never did on master
   either. Make it bypass the colour matrix and effects, or remove the menu item.
-- [ ] **Deinterlacing modes.** Bob, LinearBob and CubicBob all map onto `yadif`. Map
-  them onto `bwdif`/`yadif` modes, or prune the choices to what mpv offers.
+- [ ] **Deinterlacing preferences.** mpv's `--deinterlace=auto` now does the work
+  (`bwdif`, interlaced frames only), so the method and field-doubling choices in
+  Preferences are ignored. Prune them to what mpv offers, or map them onto a
+  `bwdif`/`yadif` filter that only runs on interlaced frames.
 - [ ] **bomi's own motion interpolator and GL scaler kernels** are inert, replaced by
   mpv's equivalents. Remove the dead code and any preferences that only drove it.
 
@@ -80,3 +80,7 @@ background and measurements behind each item.
 - [x] Display sync toggle (Ctrl+Y)
 - [x] Video colour adjustment and Invert/Grayscale/Remap as an `OUTPUT` user shader,
   correct on HDR sources (`8486a288`)
+- [x] Software decoding CPU back to plain-mpv levels: yadif no longer runs on every
+  frame, and deinterlacing is mpv's auto mode (`ae8fb42f`)
+- [x] New frames rendered from the scene-graph render thread, so GUI stalls no
+  longer drop video frames (`547add1f`)

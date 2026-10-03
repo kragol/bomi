@@ -256,29 +256,16 @@ video filters *inside* mpv's filter chains, and modern mpv has no such chains. T
 filters are disabled rather than removed: the sources are still in the tree, just out
 of the build. The items below are what that costs, and what is still wrong.
 
-### Software decoding is sluggish, and that is bomi's fault
+### Direct rendering is still off
 
-With hardware decoding off, playback of demanding content collapses: a 4K HEVC 10-bit
-file plays at 8–10fps with bomi burning **843–918% CPU**, where plain `mpv` — same
-libmpv, same file, `hwdec=no` — uses **188%**, and a minimal render-API harness with
-bomi's exact settings uses **220%** while rendering 535 times a second. So neither
-libmpv nor ffmpeg is slow; the cost is in bomi.
-
-Almost all of that CPU is *decoding*: mpv's video output is starved, logs
-`mpv_render_context_render() not being called or stuck`, drifts 200–500ms out of A/V
-sync, and races the decoder to catch up. The render path is too indirect — mpv's
-update callback posts a Qt event to the **GUI thread**, which schedules a scene-graph
-update, which eventually renders on the render thread — and cannot service a VO that
-wants ~143 presentations a second.
-
-Hardware decoding **masks** this (25–28% CPU, smooth) but does not fix it. Anything
-falling back to software decoding hits the same wall.
-
-The fix is to drive rendering from the scene-graph render thread, gated on
-`mpv_render_context_update()`, instead of round-tripping the GUI thread. Once that
-holds, `MPV_RENDER_PARAM_ADVANCED_CONTROL` becomes safe — it currently deadlocks bomi
-— which would also restore direct rendering, logged today as `DR failed - disabling`,
-so every decoded 4K frame is copied needlessly.
+Software decoding now costs what plain `mpv` costs (4K HEVC 10-bit: about 185% CPU,
+a new frame every vsync). The port's earlier 850–1000% came from running yadif on
+every frame, not from the render path. But mpv still logs `DR failed - disabling`,
+so each decoded frame is copied once more than necessary. Direct rendering needs
+`MPV_RENDER_PARAM_ADVANCED_CONTROL`. New frames are now rendered from the scene-graph
+render thread, with `mpv_render_context_update()` called there, which that mode
+requires. It deadlocked when tried on the old GUI-thread path and has not been
+retried since.
 
 ### Controls that are still shown but do nothing
 
@@ -290,8 +277,10 @@ so every decoded 4K frame is copied needlessly.
   decoded PCM, so it would need an out-of-band route.
 * **Motion smoothing** is now mpv's GPU frame interpolation, not bomi's own CPU
   interpolator, which is inert.
-* **Deinterlacing** is mpv's `yadif` only. Bob, LinearBob and CubicBob all map onto
-  it; bomi's own implementations are inert.
+* **Deinterlacing** is mpv's `--deinterlace=auto`: interlaced frames only, with
+  `bwdif` (`bwdif_cuda` under nvdec). The method choices in Preferences (Bob,
+  LinearBob, CubicBob, Yadif, field doubling) are ignored; bomi's own
+  implementations are inert.
 * **Video scaling** is mpv's, not bomi's custom GL kernels — generally better, but a
   behaviour change.
 
