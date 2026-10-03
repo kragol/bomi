@@ -6,15 +6,15 @@ Standards-Version: 3.9.5
 Build-Depends: debhelper (>= 7), pkg-config
  , qt5-qmake, qttools5-dev-tools, qtbase5-dev (>= 5.2.0), qtdeclarative5-dev
  , libqt5quick5, qml6-module-qt5compat-graphicaleffects
- , libqt5x11extras5-dev, libqt5svg5-dev, python, libbluray-dev
- , libass-bomi, libenca-dev, libfontconfig1-dev, libfreetype6-dev, libfribidi-dev, libharfbuzz-dev
+ , libqt5x11extras5-dev, libqt5svg5-dev, python3, libbluray-dev
+ , libass9, libenca-dev, libfontconfig1-dev, libfreetype6-dev, libfribidi-dev, libharfbuzz-dev
  , yasm, zlib1g-dev, libx11-dev, libdvdread-dev, libdvdnav-dev
  , libcdio-dev, libcdio-paranoia-dev, libcdio-cdda-dev
- , libasound2-dev, libva-dev, libvdpau-dev, libchardet
+ , libasound2-dev, libva-dev, libvdpau-dev, libchardet1t64
  , libbz2-dev, libjack-dev
- , libpulse-dev, libxcb-icccm4-dev, libgnutls-dev, libsmbclient-dev
+ , libpulse-dev, libxcb-icccm4-dev, libgnutls28-dev, libsmbclient-dev
  , libxcb-util0-dev, libxcb-randr0-dev, libxcb-screensaver0-dev
- , libxcb-xtest0-dev, libsmbclient-dev, qt5-default
+ , libxcb-xtest0-dev, libsmbclient-dev
 
 Package: bomi
 Architecture: any

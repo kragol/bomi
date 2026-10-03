@@ -17,7 +17,7 @@ build-arch: build-stamp
 build-indep: build-stamp
 build-stamp:
 	dh_testdir
-
+	./build-ffmpeg
 	# Add here commands to compile the package.
 	./configure --prefix=/usr @opts@ \
 		--actiondir=/usr/share/kde4/apps/solid/actions
@@ -32,9 +32,9 @@ clean:
 	rm -f build-stamp
 
 	# Add here commands to clean up after the build process.
-	[ ! -f Makefile ] || make clean
-	cd src/mpv; ./waf distclean
-	rm -rf build
+#	[ ! -f Makefile ] || make clean
+	#cd src/mpv; ./waf distclean
+#	rm -rf build
 
 	dh_clean
 
