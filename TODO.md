@@ -6,12 +6,30 @@ background and measurements behind each item.
 
 ## Performance
 
-- [ ] **Enable `MPV_RENDER_PARAM_ADVANCED_CONTROL`.** Brings back direct rendering
-  (logged now as `DR failed - disabling`), so decoded frames are no longer copied.
-  It deadlocked on the old GUI-thread render path. The render-thread path it needs
-  is now in place (`547add1f`), but it has not been retried. Watch two things: a
-  hidden or minimised window (Qt stops rendering, so `mpv_render_context_update()`
-  stops being called), and `update()` needing a current GL context in this mode.
+- [ ] **Enable `MPV_RENDER_PARAM_ADVANCED_CONTROL`** (deferred: low payoff, real risk).
+  - *What it buys:* direct rendering, meaning the software decoder writes straight
+    into GPU-visible memory, saving one copy per frame (logged now as
+    `DR failed - disabling`). Also GPU-rendered mpv screenshots, which bomi does not
+    use, because its snapshots render into its own FBO.
+  - *How much:* plain mpv on the 4K HEVC 10-bit file, software decoding, one run
+    each: `--vd-lavc-dr=yes` 180% CPU vs `no` 193%, so about 7%. Expect bomi to go
+    from about 185% to about 170%. **Nothing with hardware decoding**, where frames
+    are already on the GPU.
+  - *What it costs:* with the flag set, any wait from the render thread on a thread
+    using libmpv becomes a permanent freeze of the mpv core, not a warning. Fix these
+    first:
+    - [ ] `PlayEngine::Data::renderVideoFrame()` runs `takeSnapshot()` on the render
+      thread, which calls `mpv.get("time-pos")`, a non-render API. Move snapshotting
+      (or at least that read) off the render thread.
+    - [ ] Hidden or minimised window: Qt stops rendering, so nothing calls
+      `mpv_render_context_update()`, and the decoder can block waiting for it.
+      Service it from the render-thread `Waker` even when no frame is drawn. In this
+      mode `update()` allocates textures, so the GL context must be made current
+      there.
+    - [ ] Audit everything else reachable from `VideoRenderer::render()` for
+      non-render libmpv calls.
+  - *History:* deadlocked when tried on the old GUI-thread render path. The
+    render-thread path it needs is in place (`547add1f`); not retried since.
 
 ## Inert controls
 
