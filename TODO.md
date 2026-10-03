@@ -33,13 +33,12 @@ background and measurements behind each item.
 
 ## Inert controls
 
-- [ ] **Audio filters** via mpv's `af` property with lavfi filters. `AudioController`
-  is an inert stub.
-  - [ ] Volume normalizer → `dynaudnorm`
-  - [ ] Equalizer → `anequalizer` (or `superequalizer`)
-  - [ ] Channel manipulation → `pan`
-  - [ ] Tempo scaler → `scaletempo2` / `atempo`
-  - [ ] Soft clip → `asoftclip`
+- [ ] **Channel manipulation → `pan`.** Translate `ChannelLayoutMap` (source →
+  destination speaker mixing per layout pair) into a `pan` filter in `af()`. The
+  rest of the audio chain is done (see below).
+- [ ] **Normalizer gain readout** (play info panel) is empty: `dynaudnorm` does not
+  report its gain. Drop the readout, or estimate it (for example `astats` before and
+  after).
 - [ ] **Spectrum visualizer.** libmpv gives no access to decoded PCM, so this needs an
   out-of-band route (for example a lavfi `showspectrum`/`ashowinfo` side branch, or an
   audio-output tap). Hardest item on the list.
@@ -102,3 +101,6 @@ background and measurements behind each item.
   frame, and deinterlacing is mpv's auto mode (`ae8fb42f`)
 - [x] New frames rendered from the scene-graph render thread, so GUI stalls no
   longer drop video frames (`547add1f`)
+- [x] Audio chain as one lavfi graph in `af`: `dynaudnorm` (normalizer), `volume`
+  (volume × amp, so the soft clip sees the full gain as in bomi's mixer),
+  10 × `equalizer`, `asoftclip=type=sin`; tempo scaler via `audio-pitch-correction`

@@ -16,6 +16,7 @@
 #include "misc/charsetdetector.hpp"
 #include "audio/audiocontroller.hpp"
 #include "audio/audioformat.hpp"
+#include "audio/audionormalizeroption.hpp"
 #include "video/videorenderer.hpp"
 #include "video/videoprocessor.hpp"
 #include "video/videopreview.hpp"
@@ -119,6 +120,8 @@ struct PlayEngine::Data {
     int colorShaderSerial = 0;
 
     int avSync = 0, reload = -1, volumeScale = 0;
+    bool softClip = true;
+    AudioNormalizerOption normalizer = AudioNormalizerOption::default_();
     int time_s = 0, begin_s = 0, end_s = 0, duration_s = 0;
     int duration = 0, begin = 0, time = 0;
 
@@ -174,7 +177,9 @@ struct PlayEngine::Data {
     auto displaySize() const { return info.video.output()->size(); }
     auto post(State state) -> void { _PostEvent(p, StateChange, state); }
     auto post(Waitings w, bool set) -> void { _PostEvent(p, WaitingChange, w, set); }
-    auto volume(const MrlState *s) const -> double;
+    auto gain(const MrlState *s) const -> double;
+    auto updateAudioGain() -> void;
+    auto updateAudioFilter() -> void;
     auto loadfile(const Mrl &mrl, bool resume, const QString &sub = QString()) -> void;
     auto updateMediaName(const QString &name = QString()) -> void;
 

@@ -225,7 +225,7 @@ PlayEngine::PlayEngine()
     d->mpv.setOption("osd-level", "0");
     d->mpv.setOption("ad-lavc-downmix", "no");
     d->mpv.setOption("title", "\"\"");
-    d->mpv.setOption("audio-pitch-correction", "no");
+    d->mpv.setOption("audio-pitch-correction", d->params.audio_tempo_scaler() ? "yes" : "no");
     d->mpv.setOption("vo", d->vo(&d->params));
     d->mpv.setOption("af", d->af(&d->params));
     d->mpv.setOption("vf", d->vf(&d->params));
@@ -532,8 +532,11 @@ auto PlayEngine::relativeSeek(int pos) -> void
 
 auto PlayEngine::setVolumeControl_locked(int scale, bool soft) -> void
 {
-    d->volumeScale = scale;
-    d->ac->setSoftClip(soft);
+    // Called under the engine lock on every preference change, so rebuild only
+    // on a real change, and only asynchronously: a synchronous mpv call could
+    // wait on an mpv thread that is waiting on the lock.
+    if (_Change(d->volumeScale, scale) | _Change(d->softClip, soft))
+        d->updateAudioFilter();
 }
 
 auto PlayEngine::setChannelLayoutMap_locked(const ChannelLayoutMap &map) -> void
@@ -690,7 +693,7 @@ auto PlayEngine::seekEdition(int number, int from) -> void
 auto PlayEngine::setAudioVolume(double volume) -> void
 {
     if (d->params.set_audio_volume(volume))
-        d->mpv.setAsync("volume", d->volume(&d->params));
+        d->updateAudioGain();
 }
 
 auto PlayEngine::isMuted() const -> bool
@@ -706,7 +709,7 @@ auto PlayEngine::volume() const -> double
 auto PlayEngine::setAudioAmp(double amp) -> void
 {
     if (d->params.set_audio_amplifier(amp))
-        d->mpv.setAsync("volume", d->volume(&d->params));
+        d->updateAudioGain();
 }
 
 auto PlayEngine::setAudioMuted(bool muted) -> void
@@ -825,18 +828,15 @@ auto PlayEngine::setResyncAvWhenFilterToggled_locked(bool on) -> void
 
 auto PlayEngine::setAudioVolumeNormalizer(bool on) -> void
 {
-    if (d->params.set_audio_volume_normalizer(on)) {
-        d->mpv.tellAsync("af", "set"_b, d->af(&d->params));
-        d->resync(true);
-    }
+    if (d->params.set_audio_volume_normalizer(on))
+        d->updateAudioFilter();
 }
 
 auto PlayEngine::setAudioTempoScaler(bool on) -> void
 {
-    if (d->params.set_audio_tempo_scaler(on)) {
-        d->mpv.tellAsync("af", "set"_b, d->af(&d->params));
-        d->resync();
-    }
+    // mpv inserts scaletempo2 itself when the speed is not 1.
+    if (d->params.set_audio_tempo_scaler(on))
+        d->mpv.setAsync("audio-pitch-correction", on);
 }
 
 auto PlayEngine::stop() -> void
@@ -853,7 +853,8 @@ auto PlayEngine::setMotionIntrplOption_locked(const MotionIntrplOption &option)
 auto PlayEngine::setVolumeNormalizerOption_locked(const AudioNormalizerOption &option)
 -> void
 {
-    d->ac->setNormalizerOption(option);
+    if (_Change(d->normalizer, option) && d->params.audio_volume_normalizer())
+        d->updateAudioFilter();
 }
 
 auto PlayEngine::setDeintOptions_locked(const DeintOptionSet &set) -> void
@@ -1237,7 +1238,25 @@ auto PlayEngine::stateText() const -> QString
 
 auto PlayEngine::setAudioEqualizer(const AudioEqualizer &eq) -> void
 {
-    d->params.set_audio_equalizer(eq);
+    const auto old = d->params.audio_equalizer();
+    if (!d->params.set_audio_equalizer(eq))
+        return;
+    // The bands are only in the graph while some gain is non-zero, so going to
+    // or from flat rebuilds it; otherwise retune the bands in place.
+    if (old.isZero() || eq.isZero()) {
+        d->updateAudioFilter();
+        return;
+    }
+    for (int i = 0; i < eq.size(); ++i) {
+        if (eq[i] == old[i])
+            continue;
+        const auto g = QByteArray::number(qBound(eq.min(), eq[i], eq.max()));
+        const QByteArray band = "equalizer@band" % QByteArray::number(i);
+        if (!d->mpv.tell("af-command", "bomi"_b, "g"_b, g, band)) {
+            d->updateAudioFilter();
+            return;
+        }
+    }
 }
 
 template<class T = EditionChapterObject, class L = QVector<T*>>

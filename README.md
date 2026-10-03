@@ -269,10 +269,10 @@ retried since.
 
 ### Controls that are still shown but do nothing
 
-* **The audio filter chain.** Volume normalizer, soft clip, channel manipulation,
-  equalizer and tempo scaler. `AudioController` is an inert stub. lavfi has
-  equivalents for all of them (`dynaudnorm`, `pan`, `anequalizer`, `atempo`), to be
-  driven through mpv's `--af`.
+* **Channel manipulation** (Preferences > Audio). The equalizer, normalizer, soft
+  clip, amplifier and tempo scaler are back as a lavfi graph in mpv's `--af`; the
+  custom speaker mapping still needs translating into a `pan` filter.
+  `AudioController` remains an inert stub.
 * **The spectrum visualizer.** The hardest to bring back: libmpv exposes no way to tap
   decoded PCM, so it would need an out-of-band route.
 * **Motion smoothing** is now mpv's GPU frame interpolation, not bomi's own CPU
@@ -289,6 +289,8 @@ retried since.
 * **Snapshots cannot separate video from subtitles.** mpv composites OSD and subtitles
   into the same framebuffer as the video, so "save without subtitles" captures them
   anyway.
+* **The normalizer gain readout in the play info panel is empty.** `dynaudnorm` does
+  the normalizing now and does not report its current gain.
 * **The cache readout always says Unavailable.** `cache-used` and `cache-size` were
   removed from mpv; the equivalent lives in the `demuxer-cache-state` map and has not
   been rewired. Caching itself is unaffected.

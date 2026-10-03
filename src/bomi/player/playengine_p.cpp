@@ -53,14 +53,51 @@ private:
 PlayEngine::Data::Data(PlayEngine *engine)
     : p(engine) { }
 
+// bomi's own audio filter is gone with mpv's internal af API, so its stages are
+// rebuilt as one lavfi graph, in the old order: normalizer, gain, equalizer, then
+// clipping. The gain stage carries volume and amplifier, because mpv applies its
+// own volume after every filter and the soft clip has to see the full gain, as
+// it did in bomi's mixer. mpv's volume therefore stays at 100%.
+// Volume and equalizer changes reach the graph through af-command (see
+// updateAudioGain() and setAudioEqualizer()) without rebuilding it.
 auto PlayEngine::Data::af(const MrlState *s) const -> QByteArray
 {
-    // bomi's audio filter used to be injected into mpv's af chain by overriding
-    // af_info_dummy at link time. Modern mpv has no af chain, so the chain is
-    // empty for now; lavfi equivalents (dynaudnorm, pan, anequalizer, atempo)
-    // are the follow-up.
-    Q_UNUSED(s);
-    return QByteArray();
+    QByteArrayList graph;
+    if (s->audio_volume_normalizer()) {
+        // bomi's normalizer was modelled on dynaudnorm; the options map 1:1
+        // and bomi's defaults are dynaudnorm's.
+        const auto &n = normalizer;
+        graph.push_back("dynaudnorm=f=" % QByteArray::number(qRound(qBound(0.1, n.chunk_sec, 1.0) * 1000))
+                        % ":g=" % QByteArray::number(2 * qMax(1, n.smoothing) + 1)
+                        % ":p=" % QByteArray::number(qBound(0.0, n.target, 0.95))
+                        % ":m=" % QByteArray::number(qBound(1.0, n.max, 10.0))
+                        % ":r=" % QByteArray::number(n.use_rms ? qBound(0.0, n.target, 0.95) : 0.0));
+    }
+    graph.push_back("volume@gain=precision=float:volume=" % QByteArray::number(gain(s), 'f', 6));
+    const auto eq = s->audio_equalizer();
+    if (!eq.isZero()) {
+        for (int i = 0; i < eq.size(); ++i)
+            graph.push_back("equalizer@band" % QByteArray::number(i)
+                            % "=t=o:w=1:f=" % QByteArray::number(eq.freqeuncy(i))
+                            % ":g=" % QByteArray::number(qBound(eq.min(), eq[i], eq.max())));
+    }
+    if (softClip)
+        graph.push_back("asoftclip=type=sin"_b);
+    return "@bomi:lavfi=[" % graph.join(',') % ']';
+}
+
+auto PlayEngine::Data::updateAudioFilter() -> void
+{
+    mpv.tellAsync("af", "set"_b, af(&params));
+}
+
+// Synchronous so a failure can be caught: before the audio chain exists there is
+// no graph to command, and the option string must then carry the new gain.
+auto PlayEngine::Data::updateAudioGain() -> void
+{
+    if (!mpv.tell("af-command", "bomi"_b, "volume"_b,
+                  QByteArray::number(gain(&params), 'f', 6), "volume@gain"_b))
+        updateAudioFilter();
 }
 
 auto PlayEngine::Data::vf(const MrlState *s) const -> QByteArray
@@ -423,7 +460,8 @@ auto PlayEngine::Data::onLoad() -> void
     mpv.setAsync("options/deinterlace", deint ? "auto"_b : "no"_b);
 
     mpv.setAsync("options/af", af(local));
-    mpv.setAsync("options/volume", volume(local));
+    mpv.setAsync("options/volume", 100.0); // the gain lives in af(); see there
+    mpv.setAsync("options/audio-pitch-correction", local->audio_tempo_scaler());
     mpv.setAsync("options/mute", local->audio_muted() ? "yes"_b : "no"_b);
     mpv.setAsync("options/audio-delay", local->audio_sync() * 1e-3);
     mpv.setAsync("options/audio-channels", _ChmapNameFromLayout(local->audio_channel_layout()));
@@ -1258,7 +1296,8 @@ auto PlayEngine::Data::resync(bool force) -> void
     mpv.tellAsync("seek", 0.0, "relative"_b);
 }
 
-auto PlayEngine::Data::volume(const MrlState *s) const -> double
+// Linear gain for the graph's volume stage: bomi's volume curve times the amp.
+auto PlayEngine::Data::gain(const MrlState *s) const -> double
 {
     auto x = s->audio_volume();
     if (volumeScale > 0 && x > 1e-8) {
@@ -1266,6 +1305,6 @@ auto PlayEngine::Data::volume(const MrlState *s) const -> double
         const auto b = exp(-a);
         x = std::min(b * exp(a * x), 1.0);
     }
-    return x * 100 * s->audio_amplifier();
+    return x * s->audio_amplifier();
 }
 
