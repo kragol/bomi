@@ -86,8 +86,7 @@ background and measurements behind each item.
 - [ ] Remove the vestigial `OS::HwAcc` stub and its references in the preferences code.
 - [ ] Rewrite README's Requirements and Compilation sections: the port needs system
   `libmpv >= 2.0` and no longer builds ffmpeg/mpv in-tree.
-- [ ] Update `arch/PKGBUILD` for the libmpv build (`/usr/bin/bomi` is still the old
-  vendored build).
+- [ ] Switch `_branch` in `arch/PKGBUILD` back to `master`.
 - [ ] Remove the disabled filter-layer sources once their replacements are in.
 
 ## Done since the port started
@@ -101,6 +100,8 @@ background and measurements behind each item.
   frame, and deinterlacing is mpv's auto mode (`ae8fb42f`)
 - [x] New frames rendered from the scene-graph render thread, so GUI stalls no
   longer drop video frames (`547add1f`)
+- [x] `arch/PKGBUILD` builds the libmpv port against system mpv/ffmpeg, with
+  soname-versioned dependencies and a tag-independent `pkgver()`
 - [x] Audio chain as one lavfi graph in `af`: `dynaudnorm` (normalizer), `volume`
   (volume × amp, so the soft clip sees the full gain as in bomi's mixer),
   10 × `equalizer`, `asoftclip=type=sin`; tempo scaler via `audio-pitch-correction`

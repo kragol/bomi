@@ -211,10 +211,10 @@ $ cd arch && makepkg -si
 It carries an `epoch`, because the AUR `bomi-git` reports a higher commit count than
 this branch does and pacman would otherwise read the fork as a downgrade.
 
-Two things it works around, both explained in comments there: the in-tree FFmpeg
-tarball is a `source=` entry rather than a `./download-ffmpeg` call, since `build()`
-is supposed to run offline; and `./build-ffmpeg` has to run before `./configure`,
-not after.
+On the `libmpv-port` branch it fetches that branch and builds against the system
+`mpv` and `ffmpeg`; nothing is vendored. Their libraries are declared by soname, so
+pacman holds back an mpv or ffmpeg update that bumps a soname until you rebuild
+`bomi-git`.
 
 To have `pacman -Syu` offer rebuilds the way it does for repository packages, put the
 built package in a [local repository](https://wiki.archlinux.org/title/Pacman/Tips_and_tricks#Custom_local_repository):
@@ -232,9 +232,9 @@ SigLevel = Optional TrustAll
 Server = file:///home/YOUR_USER/pkgrepo
 ```
 
-Rebuilding after a `git pull` bumps `pkgver` from
-`git describe`, so the new build sorts above the installed one and shows up as a
-normal update.
+Rebuilding after new commits bumps `pkgver` (commits since v0.9.11, counted from
+that commit's hash because the GitHub repository carries no tags), so the new
+build sorts above the installed one and shows up as a normal update.
 
 ## Known issues in this fork
 
