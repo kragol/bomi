@@ -290,9 +290,9 @@ Issues for this fork go to its own tracker:
 **[github.com/kragol/bomi/issues](https://github.com/kragol/bomi/issues)**.
 
 Please read this before posting. This is a personal fork, maintained for my own use.
-There is no support commitment: I do not plan to work through user reports, and an
-issue may sit unanswered. I do read what gets posted, and I may fix some of it,
-most likely when it affects me too. Issues that come with clear reproduction steps,
+There is no support commitment: I do not plan to work through user reports, and I
+do not commit to reading them either, so an issue may sit unanswered. I may look
+through them once in a while and fix some, most likely when they affect me too. Issues that come with clear reproduction steps,
 the bomi version (Help > About bomi, or `pacman -Q bomi-git`) and the relevant log
 output stand the best chance. If something worked in 0.9.x and broke in 0.10, say
 whether the `legacy` branch still behaves the old way.
