@@ -126,7 +126,9 @@ public:
     auto currentAudioStreamTrack() const -> StreamTrack;
     auto currentSubtitleStreamTrack() const -> StreamTrack;
     auto frameSize() const -> QSize;
-    auto snapshot(bool osd = false) const -> QImage;
+    // Asynchronous: calls done on this thread with the frame as displayed, or a
+    // null image when there is no video. See PlayEngine::Data::takeSnapshot().
+    auto grabFrame(std::function<void(const QImage&)> &&done) -> void;
 
     auto setAudioFiles(const QStringList &files) -> void;
     auto addAudioFiles(const QStringList &files) -> void;
@@ -150,7 +152,7 @@ public:
     auto setTrackSelected(StreamType type, int id, bool s) -> void;
 
     auto lock() -> void;
-    auto setHwAcc_locked(bool use, const QList<CodecId> &codecs) -> void;
+    auto setHwAcc_locked(bool use, const QStringList &codecs) -> void;
     auto setSubtitleStyle_locked(const OsdStyle &style) -> void;
     auto setAutoselectMode_locked(bool enable, AutoselectMode mode,
                                   const QString &ext, bool preferExternal) -> void;
@@ -165,6 +167,7 @@ public:
     auto setAutoloader_locked(const Autoloader &audio, const Autoloader &sub) -> void;
     auto setResume_locked(bool resume) -> void;
     auto setPreciseSeeking_locked(bool on) -> void;
+    auto setDisplaySync_locked(bool on) -> void;
     auto setResyncAvWhenFilterToggled_locked(bool on) -> void;
     auto setMotionIntrplOption_locked(const MotionIntrplOption &option) -> void;
     auto unlock() -> void;

@@ -451,6 +451,7 @@ RootMenu::RootMenu()
         d->separator();
 
         d->action(u"motion"_q, QT_TR_NOOP("Motion Smoothing"), true);
+        d->action(u"display-sync"_q, QT_TR_NOOP("Display Sync"), true);
         d->enumMenuCheckable<DeintMode>(true);
         d->menu(u"filter"_q, QT_TR_NOOP("Filter"), [=] () {
             d->group()->setExclusive(false);

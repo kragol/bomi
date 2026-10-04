@@ -136,7 +136,10 @@ PrefDialog::PrefDialog(QWidget *parent)
     addPage(tr("Control step"), d->ui.ui_step, u":/img/run-build-32.png"_q);
 
     d->ui.app_fixed_font->setFixedFontOnly(true);
-    d->ui.enable_hwaccel->setEnabled(OS::hwAcc()->isAvailable());
+    // Not gated on OS::hwAcc() any more: that only ever enumerated VA-API and
+    // VDPAU, both gone, so it always reported "unavailable" and left this
+    // permanently greyed out. mpv decides at playback time whether it can use
+    // a backend, and the play info panel reports which one it picked.
     d->ui.screensaver_method->addItems(OS::screensaverMethods());
     d->ui.screensaver_method->setVisible(d->ui.screensaver_method->count() > 1);
     d->ui.quick_snapshot_folder_browse->setEditor(d->ui.quick_snapshot_folder);

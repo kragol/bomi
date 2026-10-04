@@ -36,7 +36,7 @@ bomi_exec_path := $(bomi_exec_dir)/$(bomi_exec)
 
 bomi: build/$(bomi_exec_path)
 
-build/$(bomi_exec_path): mpv skins imports translations
+build/$(bomi_exec_path): skins imports translations
 	cd src/bomi && $(qmake) bomi.pro && $(MAKE) -j$(njobs) release
 ifeq ($(os),osx)
 	cp -r build/skins $(bomi_exec_dir)
@@ -53,11 +53,6 @@ bomi-bundle: bomi
 #	cd build && $(macdeployqt) $(bomi_exec).app
 #	./fix-dep
 	cd build && $(macdeployqt) $(bomi_exec).app -dmg
-
-build/lib/libmpv.a: build-mpv
-	@./build-mpv
-
-mpv: build/lib/libmpv.a
 
 build/skins: build
 	$(install_dir) build/skins
@@ -82,9 +77,6 @@ build:
 	$(install_dir) build
 
 clean:
-	-cd src/mpv && ./waf uninstall
-	-cd src/mpv && ./waf clean
-	-cd src/mpv && ./waf distclean
 	-cd src/bomi && make clean
 	-cd src/bomi && rm -rf Makefile* debug release
 	-rm -rf build/bomi*
@@ -134,4 +126,4 @@ else
 	mv build/$(bomi_exec).app $(DEST_DIR)$(prefix)
 endif
 
-.PHONY: bomi mpv clean skins imports install
+.PHONY: bomi clean skins imports install

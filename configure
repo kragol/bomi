@@ -5,7 +5,7 @@ SED=sed
 #special case for build in ubuntu using bomi ppa
 PKG_CONFIG_PATH=/opt/ffmpeg-bomi/lib/pkgconfig:/opt/libass-bomi/lib/pkgconfig:${PKG_CONFIG_PATH}
 
-export PKG_CONFIG_PATH="`pwd`/build/lib/pkgconfig:$PKG_CONFIG_PATH"
+export PKG_CONFIG_PATH
 
 arguments="$@"
 
@@ -16,24 +16,20 @@ has_arg() {
 qtsdk=
 kern=`uname -s`
 njobs=
-mpv_args=
 os=
 win=
 mkspec=
 if [ "$kern" = "Darwin" ]; then
     os="osx"
-    mpv_args="$mpv_args --enable-coreaudio --enable-vda-hwaccel" #
     njobs=`sysctl hw.ncpu | awk '{print $2}'`
     mkspec=macx-clang
     echo "configure for OS X..."
 elif [ "$kern" = "Linux" ]; then
     os="linux"
-    mpv_args="$mpv_args --enable-alsa --enable-oss-audio"
     njobs=$(nproc)
     echo "configure for Linux..."
 elif [[ "$kern" = MINGW* ]]; then
     os="win"
-    mpv_args="$mpv_args --enable-dsound --enable-wasapi --enable-dxva2-hwaccel"
     njobs=$(nproc)
     mkspec=win32-g++
 	if [[ "$kern" = MINGW64* ]]; then
@@ -133,10 +129,9 @@ f_pkg=4
 parallel=$njobs
 release=
 # Opt-in via --developer. Do not default this to 1: the block that consumes it
-# runs after argument parsing and would silently override --disable-vaapi and
+# runs after argument parsing and would silently override --disable-jack and
 # friends, and would point skindir/importdir at the source tree.
 developer=
-python=autodetect
 cc=gcc
 cxx=g++
 qmake=autodetect
@@ -151,7 +146,6 @@ mo() {
 config_opts="""
 --help|display this help and exit
 --cc=COMPILER|C compiler (corresponding C++ compiler will be detected)|$cc
---python=PYTHON|python used to run mpv's waf build (needs < 3.12)|autodetect
 --win=ARCH|32 for 32bit or 64 for 64bit(only Windows)|$win
 --qtsdk=QTSDK|directory for Qt SDK|
 --qmake=QMAKE|qmake executable|$qmake
@@ -273,8 +267,6 @@ pulseaudio=autodetect
 cdda=autodetect
 systemd=autodetect
 samba=autodetect
-vdpau=autodetect
-vaapi=autodetect
 
 mf() { # make_feature
     local value=$(eval echo \$$1)
@@ -292,23 +284,8 @@ $(mf pulseaudio "enable PulseAudio support" "libpulse")
 $(mf cdda "enable CDDA support" "libcdio_paranoia libcdio libcdio_cdda")
 $(mf samba "enable playing through samba" "smbclient")
 $(mf systemd "enable systemd integration" "libsystemd")
-$(mf vdpau "enable VDPAU support for harware acceleration" "vdpau")
-$(mf vaapi "enable VA-API support for harware acceleration" "libva libva-glx libva-x11")
 """
 
-add_mpv() {
-    mpv_args="$mpv_args --$1-$2"
-}
-setup_features() {
-    add_mpv $jack jack
-    add_mpv $pulseaudio pulse
-    add_mpv $cdda cdda
-    add_mpv $samba libsmbclient
-    add_mpv $vdpau vdpau
-    add_mpv $vdpau vdpau-gl-x11
-    add_mpv $vaapi vaapi
-    add_mpv $vaapi vaapi-glx
-}
 
 options="""
 $config_opts
@@ -373,15 +350,13 @@ heredoc
 
 # --developer only sets defaults, so it has to run *before* the arguments are
 # parsed. Run after, and it silently overrides whatever was asked for on the
-# command line -- --disable-vaapi in particular.
+# command line.
 if has_arg "developer"; then
     printf "developer option enabled.\n"
     if [ "$os" = "linux" ]; then
         jack=enable
         pulseaudio=enable
         cdda=enable
-        vdpau=enable
-        vaapi=enable
     elif [ "$os" = "osx" ]; then
         qtsdk=/usr/local/opt/qt5
         macdeployqt=macdeployqt
@@ -463,6 +438,10 @@ if [ "$os" = "win" ]; then
 fi
 
 check_pkg_or_exit "ffmpeg >= 2.4" "libavformat >= 56.01.0" "libavutil >= 54.02.0" "libavcodec >= 56.1.0" "libswscale >= 2.1.3" "libswresample" "libavfilter"
+# bomi links the system libmpv (>= 2.0, i.e. mpv 0.30+) via the render API. The
+# in-tree mpv this fork used to vendor is gone: modern mpv has no af/vf chain to
+# hook into, so there is nothing left that needed a patched static build.
+check_pkg_or_exit "mpv >= 2.0"
 check_pkg_or_exit "libass >= 0.12.1"
 check_pkg_or_exit "dvdread"
 check_pkg_or_exit "dvdnav"
@@ -510,7 +489,6 @@ check_feature_one() {
 loop_options "$feature_opts" check_feature_one
 
 setup_dirs
-setup_features
 setup_build
 
 add_define BOMI_SKINS_PATH "\"$skindir\""
@@ -541,38 +519,6 @@ cxx=$(which $cxx)
 
 parse_file "Makefile" os qmake lrelease PATH PKG_CONFIG_PATH prefix bindir datadir compdir mandir icondir appdir actiondir \
     transdir skindir importdir parallel qtsdk macdeployqt
-# mpv's bundled waf predates Python 3.12, which removed imp and distutils.
-# Find an older interpreter to run it with; waf only produces libmpv.a, so this
-# has no bearing on the resulting binary.
-printf "checking for python to run mpv's waf ... "
-if [ "$python" = "autodetect" ]; then
-    python_candidates="python3.11 python3.10 python3.9"
-    if command -v pyenv > /dev/null 2>&1; then
-        for v in $(pyenv versions --bare 2> /dev/null | grep -E '^3\.(9|10|11)\.'); do
-            python_candidates="$python_candidates $(pyenv root)/versions/$v/bin/python"
-        done
-    fi
-    python=
-    for c in $python_candidates; do
-        if command -v "$c" > /dev/null 2>&1; then
-            python="$c"
-            break
-        fi
-    done
-    if [ -n "$python" ]; then
-        echo "$python"
-    else
-        echo "none found"
-        echo "  WARNING: no python < 3.12 found. mpv's waf will run under the"
-        echo "  system python and will probably fail. Install one, or pass"
-        echo "  --python=/path/to/python."
-    fi
-else
-    echo "$python (user specified)"
-fi
-
-parse_file "build-mpv" cc python mpv_args parallel os njobs PKG_CONFIG_PATH PATH
-
 if [ "$os" = "win" ]; then
     cc=$(echo $cc | sed 's#/mingw#C:/msys64/mingw#g')
     cxx=$(echo $cxx | sed 's#/mingw#C:/msys64/mingw#g')
@@ -582,7 +528,5 @@ parse_file "src/bomi/configure.pro" cc cxx config libs cflags rootdir
 if [ "$os" = "win" ]; then
     sed -i 's#'"$(pwd)"'#../..#g' "src/bomi/configure.pro"
 fi
-
-chmod +x build-mpv
 
 printf "\nbomi has been configured successfully!\n\n"

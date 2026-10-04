@@ -26,18 +26,6 @@
 #include <xcb/screensaver.h>
 #include <xcb/xtest.h>
 
-extern "C" {
-#if HAVE_VAAPI
-#include <video/vaapi.h>
-#endif
-#if HAVE_VDPAU
-#include <video/vdpau.h>
-#endif
-#include <video/img_format.h>
-#include <video/mp_image.h>
-#include <video/mp_image_pool.h>
-}
-
 #ifdef bool
 #undef bool
 #endif
@@ -97,7 +85,6 @@ struct X11 : public QObject {
     xcb_window_t root = 0;
     Display *display = nullptr;
     xcb_atom_t atoms[XcbAtomEnd];
-    HwAccX11 *api = nullptr;
 
     int statm = 0;
 
@@ -195,39 +182,18 @@ X11::X11()
         xcb_flush(connection);
     });
 
-#if HAVE_VAAPI && HAVE_VDPAU
-    api = new VaApiInfo;
-    if (!api->isNative()) {
-        delete api;
-        api = new VdpauInfo;
-        if (!api->isNative())
-            _Delete(api);
-    }
-#elif HAVE_VAAPI
-    api = new VaApiInfo;
-#elif HAVE_VDPAU
-    api = new VdpauInfo;
-#endif
-    if (api && !api->isOk()) {
-        _Info("Failed to initialize hardware acceration API.");
-        _Delete(api);
-    }
-    if (api)
-        _Info("Initialized hardware acceleration API: %%.", api->name());
-    else
-        _Info("No available hardware acceleration API.");
 
     statm = ::open("/proc/self/statm", O_RDONLY);
 }
 
 X11::~X11()
 {
-    delete api;
     delete ss.iface;
     ::close(statm);
 }
 
-auto getHwAcc() -> HwAcc* { return d ? d->api : nullptr; }
+// bomi's own VA-API/VDPAU support is gone; hardware decoding is mpv's.
+auto getHwAcc() -> HwAcc* { return nullptr; }
 
 template<class T>
 static inline QSharedPointer<T> _Reply(T *t) { return QSharedPointer<T>(t, free); }
@@ -653,211 +619,6 @@ auto usingMemory() -> double
     return resident * sysconf(_SC_PAGESIZE) / double(1024*1024);
 }
 
-/******************************************************************************/
-
-struct HwAccCodec {
-    HwAccCodec(CodecId id = CodecId::Invalid,
-               const QVector<uint32_t> &profiles = QVector<uint32_t>())
-        : id(id), profiles(profiles) { }
-    CodecId id;
-    QVector<uint32_t> profiles;
-};
-
-#define HA_CODEC(c, ...) { CodecId::c, __VA_ARGS__ }
-#if HAVE_VAAPI
-#define VA(v) (VAProfile##v)
-static const HwAccCodec s_vaCodecs[] = {
-//    VA_CODEC(Mpeg1, {}),
-    HA_CODEC(Mpeg2, {VA(MPEG2Simple), VA(MPEG2Main)})
-  , HA_CODEC(Mpeg4, {VA(MPEG4AdvancedSimple), VA(MPEG4Main), VA(MPEG4Simple)})
-  , HA_CODEC(H264,  {VA(H264Baseline), VA(H264High), VA(H264Main)})
-  , HA_CODEC(Vc1,   {VA(VC1Advanced), VA(VC1Main), VA(VC1Simple)}) // same as wmv3
-  , HA_CODEC(Wmv3,  {VA(VC1Advanced), VA(VC1Main), VA(VC1Simple)})
-#if VA_CHECK_VERSION(0, 37, 0)
-  , HA_CODEC(Hevc,  {VA(HEVCMain), VA(HEVCMain10)})
-#endif
-};
-#undef VA
-#endif
-
-#if HAVE_VDPAU
-#define VDP(v) (VDP_DECODER_PROFILE_##v)
-static const HwAccCodec s_vdpCodecs[] = {
-    HA_CODEC(Mpeg1, {VDP(MPEG1)})
-    , HA_CODEC(Mpeg2, {VDP(MPEG2_SIMPLE), VDP(MPEG2_MAIN)})
-    , HA_CODEC(Mpeg4, {VDP(MPEG4_PART2_ASP), VDP(MPEG4_PART2_SP)})
-    , HA_CODEC(H264,  {VDP(H264_BASELINE), VDP(H264_MAIN), VDP(H264_HIGH)
-#ifdef VDP_DECODER_PROFILE_H264_HIGH_444_PREDICTIVE
-                     , VDP(H264_EXTENDED), VDP(H264_HIGH_444_PREDICTIVE)
-                     , VDP(H264_PROGRESSIVE_HIGH), VDP(H264_CONSTRAINED_HIGH)
-#endif
-    })
-    , HA_CODEC(Vc1,   {VDP(VC1_ADVANCED), VDP(VC1_MAIN), VDP(VC1_SIMPLE)})
-    , HA_CODEC(Wmv3,  {VDP(VC1_ADVANCED), VDP(VC1_MAIN), VDP(VC1_SIMPLE)})
-#ifdef VDP_DECODER_PROFILE_HEVC_MAIN_444
-    , HA_CODEC(Hevc,  {VDP(HEVC_MAIN), VDP(HEVC_MAIN_10), VDP(HEVC_MAIN_STILL)
-                     , VDP(HEVC_MAIN_12), VDP(HEVC_MAIN_444)})
-#endif
-};
-#undef VDP
-#endif
-#undef HA_CODEC
-
-#if HAVE_VAAPI
-
-VaApiInfo::VaApiInfo(): HwAccX11(VaApiGLX)
-{
-    setLogContext("VAAPI");
-    setOkStatus(VA_STATUS_SUCCESS);
-    setGetErrorStringFunction([] (qint64 s) { return vaErrorStr(s); });
-    const auto xdpy = QX11Info::display();
-    auto display = vaGetDisplayGLX(xdpy);
-    if (!check(display ? VA_STATUS_SUCCESS : VA_STATUS_ERROR_UNIMPLEMENTED,
-               "Cannot create VADisplay."))
-        return;
-    int major, minor;
-    if (!check(vaInitialize(display, &major, &minor),
-               "Cannot initialize VA-API."))
-        return;
-    do {
-        const auto vendor = QString::fromLatin1(vaQueryVendorString(display));
-        if (!vendor.contains("VDPAU"_a))
-            setNative(true);
-#if HAVE_VDPAU
-        if (!isNative())
-            break;
-#endif
-        auto size = vaMaxNumProfiles(display);
-        QVector<VAProfile> profiles(size);
-        if (!check(vaQueryConfigProfiles(display, profiles.data(), &size),
-                   "No available profiles."))
-            break;
-        profiles.resize(size);
-        QList<CodecId> codecs;
-        for (auto profile : profiles) {
-            int size = vaMaxNumEntrypoints(display);
-            QVector<VAEntrypoint> entries(size);
-            if (!isOk(vaQueryConfigEntrypoints(display, profile,
-                                                    entries.data(), &size)))
-                continue;
-            entries.resize(size);
-            if (!entries.contains(VAEntrypointVLD))
-                continue;
-            for (auto &codec : s_vaCodecs) {
-                if (codec.profiles.contains(profile)) {
-                    if (!codecs.contains(codec.id))
-                        codecs.push_back(codec.id);
-                    break;
-                }
-            }
-        }
-        isOk(VA_STATUS_SUCCESS);
-        if (codecs.contains(CodecId::Vc1))
-            codecs.push_back(CodecId::Wmv3);
-        setSupportedCodecs(codecs);
-    } while (false);
-    vaTerminate(display);
-}
-
-auto VaApiInfo::download(mp_hwdec_ctx *ctx, const mp_image *mpi,
-                         mp_image_pool *pool) -> mp_image*
-{
-    if (!ctx->vaapi_ctx)
-        return nullptr;
-    auto img = va_surface_download((mp_image*)mpi, pool);
-    if (!img)
-        return nullptr;
-    mp_image_copy_attributes(img, (mp_image*)mpi);
-    return img;
-}
-
-#endif
-
-/******************************************************************************/
-
-#if HAVE_VDPAU
-
-VdpauInfo::VdpauInfo()
-    : HwAccX11(VdpauX11)
-{
-    setLogContext("VDPAU");
-    setOkStatus(VDP_STATUS_OK);
-    setGetErrorStringFunction([this] (qint64 s) {
-        if (m_errors.isEmpty() || s < 0 || s >= m_errors.size())
-            return "Unknown error code";
-        return m_errors[s].constData();
-    });
-    if (!check(vdp_device_create_x11(QX11Info::display(), QX11Info::appScreen(),
-                                     &m_device, &m_proc), "Cannot intialize VDPAU device"))
-        return;
-    VdpGetErrorString *getErrorString = nullptr;
-    VdpDeviceDestroy *deviceDestroy = nullptr;
-    VdpDecoderQueryCapabilities *decoderQueryCaps = nullptr;
-    VdpGetInformationString *getInformationString = nullptr;
-#define PROC(id, f) proc(VDP_FUNC_ID_##id, f)
-    PROC(GET_ERROR_STRING,                 getErrorString);
-    PROC(DEVICE_DESTROY,                   deviceDestroy);
-    PROC(DECODER_QUERY_CAPABILITIES,       decoderQueryCaps);
-    PROC(GET_INFORMATION_STRING,           getInformationString);
-#undef PROC
-    if (getErrorString) {
-        m_errors.resize(VDP_STATUS_ERROR);
-        for (int i = 0; i < m_errors.size(); ++i)
-            m_errors[i] = getErrorString(static_cast<VdpStatus>(i));
-    }
-    do {
-        if (!check(status(), "Cannot get VDPAU functions."))
-            break;
-        char const *info = nullptr;
-        if (!check(getInformationString(&info), "Cannot get VDPAU information."))
-            break;
-        if (!QString::fromLatin1(info).contains("VAAPI"_a))
-            setNative(true);
-#if HAVE_VAAPI
-        if (!isNative())
-            break;
-#endif
-        auto supports = [=] (VdpDecoderProfile id) -> bool
-        {
-            VdpBool supported = VDP_FALSE;
-            quint32 lv = 0, blocks = 0, w = 0, h = 0;
-            return decoderQueryCaps(m_device, id, &supported, &lv, &blocks,
-                                    &w, &h) == VDP_STATUS_OK && supported == VDP_TRUE;
-        };
-        QList<CodecId> codecs;
-        for (auto &codec : s_vdpCodecs) {
-            for (auto profile : codec.profiles) {
-                if (supports(profile)) {
-                    codecs.push_back(codec.id);
-                    break;
-                }
-            }
-        }
-        isOk(VDP_STATUS_OK);
-        setSupportedCodecs(codecs);
-    } while (false);
-    if (deviceDestroy)
-        deviceDestroy(m_device);
-    m_device = 0;
-}
-
-auto VdpauInfo::download(mp_hwdec_ctx *ctx, const mp_image *mpi,
-                         mp_image_pool *pool) -> mp_image*
-{
-    if (!ctx->vdpau_ctx)
-        return nullptr;
-    auto img = mp_image_pool_get(pool, IMGFMT_420P, mpi->w, mpi->h);
-    mp_image_copy_attributes(img, (mp_image*)mpi);
-    const VdpVideoSurface surface = (intptr_t)mpi->planes[3];
-    if (ctx->vdpau_ctx->vdp.video_surface_get_bits_y_cb_cr(
-                surface, VDP_YCBCR_FORMAT_YV12, (void* const*)img->planes,
-                (uint32_t*)img->stride) == VDP_STATUS_OK)
-        return img;
-    talloc_free(img);
-    return nullptr;
-}
-
-#endif
 
 } // namespace OS
 

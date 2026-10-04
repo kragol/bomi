@@ -275,6 +275,13 @@ class VideoObject : public AvCommonObject {
     Q_PROPERTY(qreal droppedFps READ droppedFps NOTIFY droppedFpsChanged)
     Q_PROPERTY(qint64 frameNumber READ frameNumber NOTIFY frameNumberChanged)
     Q_PROPERTY(qint64 frameCount READ frameCount NOTIFY frameCountChanged)
+    // Display sync. mpv falls back to audio sync silently when it cannot keep
+    // the display locked, so whether it is *active* matters more than whether
+    // it was requested.
+    Q_PROPERTY(bool displaySyncActive READ displaySyncActive NOTIFY displaySyncActiveChanged)
+    Q_PROPERTY(qreal vsyncRatio READ vsyncRatio NOTIFY vsyncRatioChanged)
+    Q_PROPERTY(int lateFrames READ lateFrames NOTIFY lateFramesChanged)
+    Q_PROPERTY(qreal displayFps READ displayFps NOTIFY displayFpsChanged)
 public:
     VideoObject();
     auto decoder() const -> const VideoFormatObject* { return &m_decoder; }
@@ -304,7 +311,23 @@ public:
     auto frameCount() const -> qint64 { return m_frameCount; }
     auto screen() const -> VideoRenderer* { return m_screen; }
     auto setScreen(VideoRenderer *vr) { m_screen = vr; }
+    auto displaySyncActive() const -> bool { return m_dsActive; }
+    auto setDisplaySyncActive(bool a) -> void
+        { if (_Change(m_dsActive, a)) emit displaySyncActiveChanged(); }
+    auto vsyncRatio() const -> qreal { return m_vsyncRatio; }
+    auto setVsyncRatio(qreal r) -> void
+        { if (_Change(m_vsyncRatio, r)) emit vsyncRatioChanged(); }
+    auto lateFrames() const -> int { return m_lateFrames; }
+    auto setLateFrames(int f) -> void
+        { if (_Change(m_lateFrames, f)) emit lateFramesChanged(); }
+    auto displayFps() const -> qreal { return m_displayFps; }
+    auto setDisplayFps(qreal fps) -> void
+        { if (_Change(m_displayFps, fps)) emit displayFpsChanged(); }
 signals:
+    void displaySyncActiveChanged();
+    void vsyncRatioChanged();
+    void lateFramesChanged();
+    void displayFpsChanged();
     void frameCountChanged();
     void frameNumberChanged();
     void droppedFramesChanged();
@@ -314,7 +337,9 @@ signals:
 private:
     VideoFormatObject m_decoder, m_filter, m_output;
     VideoToolObject m_hwacc, m_deint;
-    int m_dropped = 0, m_delayed = 0;
+    int m_dropped = 0, m_delayed = 0, m_lateFrames = 0;
+    bool m_dsActive = false;
+    qreal m_vsyncRatio = 0.0, m_displayFps = 0.0;
     qreal m_droppedFps = 0.0, m_fpsMp = 1;
     qint64 m_frameCount = 0, m_frameNumber = 0;
     QTime m_time;

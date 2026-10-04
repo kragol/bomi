@@ -1,6 +1,5 @@
 #include "videorenderer.hpp"
 #include "letterboxitem.hpp"
-#include "mpvosdrenderer.hpp"
 #include "opengl/opengltexture2d.hpp"
 #include "opengl/openglframebufferobject.hpp"
 #include "opengl/opengltexturebinder.hpp"
@@ -9,6 +8,9 @@
 #include "enum/rotation.hpp"
 #include <QQmlProperty>
 #include <QQuickWindow>
+#include <QMutex>
+#include <QCoreApplication>
+#include <atomic>
 
 DECLARE_LOG_CONTEXT(Video)
 
@@ -134,6 +136,22 @@ private:
     VideoRenderer *r;
 };
 
+// Lives on the scene-graph render thread. A posted event wakes that thread, and
+// QQuickWindow::update() called from it asks for a repaint without a sync, so a
+// new mpv frame never waits for the GUI thread.
+struct VideoRenderer::Waker : public QObject {
+    Waker(QQuickWindow *w): w(w) { }
+    auto event(QEvent *event) -> bool final
+    {
+        if (event->type() != QEvent::User)
+            return QObject::event(event);
+        w->update();
+        return true;
+    }
+private:
+    QQuickWindow *w;
+};
+
 struct VideoRenderer::Data {
     VideoRenderer *p = nullptr;
     double crop = -1.0, aspect = -1.0, dar = 0.0;
@@ -151,6 +169,13 @@ struct VideoRenderer::Data {
     QSize sourceSize{0, 1};
     QTimer sizeChecker;
     RenderFrameFunc render = nullptr;
+    FrameUpdateFunc frameUpdate = nullptr;
+
+    // Written by mpv's update callback, read on the render thread.
+    std::atomic<bool> framePending{false};
+    std::atomic<quint64> displaySize{0};
+    QMutex wakerLock;
+    Waker *waker = nullptr;
 
     static auto isSameRatio(double r1, double r2) -> bool
         {return (r1 < 0.0 && r2 < 0.0) || qFuzzyCompare(r1, r2);}
@@ -216,20 +241,15 @@ struct VideoRenderer::Data {
             *letterbox = {xy, letter};
         return rect;
     }
-    auto osdSizeHint() const -> QSize
-    {
-        if (onLetterbox)
-            return p->size().toSize();
-        return fboSizeHint();
-    }
+    auto osdSizeHint() const -> QSize { return fboSizeHint(); }
+    // mpv now owns the aspect fit: it is handed an item-sized framebuffer, draws
+    // the video letterboxed inside it, and places subtitles on the resulting
+    // bars when --sub-use-margins is on. Sizing this to the video instead would
+    // leave no bars for subtitles to land on.
     auto fboSizeHint() const -> QSize
     {
-        auto size = sourceSize;
-        if (portrait)
-            std::swap(size.rwidth(), size.rheight());
-        if (scaler)
-            size.scale(qCeil(vtx.width()), qCeil(vtx.height()), Qt::KeepAspectRatio);
-        return size;
+        auto size = p->size().toSize();
+        return size.isEmpty() ? QSize(1, 1) : size;
     }
 };
 
@@ -237,6 +257,9 @@ VideoRenderer::VideoRenderer(QQuickItem *parent)
     : Super(parent), d(new Data)
 {
     d->p = this;
+    // There is no separate OSD texture any more; this keeps the shader on its
+    // single-texture path (see type() and createShader()).
+    d->osd.visible = false;
     d->letterbox = new LetterboxItem(this);
     const QQmlProperty property(d->letterbox, u"anchors.centerIn"_q);
     property.write(QVariant::fromValue(this));
@@ -277,9 +300,30 @@ auto VideoRenderer::setRenderFrameFunction(const RenderFrameFunc &func) -> void
     d->render = func;
 }
 
+auto VideoRenderer::setFrameUpdateFunction(const FrameUpdateFunc &func) -> void
+{
+    d->frameUpdate = func;
+}
+
 auto VideoRenderer::updateForNewFrame(const QSize &displaySize) -> void
 {
     _PostEvent(Qt::HighEventPriority, this, NewFrame, displaySize);
+}
+
+// Called from mpv's update callback, on an mpv thread. Only a change of video
+// size needs the GUI thread (geometry and polish); a plain new frame goes
+// straight to the render thread.
+auto VideoRenderer::requestFrame(const QSize &displaySize) -> void
+{
+    const quint64 packed = (quint64(quint32(displaySize.width())) << 32)
+                           | quint32(displaySize.height());
+    if (d->displaySize.exchange(packed) != packed)
+        updateForNewFrame(displaySize);
+    if (d->framePending.exchange(true))
+        return; // a wake-up is already on its way
+    QMutexLocker locker(&d->wakerLock);
+    if (d->waker)
+        QCoreApplication::postEvent(d->waker, new QEvent(QEvent::User), Qt::HighEventPriority);
 }
 
 auto VideoRenderer::setOverlayOnLetterbox(bool letterbox) -> void
@@ -305,11 +349,19 @@ auto VideoRenderer::initializeGL() -> void
     const quint32 p = 0x0;
     d->frame.fallback.initialize(1, 1, OGL::BGRA, &p);
     d->osd.fallback = d->frame.fallback;
+    QMutexLocker locker(&d->wakerLock);
+    if (!d->waker && window())
+        d->waker = new Waker(window());
 }
 
 auto VideoRenderer::finalizeGL() -> void
 {
     Super::finalizeGL();
+    {
+        QMutexLocker locker(&d->wakerLock);
+        delete d->waker;
+        d->waker = nullptr;
+    }
     d->frame.fallback.destroy();
     _Delete(d->frame.fbo);
 }
@@ -441,17 +493,16 @@ auto VideoRenderer::updatePolish() -> void
     Super::updatePolish();
     d->sizeChecker.stop();
     QRectF letter;
-    if (_Change(d->vtx, d->frameRect({0, 0, width(), height()}, d->offset, &letter))) {
+    if (_Change(d->vtx, d->frameRect({0, 0, width(), height()}, d->offset, &letter)))
         reserve(UpdateGeometry, false);
-        const auto p0 = d->vtx.topLeft();
-        const auto p1 = d->vtx.bottomRight();
-#define NORM(v, vv) (vv - p0.v()) / double(p1.v() - p0.v())
-        d->frame.rect.setTop(NORM(y, 0));
-        d->frame.rect.setBottom(NORM(y, height()));
-        d->frame.rect.setLeft(NORM(x, 0));
-        d->frame.rect.setRight(NORM(x, width()));
-#undef NORM
-    }
+    // The framebuffer is item-sized and mpv has already fitted the video inside
+    // it, so it is blitted 1:1 over the whole item. Mapping the item rect into
+    // vtx space -- bomi's own video rectangle -- the way the old video-sized
+    // framebuffer required would letterbox the picture a second time, squashing
+    // it and dragging the subtitles out of the bars with it. vtx is still
+    // computed above because screenRect(), mapToVideo() and the overlay
+    // geometry are expressed in it.
+    d->frame.rect = QRectF(0, 0, 1, 1);
     if (d->onLetterbox) {
         d->osd.rect = QRectF(0, 0, 1, 1);
         d->osd.margins.setTop(d->vtx.top());
@@ -515,13 +566,18 @@ auto VideoRenderer::createNode() const -> QSGGeometryNode*
 
 auto VideoRenderer::render(VideoShaderData *data) -> void
 {
-    if (!data->redraw)
+    // Clear the flag before asking mpv, so an update callback arriving during
+    // frameUpdate() sets it again and schedules another pass, as mpv requires.
+    bool newFrame = false;
+    if (d->framePending.exchange(false) && d->frameUpdate)
+        newFrame = d->frameUpdate();
+    if (!data->redraw && !newFrame)
         return;
     data->redraw = false;
     auto w = window();
     if (w && d->render) {
         w->resetOpenGLState();
-        d->render(d->frame.fbo, data->osdVisible ? d->osd.fbo : nullptr, data->osdMargins);
+        d->render(d->frame.fbo);
         w->resetOpenGLState();
     }
 }
@@ -620,10 +676,10 @@ auto VideoRenderer::setScalerEnabled(bool on) -> void
 
 auto VideoRenderer::setOsdVisible(bool visible) -> void
 {
-    if (_Change(d->osd.visible, visible)) {
-        d->redraw = true;
-        reserve(UpdateAll);
-    }
+    // mpv composites the OSD into the video framebuffer itself, so there is no
+    // separate OSD texture to switch on. Kept as a no-op so callers and the
+    // single-texture shader path stay valid.
+    Q_UNUSED(visible);
 }
 
 auto VideoRenderer::updateAll() -> void

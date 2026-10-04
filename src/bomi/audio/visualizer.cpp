@@ -1,6 +1,5 @@
 #include "visualizer.hpp"
 #include "opengl/opengltexture2d.hpp"
-#include "audiobuffer.hpp"
 #include "kiss_fft/tools/kiss_fftr.h"
 #include <complex>
 
@@ -10,28 +9,6 @@ class FFT {
 public:
     FFT() { setInputSize(10); }
     ~FFT() { kiss_fftr_free(m_kiss); }
-    auto push(const AudioBufferPtr &input) -> bool
-    {
-        if (m_pos < m_size_in) {
-            if (!input || input->isEmpty())
-                return false;
-            m_nq = input->fps() / 2;
-            auto view = input->constView<float>();
-            const float *p = view.plane();
-            const int frames = input->frames();
-            const int nch = input->channels();
-            auto dst = m_input.data() + m_pos;
-            for (int i = 0; i < frames && m_pos < m_size_in; ++i, ++m_pos) {
-                float mix = 0;
-                for (int c = 0; c < nch; ++c) {
-                    mix += *p++;
-                }
-                mix /= nch;
-                *dst++ = mix;
-            }
-        }
-        return m_pos >= m_size_in;
-    }
     auto run() -> void { kiss_fftr(m_kiss, m_input.data(), (kiss_fft_cpx*)m_output.data()); clear(); }
     auto output() -> const std::vector<std::complex<float>>& { return m_output; }
     auto inputSize() const -> int { return m_size_in; }
@@ -92,70 +69,11 @@ auto AudioVisualizer::reset() -> void
 //        function i2f(i, fps, n) { return i * fps * 0.5 / (n - 1); }
 auto AudioVisualizer::analyze(const QSharedPointer<AudioBuffer> &data) -> void
 {
-    if (!d->enabled)
-        return;
-    Q_ASSERT(data);
-    if (_Change(d->fps, data->fps()))
-        d->fft.setInputSize(d->fps * 0.1);
-    if (!d->fft.push(data))
-        return;
-    d->fft.run();
-    auto &cpx = d->fft.output();
-
-    const int c = d->count;
-    if (d->back.size() != c) {
-        d->back.clear(); d->back.reserve(c);
-        for (int i = 0; i < c; ++i)
-            d->back.push_back(0.0);
-    }
-    const auto nq = d->fps * 0.5;
-    auto get = [&] (double i) -> double {
-        const int left = i;
-        const int right = left + 1;
-        if (left < 0 || right >= (int)cpx.size())
-            return 0.0;
-        const float a = i - (double)left;
-        return std::abs(cpx.at(left)) * (1.0f - a) + a * std::abs(cpx.at(right));
-    };
-
-    constexpr int radius = 3;
-    static const auto gw = Gaussian::create(radius);
-
-    if (_Change(d->tys, d->ys))
-        reset();
-
-    double &min = d->minLv, &max = d->maxLv;
-    for (int i = 0; i < c; ++i) {
-        const auto f = d->xs != Log ? d->min + (d->max - d->min) * i / (c - 1)
-            : std::exp(std::log(d->min) + (std::log(d->max) - std::log(d->min)) * i / (c - 1));
-        const double idx = f * (cpx.size() - 1) / nq;
-        double lv = 0.0;
-        int g = 0;
-        for (int j = -radius; j <= radius; ++j, ++g)
-            lv += get(idx + j) * gw[g];
-        if (lv < 1e-4)
-            lv = 0.0;
-        else {
-            if (d->tys == Log)
-                lv = std::log(lv);
-            min = std::min(lv, min);
-            max = std::max(lv, max);
-        }
-        d->back[i] = lv;
-    }
-    if (d->tys != Log)
-        min = 0;
-    if (min != max) {
-        for (auto &v : d->back) {
-            if (v != 0.0)
-                v = (v - min) / (max - min);
-        }
-    }
-
-    d->mutex.lock();
-    d->back.swap(d->interm);
-    d->mutex.unlock();
-    qApp->postEvent(this, new QEvent(UpdateData));
+    // The spectrum analyser used to be fed from bomi's filter running inside
+    // mpv's audio chain. Modern mpv has no such chain and libmpv exposes no PCM
+    // tap, so there is nothing left to analyse. The object stays alive so the
+    // QML bindings keep resolving; it simply never becomes enabled.
+    Q_UNUSED(data);
 }
 
 auto AudioVisualizer::min() const -> qreal

@@ -22,8 +22,11 @@ static auto allCodecs() -> const CodecListPair&
 {
     static const auto list = [] () {
         CodecListPair list;
-        AVCodec *c = nullptr;
-        while ((c = av_codec_next(c))) {
+        // av_codec_next() was removed in ffmpeg 5; av_codec_iterate() walks a
+        // static table, so nothing here is owned and nothing is freed.
+        void *i = nullptr;
+        const AVCodec *c = nullptr;
+        while ((c = av_codec_iterate(&i))) {
             if (!av_codec_is_encoder(c))
                 continue;
             if (c->type == AVMEDIA_TYPE_VIDEO)
@@ -31,7 +34,6 @@ static auto allCodecs() -> const CodecListPair&
             else if (c->type == AVMEDIA_TYPE_AUDIO)
                 list.ac.push_back(_L(c->name));
         }
-        av_free(c);
         qSort(list.ac);
         qSort(list.vc);
         return list;

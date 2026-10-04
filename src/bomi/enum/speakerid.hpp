@@ -3,12 +3,24 @@
 
 #include "enums.hpp"
 #define SPEAKERID_IS_FLAG 0
-extern "C" {
-#include <audio/chmap.h>
-}
-#ifdef bool
-#undef bool
-#endif
+
+// mpv's audio/chmap.h is an internal header and is not installed with libmpv.
+// Only the WAVEFORMATEXTENSIBLE speaker ids are needed here, and bomi persists
+// them in its settings, so they are reproduced verbatim rather than remapped.
+enum mp_speaker_id {
+    MP_SPEAKER_ID_FL = 0,
+    MP_SPEAKER_ID_FR,
+    MP_SPEAKER_ID_FC,
+    MP_SPEAKER_ID_LFE,
+    MP_SPEAKER_ID_BL,
+    MP_SPEAKER_ID_BR,
+    MP_SPEAKER_ID_FLC,
+    MP_SPEAKER_ID_FRC,
+    MP_SPEAKER_ID_BC,
+    MP_SPEAKER_ID_SL,
+    MP_SPEAKER_ID_SR,
+    MP_SPEAKER_ID_COUNT
+};
 
 enum class SpeakerId : int {
     FrontLeft = (int)(1 << 0),

@@ -279,7 +279,10 @@ Player::Player(QObject *parent)
     });
     connect(&d->started.timer, &QTimer::timeout, this, [=] () {
         d->started.flag = true;
-        d->thread.saveAlbumArt(d->engine->snapshot());
+        d->engine->grabFrame([=] (const QImage &frame) {
+            if (d->started.flag) // not if playback ended meanwhile
+                d->thread.saveAlbumArt(frame);
+        });
     });
     d->thread.moveToThread(&d->thread);
 }

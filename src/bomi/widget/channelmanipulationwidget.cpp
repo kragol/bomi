@@ -17,16 +17,30 @@ struct ChannelManipulationWidget::Data {
 
     ObjectStorage storage;
 
+    // mpv's mp_chmap is internal and not installed with libmpv. A layout's
+    // normalised speaker list is derivable from bomi's own ChannelLayout, which
+    // is a bitmask of SpeakerId values declared in WAVEFORMATEXTENSIBLE order -
+    // the same order mp_chmap_reorder_norm() produced, so rows and columns keep
+    // their previous ordering.
+    static auto speakersOf(ChannelLayout layout) -> QVector<mp_speaker_id>
+    {
+        QVector<mp_speaker_id> ids;
+        const int mask = static_cast<int>(layout);
+        for (auto &item : SpeakerIdInfo::items()) {
+            if (mask & static_cast<int>(item.value))
+                ids.push_back(item.data);
+        }
+        return ids;
+    }
     void makeTable() {
         table->blockSignals(true);
-        mp_chmap src, dest;
         ChannelLayout output = this->output->currentEnum();
         ChannelLayout  input = this-> input->currentEnum();
-        auto makeHeader = [] (ChannelLayout layout, mp_chmap &chmap) {
-            _ChmapFromLayout(&chmap, layout);
+        const auto dest = speakersOf(output);
+        const auto src = speakersOf(input);
+        auto makeHeader = [] (const QVector<mp_speaker_id> &ids) {
             QStringList header;
-            for (int i=0; i<chmap.num; ++i) {
-                const int speaker = chmap.speaker[i];
+            for (auto speaker : ids) {
                 Q_ASSERT(_InRange<int>(MP_SPEAKER_ID_FL,
                                        speaker, MP_SPEAKER_ID_SR));
                 auto abbr = ChannelLayoutMap::channelNames()[speaker].abbr;
@@ -34,11 +48,11 @@ struct ChannelManipulationWidget::Data {
             }
             return header;
         };
-        auto header = makeHeader(output, dest);
+        auto header = makeHeader(dest);
         table->setRowCount(header.size());
         table->setVerticalHeaderLabels(header);
 
-        header = makeHeader(input, src);
+        header = makeHeader(src);
         table->setColumnCount(header.size());
         table->setHorizontalHeaderLabels(header);
 
@@ -48,9 +62,6 @@ struct ChannelManipulationWidget::Data {
         hv->setSectionResizeMode(QHeaderView::ResizeToContents);
         hv->setDefaultAlignment(Qt::AlignRight);
 
-        mp_chmap_reorder_norm(&dest);
-        mp_chmap_reorder_norm(&src);
-
         for (int i=0; i<table->rowCount(); ++i) {
             for (int j=0; j<table->columnCount(); ++j) {
                 auto item = table->item(i, j);
@@ -59,10 +70,9 @@ struct ChannelManipulationWidget::Data {
                     item = new QTableWidgetItem;
                     table->setItem(i, j, item);
                 }
-                auto &sources = man.sources((mp_speaker_id)dest.speaker[i]);
+                auto &sources = man.sources(dest[i]);
                 item->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
-                const auto speaker = static_cast<mp_speaker_id>(src.speaker[j]);
-                const auto has = sources.contains(speaker);
+                const auto has = sources.contains(src[j]);
                 item->setCheckState(has ? Qt::Checked : Qt::Unchecked);
             }
         }
@@ -73,13 +83,8 @@ struct ChannelManipulationWidget::Data {
     void fillMap() {
         if (!table->rowCount() || !table->columnCount())
             return;
-        mp_chmap src, dst;
-        auto getChMap = [] (mp_chmap &chmap, ChannelLayout layout) {
-            _ChmapFromLayout(&chmap, layout);
-            mp_chmap_reorder_norm(&chmap);
-        };
-        getChMap(src, currentInput);
-        getChMap(dst, currentOutput);
+        const auto src = speakersOf(currentInput);
+        const auto dst = speakersOf(currentOutput);
         auto &man = map.get(currentInput, currentOutput);
         for (int i=0; i<table->rowCount(); ++i) {
             ChannelManipulation::SourceArray sources;
@@ -88,9 +93,9 @@ struct ChannelManipulationWidget::Data {
                 if (!item)
                     continue;
                 if (item->checkState() == Qt::Checked)
-                    sources.append((mp_speaker_id)src.speaker[j]);
+                    sources.append(src[j]);
             }
-            man.set((mp_speaker_id)dst.speaker[i], sources);
+            man.set(dst[i], sources);
         }
     }
 };

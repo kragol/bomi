@@ -2,6 +2,7 @@
 #define PLAYENGINE_P_HPP
 
 #include "playengine.hpp"
+#include <atomic>
 #include "mpv_helper.hpp"
 #include "mpv.hpp"
 #include "mrlstate_p.hpp"
@@ -16,6 +17,7 @@
 #include "misc/charsetdetector.hpp"
 #include "audio/audiocontroller.hpp"
 #include "audio/audioformat.hpp"
+#include "audio/audionormalizeroption.hpp"
 #include "video/videorenderer.hpp"
 #include "video/videoprocessor.hpp"
 #include "video/videopreview.hpp"
@@ -109,11 +111,26 @@ struct PlayEngine::Data {
     bool hasImage = false, seekable = false, hasVideo = false;
     bool pauseAfterSkip = false, resume = false, hwdec = false;
     bool quit = false, preciseSeeking = false, mouseOnButton = false;
+    bool displaySync = true;
     bool filterResync = false, audioOnly = false, useIntrplDown = false;
 
-    QList<CodecId> hwCodecs;
+    QStringList hwCodecs;
+    QMetaObject::Connection screenConnection;
+    qreal displayFps = -1;
+    bool followingScreen = false;
+    auto setDisplayFps(qreal hz) -> void
+    {
+        if (hz > 0 && _Change(displayFps, hz))
+            mpv.setAsync("display-fps-override", hz);
+    }
+    // Colour adjustment shader files handed to mpv, oldest first, and a serial
+    // for naming them; see updateColorShader().
+    QStringList colorShaders;
+    int colorShaderSerial = 0;
 
     int avSync = 0, reload = -1, volumeScale = 0;
+    bool softClip = true;
+    AudioNormalizerOption normalizer = AudioNormalizerOption::default_();
     int time_s = 0, begin_s = 0, end_s = 0, duration_s = 0;
     int duration = 0, begin = 0, time = 0;
 
@@ -132,7 +149,17 @@ struct PlayEngine::Data {
         SpeedMeasure<quint64> measure{5, 20};
     } frames;
 
-    struct { QImage osd, frame; bool take = false; int time = 0; } ss;
+    // Snapshot capture, see takeSnapshot(). stage is the capture the render
+    // thread should make on its next pass: 1 with subtitles, 2 without.
+    struct {
+        QImage osd, frame; int time = 0; QSize size;
+        std::atomic<int> stage{0}; bool hidSubtitles = false;
+    } ss;
+    // A one-pass capture for grabFrame(), independent of snapshots.
+    struct {
+        std::atomic<bool> pending{false}; QSize size;
+        std::function<void(const QImage&)> done;
+    } grab;
     QPoint mouse;
 
     auto resync(bool force = false) -> void;
@@ -160,14 +187,18 @@ struct PlayEngine::Data {
     auto vf(const MrlState *s) const -> QByteArray;
     auto vo(const MrlState *s) const -> QByteArray;
     auto updateVideoScaler() -> void;
-    auto videoSubOptions(const MrlState *s) const -> QByteArray;
+    auto setScalerProperties(const QByteArray &prefix, const QByteArray &opt) -> void;
     auto updateVideoSubOptions() -> void;
+    auto updateColorShader(const QMatrix4x4 &matrix) -> void;
+    auto removeColorShaders(int keep) -> void;
     auto updateVideoRendererFboFormat() -> void;
-    auto renderVideoFrame(Fbo *frame, Fbo *osd, const QMargins &m) -> void;
+    auto renderVideoFrame(Fbo *frame) -> void;
     auto displaySize() const { return info.video.output()->size(); }
     auto post(State state) -> void { _PostEvent(p, StateChange, state); }
     auto post(Waitings w, bool set) -> void { _PostEvent(p, WaitingChange, w, set); }
-    auto volume(const MrlState *s) const -> double;
+    auto gain(const MrlState *s) const -> double;
+    auto updateAudioGain() -> void;
+    auto updateAudioFilter() -> void;
     auto loadfile(const Mrl &mrl, bool resume, const QString &sub = QString()) -> void;
     auto updateMediaName(const QString &name = QString()) -> void;
 
@@ -186,6 +217,7 @@ struct PlayEngine::Data {
         return true;
     }
     auto takeSnapshot() -> void;
+    auto snapshotCaptured(int stage, const QImage &image) -> void;
     auto localCopy() -> QSharedPointer<MrlState>;
     auto onLoad() -> void;
     auto onUnload() -> void;

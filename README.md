@@ -16,7 +16,29 @@ This is a fork of [bm16ton/bomi](https://github.com/bm16ton/bomi), itself a fork
 the original [xylosper/bomi](https://github.com/xylosper/bomi), which stopped in 2016.
 It carries the changes needed to build and run on a current Linux distribution
 (tested on Arch with gcc 16, Qt 5.15 and Python 3.14) and to work under a
-Wayland desktop session.
+Wayland desktop session, and it ports bomi from its vendored 2016 mpv to the
+system libmpv.
+
+### Branches
+
+* **`master`** builds against the system **libmpv** (>= 2.0, i.e. mpv 0.30 or
+  later) through mpv's render API, and against whatever FFmpeg that libmpv uses.
+  Nothing is vendored. This is where development happens.
+* **`legacy`** is bomi as it was before the libmpv port: the vendored, patched
+  mpv (client API 1.18, early 2016) in `src/mpv`, linked statically against a
+  pinned in-tree FFmpeg 4.0.1, with bomi's own audio and video filters running
+  inside mpv's filter chains. It is kept on purpose, for two reasons:
+  * **Regression testing.** It is the reference for how bomi behaved before the
+    port: when something sounds, looks or performs differently on `master`,
+    build `legacy` and compare.
+  * **A base for contributors** who want to work on the vendored version, or
+    need code the port removed (the audio mixer, normalizer and channel
+    mapping, the motion interpolator, the software deinterlacers, bomi's own
+    VA-API/VDPAU support).
+
+  It receives no new features. Its README describes how to build it (it needs a
+  Python older than 3.12 and `nasm`); its `arch/PKGBUILD` packages it as
+  `bomi-git` too, so the two cannot be installed side by side.
 
 The history of this fork was rewritten once, on 2026-09-07. bm16ton's
 [`e28c64a2`](../../commit/e28c64a235eafba093d2bf5f5459cffe75af6427)
@@ -38,13 +60,13 @@ reviewed the code. Weigh that as you see fit before running it or merging from i
 
 Two things are worth knowing before you dig in:
 
-* bomi is not an ordinary libmpv client. It vendors a patched mpv (client API
-  1.18, early 2016) in `src/mpv`, links it **statically**, includes mpv's
-  internal headers, and overrides mpv's own `af_info_dummy` and
-  `vf_info_noformat` symbols at link time so that bomi's audio and video
-  filters run inside mpv's filter chain. mpv deleted that architecture in
-  0.30, so building against a modern system libmpv is a rewrite, not a version
-  bump. The vendored mpv and the pinned in-tree FFmpeg are not optional.
+* bomi used to be no ordinary libmpv client: it vendored a patched 2016 mpv,
+  linked it statically and ran its own audio and video filters inside mpv's
+  filter chains, an architecture mpv deleted in 0.30. On `master` it is an
+  ordinary render-API client of the system libmpv, and what those filters did
+  is now done by mpv (a lavfi audio graph, `--deinterlace`, GPU interpolation,
+  user shaders for colour adjustment). See "Known issues after the libmpv
+  port" below for what that changed, and the `legacy` branch for the old code.
 * bomi is an X11 client. It uses xcb directly for fullscreen, always-on-top,
   drag-to-move and screensaver inhibition. Under a Wayland session it runs on
   XWayland: it defaults `QT_QPA_PLATFORM` to `xcb` when an X display is
@@ -58,38 +80,26 @@ In order to build bomi, you need next tools:
 
 * `g++` or `clang` which supports C++14
 * `pkg-config`
-* `python` — plus an interpreter older than 3.12 for mpv's bundled waf, which
-  predates the removal of `imp` and `distutils`. `./configure` looks for
-  `python3.9`/`3.10`/`3.11`, including pyenv installs; override with
-  `--python=/path/to/python`.
-* `nasm` for FFmpeg's x86 assembly. Without it the in-tree FFmpeg still
-  builds, just without hand-written assembly.
+* Qt 5 `qmake` and `lrelease`
 * `git` if you try to build from git repository
 
 You have to prepare next libraries, too:
 
-* Qt5 >= 5.2
+* Qt5 >= 5.2, with QtQuick and QtQuick.Controls 1.x
 * OpenGL >= 2.1 with framebuffer object support
-* FFmpeg (libav is not supported) (*)
-  * libavformat >= 55.12.0 (*)
-  * libavcodec >= 55.34.1 (*)
-  * libavutil >= 52.48.101 (*)
-  * libavfilter (*)
-  * libswresample (*)
-  * libswscale (*)
-* chardet (*)
-* libmpg123
-* libass
-* dvdread dvdnav
+* libmpv (`mpv` >= 2.0, i.e. mpv 0.30 or later)
+* FFmpeg (libav is not supported): libavformat, libavcodec, libavutil,
+  libavfilter, libswresample, libswscale -- the ones your libmpv uses
+* libass >= 0.12.1
+* dvdread, dvdnav
 * libbluray
-* icu-uc
-* xcb xcb-icccm x11
-* libva libva-glx libva-x11
-* vdpau
+* chardet (*)
+* glib-2.0, gobject-2.0
+* xcb, xcb-icccm, xcb-screensaver, xcb-randr, xcb-xtest, x11
 * alsa
 
 Each item corresponds to its package name for `pkg-config` command except Qt and OpenGL.
-Some packages marked with (*) can be in-tree-built.
+chardet, marked with (*), can be built in-tree.
 
 ## Compilation
 
@@ -105,23 +115,7 @@ At first, prepare the source code.
 
 ### In-tree build packages
 
-**The in-tree FFmpeg is required, not optional.** It is pinned to 4.0.1, because
-the vendored mpv in `src/mpv` carries API fixes written against ffmpeg 4.0 and will
-not build against a current system FFmpeg. `./configure` prepends `build/lib/pkgconfig`
-to `PKG_CONFIG_PATH`, so build FFmpeg first and **re-run `./configure` afterwards** —
-otherwise bomi is configured against your system FFmpeg and nothing will link.
-
-* To build FFmpeg in-tree, run next:
-```
-$ ./download-ffmpeg
-$ ./build-ffmpeg
-```
-
-`build-ffmpeg` applies everything in `patches/ffmpeg-*.patch` first, idempotently.
-Currently that is a backport of upstream `effadce6`, without which modern binutils
-rejects the inline assembly in `libavcodec/x86/mathops.h`.
-
-chardet can also be built in-tree if your distribution lacks it; skip it if
+chardet can be built in-tree if your distribution lacks it; skip it if
 `pkg-config chardet` already works.
 
 * To build chardet in-tree, run next:
@@ -143,17 +137,13 @@ For a build you can run straight from the source tree, pass `--developer`; it
 points the skin, import and translation paths at `src/bomi` instead of the
 install prefix. Do not use it when building a package.
 
-Hardware decoding (VA-API and VDPAU) is off in the tested configuration:
-```
-$ ./configure --disable-vaapi --disable-vdpau
-```
-Both paths are GLX-based and predate the current drivers. They still compile,
-but have not been verified on this fork.
+Hardware decoding is mpv's: enable it in Preferences > Video > Hardware
+acceleration, and mpv picks the backend (nvdec, VA-API, Vulkan...). There is no
+build option for it.
 
-Earlier revisions of this README told you to comment out `extern int pause (void);`
-in `/usr/include/unistd.h` before building and put it back afterwards. That is no
-longer necessary: the collision was a `static void pause()` in mpv's
-`audio/out/ao_pulse.c`, which is now named `audio_pause()`.
+Build with `make` from the top level, not `make release` inside `src/bomi` -- the
+latter produces a binary with no skins or imports, which loads no QML at all and
+looks like a renderer bug rather than a build mistake.
 
 #### Test purpose
 If you want to try bomi without install, run next commands in order to build bomi:
@@ -195,9 +185,6 @@ package() {
 ```
 where `$pkgdir` is the fake root system. `jack` and `cdda` support is also enabled in this example.
 
-That snippet is upstream's and is incomplete for this fork: it never builds the in-tree
-FFmpeg, so `./configure` picks up the system one and nothing links.
-
 #### Arch Linux
 
 `arch/PKGBUILD` builds this fork as a `bomi-git` package. It fetches from this
@@ -211,10 +198,10 @@ $ cd arch && makepkg -si
 It carries an `epoch`, because the AUR `bomi-git` reports a higher commit count than
 this branch does and pacman would otherwise read the fork as a downgrade.
 
-Two things it works around, both explained in comments there: the in-tree FFmpeg
-tarball is a `source=` entry rather than a `./download-ffmpeg` call, since `build()`
-is supposed to run offline; and `./build-ffmpeg` has to run before `./configure`,
-not after.
+It fetches `master` and builds against the system `mpv` and `ffmpeg`; nothing is
+vendored. Their libraries are declared by soname, so pacman holds back an mpv or
+ffmpeg update that bumps a soname until you rebuild `bomi-git`. The `legacy`
+branch has its own `arch/PKGBUILD`, which fetches `legacy`.
 
 To have `pacman -Syu` offer rebuilds the way it does for repository packages, put the
 built package in a [local repository](https://wiki.archlinux.org/title/Pacman/Tips_and_tricks#Custom_local_repository):
@@ -232,9 +219,9 @@ SigLevel = Optional TrustAll
 Server = file:///home/YOUR_USER/pkgrepo
 ```
 
-Rebuilding after a `git pull` bumps `pkgver` from
-`git describe`, so the new build sorts above the installed one and shows up as a
-normal update.
+Rebuilding after new commits bumps `pkgver` (commits since v0.9.11, counted from
+that commit's hash because the GitHub repository carries no tags), so the new
+build sorts above the installed one and shows up as a normal update.
 
 ## Known issues in this fork
 
@@ -248,20 +235,51 @@ normal update.
 * **Font drop-down rows all take the height of the first row.** No clipping has been
   observed, but a family with unusually tall metrics sorting first could cause it. The
   fix would be an item delegate returning a padded height.
-* **Hardware decoding is off, deliberately.** Builds are configured with
-  `--disable-vaapi --disable-vdpau`. bomi's VA-API path hardcodes the GLX interop
-  (`vaGetDisplayGLX`), which the current NVIDIA VA driver — an EGL/NVDEC bridge — does not
-  implement, so only VDPAU is reachable. VDPAU still works on the NVIDIA blob, but Mesa
-  removed it in 25.3.0 and NVIDIA has deprecated it for NVDEC/NVENC, and the vendored mpv
-  is far too old to offer nvdec, CUDA, Vulkan or EGL VA-API instead. Software decoding
-  keeps up fine, so enabling it buys little.
-* **No display sync, so frame pacing is approximate.** `--video-sync` and `interpolation`
-  do not exist in the vendored mpv; upstream added them in 0.18 and this tree is
-  0.14/0.15. Playback is audio-synced, which judders whenever the frame interval does not
-  divide the refresh interval — choosing a display mode that divides evenly into your
-  content's frame rate helps more than anything in this codebase. bomi's own motion
-  interpolation (Preferences > Video Processing) is the built-in mitigation. A proper fix
-  means porting to a modern libmpv.
+## Known issues after the libmpv port
+
+`master` links the system libmpv instead of the vendored mpv (the `legacy` branch).
+Hardware decoding and display sync work as a result, but bomi ran its own audio and
+video filters *inside* mpv's filter chains, and modern mpv has no such chains. Most
+of what they did is now done by mpv; the items below are what is still missing or
+different. `TODO.md` tracks them.
+
+### Direct rendering is still off
+
+Software decoding now costs what plain `mpv` costs (4K HEVC 10-bit: about 185% CPU,
+a new frame every vsync). The port's earlier 850–1000% came from running yadif on
+every frame, not from the render path. But mpv still logs `DR failed - disabling`,
+so each decoded frame is copied once more than necessary. Direct rendering needs
+`MPV_RENDER_PARAM_ADVANCED_CONTROL`. New frames are now rendered from the scene-graph
+render thread, with `mpv_render_context_update()` called there, which that mode
+requires. It deadlocked when tried on the old GUI-thread path and has not been
+retried since.
+
+### Controls that are still shown but do nothing
+
+* **Channel manipulation** (Preferences > Audio). Not ported yet, and low priority:
+  mpv's own downmix is used, and the custom speaker mapping is ignored. The equalizer,
+  normalizer, soft clip, amplifier and tempo scaler are back as a lavfi graph in
+  mpv's `--af`. `AudioController` remains an inert stub.
+* **The spectrum visualizer.** The hardest to bring back: libmpv exposes no way to tap
+  decoded PCM, so it would need an out-of-band route.
+* **Motion smoothing** is now mpv's GPU frame interpolation, not bomi's own CPU
+  interpolator, which is inert.
+* **Deinterlacing** is mpv's `--deinterlace=auto`: interlaced frames only, with
+  `bwdif` (`bwdif_cuda` under nvdec). The method choices in Preferences (Bob,
+  LinearBob, CubicBob, Yadif, field doubling) are ignored; bomi's own
+  implementations are inert.
+* **Video scaling** is mpv's, not bomi's custom GL kernels — generally better, but a
+  behaviour change.
+
+### Smaller regressions
+
+* **The normalizer gain readout in the play info panel is empty.** `dynaudnorm` does
+  the normalizing now and does not report its current gain.
+* **DVD menu hit-testing is gone** with the `disc-mouse-on-button` property.
+* **`vsync-ratio` in the play info panel looks wrong** — it reads 1.4–3.0 where ~6
+  would be expected for 24fps content on a 143.84Hz output. It may be counting render
+  callbacks rather than vsyncs under `vo=libmpv`. Worth understanding before trusting
+  the display-sync figures.
 
 ## Contacts
 

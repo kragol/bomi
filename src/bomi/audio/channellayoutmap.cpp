@@ -20,12 +20,6 @@ auto _ChmapNameFromLayout(ChannelLayout layout) -> QByteArray
     }
 }
 
-auto _ChmapFromLayout(mp_chmap *chmap, ChannelLayout layout) -> bool
-{
-    const auto data = _ChmapNameFromLayout(layout);
-    return mp_chmap_from_str(chmap, bstr0(data.constData()));
-}
-
 SIA to_mp_speaker_id(SpeakerId speaker) -> mp_speaker_id
     { return SpeakerIdInfo::data(speaker); }
 
@@ -143,53 +137,9 @@ ChannelLayoutMap::ChannelLayoutMap()
     m_map = map;
 }
 
-auto ChannelLayoutMap::isIdentity(const mp_chmap &src, const mp_chmap &dest) const -> bool
-{
-    const auto ls = toLayout(src);
-    const auto ld = toLayout(dest);
-    if (ls != ld)
-        return false;
-    auto man = m_map[ls][ld];
-    for (int i = 0; i < dest.num; ++i) {
-        const auto out = (mp_speaker_id)dest.speaker[i];
-        if (!man.hasSources(out))
-            return false;
-        const auto &s = man.sources(out);
-        if (s.size() != 1)
-            return false;
-        if (s.first() != out)
-            return false;
-    }
-    return true;
-}
-
 auto ChannelLayoutMap::default_() -> ChannelLayoutMap
 {
     return ChannelLayoutMap();
-}
-
-auto ChannelLayoutMap::toLayout(const mp_chmap &chmap) -> ChannelLayout
-{
-    auto &items = SpeakerIdInfo::items();
-    int layout = 0;
-    for (int i=0; i<chmap.num; ++i) {
-        auto id = (SpeakerId)(-1);
-        for (auto &item : items) {
-            if (item.data == chmap.speaker[i]) {
-                id = item.value;
-                break;
-            }
-        }
-        if (id < 0) {
-            char str[64] = {0};
-            _Error("Cannot convert mp_chmap(%%) to ChannelLayout",
-                   mp_chmap_to_str_buf(str, 64, &chmap));
-            talloc_free(str);
-            return ChannelLayoutInfo::default_();
-        }
-        layout |= static_cast<int>(id);
-    }
-    return ChannelLayoutInfo::from(layout);
 }
 
 auto ChannelLayoutMap::toString() const -> QString

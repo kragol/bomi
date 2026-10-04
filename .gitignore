@@ -5,7 +5,6 @@ windows/latest/*
 windows/repo/
 windows/*.exe
 windows/packages/net.xylosper.bomi*/data/*
-src/mpv/.git
 src/libchardet*
 src/ffmpeg*
 src/build-*
@@ -26,7 +25,6 @@ src/bomi/object_script.bomi*
 moc_*.cpp
 a.out
 *-build-*
-build-mpv
 Makefile
 build/*
 arch/pkg
