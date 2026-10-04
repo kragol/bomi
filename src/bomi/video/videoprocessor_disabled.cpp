@@ -1,15 +1,15 @@
 // Inert VideoProcessor for the libmpv port.
 //
-// The real implementation (videoprocessor.cpp, still on disk but out of the
-// build) ran bomi's motion interpolator, software deinterlacers and colour
-// conversion *inside* mpv's video filter chain, by overriding mpv's
-// vf_info_noformat symbol at link time. Modern mpv replaced the vf chain with
-// libavfilter, so there is nothing to inject into.
+// The real implementation (videoprocessor.cpp and the video filter classes
+// under video/, kept on the legacy branch) ran bomi's motion interpolator,
+// software deinterlacers and colour conversion *inside* mpv's video filter
+// chain, by overriding mpv's vf_info_noformat symbol at link time. Modern mpv
+// replaced the vf chain with libavfilter, so there is nothing to inject into.
 //
 // The class keeps its interface so PlayEngine and the preferences UI are
-// untouched. Deinterlacing has already moved to mpv's own --vf=yadif (see
-// PlayEngine::Data::vf); motion interpolation is deferred, with mpv's native
-// GPU `interpolation` the intended replacement.
+// untouched. Deinterlacing is mpv's own --deinterlace=auto (see
+// PlayEngine::Data::loadfile()), and motion smoothing is mpv's GPU
+// `interpolation`.
 
 #include "videoprocessor.hpp"
 #include "enum/colorspace.hpp"
