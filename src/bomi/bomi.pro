@@ -91,7 +91,7 @@ HEADERS += \
 	subtitle/richtextdocument.hpp \
 	subtitle/subtitledrawer.hpp \
 	subtitle/subtitlerenderingthread.hpp \
-	subtitle/opensubtitlesfinder.hpp \
+	subtitle/subliminalfinder.hpp \
 	quick/busyiconitem.hpp \
 	quick/toplevelitem.hpp \
 	quick/itemwrapper.hpp \
@@ -163,7 +163,6 @@ HEADERS += \
 	misc/downloader.hpp \
 	misc/actiongroup.hpp \
 	misc/dataevent.hpp \
-	misc/xmlrpcclient.hpp \
 	misc/simplelistmodel.hpp \
 	misc/log.hpp \
 	misc/udf25.hpp \
@@ -309,7 +308,7 @@ SOURCES += \
 	subtitle/richtextdocument.cpp \
 	subtitle/subtitledrawer.cpp \
 	subtitle/subtitlerenderingthread.cpp \
-	subtitle/opensubtitlesfinder.cpp \
+	subtitle/subliminalfinder.cpp \
 	quick/geometryitem.cpp \
 	quick/busyiconitem.cpp \
 	quick/toplevelitem.cpp \
@@ -381,7 +380,6 @@ SOURCES += \
 	misc/charsetdetector.cpp \
 	misc/downloader.cpp \
 	misc/actiongroup.cpp \
-	misc/xmlrpcclient.cpp \
 	misc/log.cpp \
 	misc/simplelistmodel.cpp \
 	misc/udf25.cpp \

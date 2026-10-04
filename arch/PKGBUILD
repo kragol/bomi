@@ -41,6 +41,7 @@ depends=('gcc-libs' 'glib2' 'glibc' 'libchardet' 'libgl' 'libxcb'
 makedepends=('git' 'pkgconf' 'qt5-tools' 'mesa')
 
 optdepends=('yt-dlp: streaming website support including YouTube'
+            'subliminal: Find Subtitle (AUR)'
             'libaacs: AACS decryption for Blu-ray support'
             'libbdplus: BD+ decryption for Blu-ray support')
 
