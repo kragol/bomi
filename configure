@@ -129,7 +129,7 @@ f_pkg=4
 parallel=$njobs
 release=
 # Opt-in via --developer. Do not default this to 1: the block that consumes it
-# runs after argument parsing and would silently override --disable-vaapi and
+# runs after argument parsing and would silently override --disable-jack and
 # friends, and would point skindir/importdir at the source tree.
 developer=
 cc=gcc
@@ -267,8 +267,6 @@ pulseaudio=autodetect
 cdda=autodetect
 systemd=autodetect
 samba=autodetect
-vdpau=autodetect
-vaapi=autodetect
 
 mf() { # make_feature
     local value=$(eval echo \$$1)
@@ -286,8 +284,6 @@ $(mf pulseaudio "enable PulseAudio support" "libpulse")
 $(mf cdda "enable CDDA support" "libcdio_paranoia libcdio libcdio_cdda")
 $(mf samba "enable playing through samba" "smbclient")
 $(mf systemd "enable systemd integration" "libsystemd")
-$(mf vdpau "enable VDPAU support for harware acceleration" "vdpau")
-$(mf vaapi "enable VA-API support for harware acceleration" "libva libva-glx libva-x11")
 """
 
 
@@ -354,15 +350,13 @@ heredoc
 
 # --developer only sets defaults, so it has to run *before* the arguments are
 # parsed. Run after, and it silently overrides whatever was asked for on the
-# command line -- --disable-vaapi in particular.
+# command line.
 if has_arg "developer"; then
     printf "developer option enabled.\n"
     if [ "$os" = "linux" ]; then
         jack=enable
         pulseaudio=enable
         cdda=enable
-        vdpau=enable
-        vaapi=enable
     elif [ "$os" = "osx" ]; then
         qtsdk=/usr/local/opt/qt5
         macdeployqt=macdeployqt

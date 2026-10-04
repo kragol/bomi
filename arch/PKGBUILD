@@ -73,11 +73,10 @@ pkgver() {
 build() {
   cd "$srcdir/$_pkgbase"
 
-  # bomi builds against the system libmpv and FFmpeg; nothing is vendored.
-  # --disable-vaapi/--disable-vdpau keep bomi's own GLX-era VA-API and VDPAU
-  # code out; hardware decoding is mpv's business now. The rest are
-  # autodetected by default -- pinning them keeps the package's dependencies
-  # from drifting with whatever is installed here.
+  # bomi builds against the system libmpv and FFmpeg; nothing is vendored, and
+  # hardware decoding is mpv's business. These features are autodetected by
+  # default -- pinning them keeps the package's dependencies from drifting
+  # with whatever is installed here.
   ./configure \
     --prefix=/usr \
     --actiondir=/usr/share/solid/actions \
@@ -85,9 +84,7 @@ build() {
     --enable-pulseaudio \
     --enable-cdda \
     --enable-samba \
-    --enable-systemd \
-    --disable-vaapi \
-    --disable-vdpau
+    --enable-systemd
 
   make
 }
