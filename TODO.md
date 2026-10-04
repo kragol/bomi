@@ -67,6 +67,11 @@ background and measurements behind each item.
   helps yet. Test with high-bitrate 23.976/24fps content, use counter deltas over a
   steady window without touching the UI, and look at a panning shot.
 
+- [ ] **`debian/` and `rpm/` packaging** (inherited from upstream and bm16ton,
+  untested here) still build the vendored mpv (`debian/build.sh` runs mpv's waf,
+  build-depends name `ffmpeg-bomi` and codec libraries). Update them for the
+  system libmpv or drop them; `legacy` keeps the working versions.
+
 ## Beyond the old bomi
 
 - [ ] **HDR output.** HDR sources are already tone-mapped to SDR correctly, which the
