@@ -45,6 +45,8 @@ background and measurements behind each item.
   (`bwdif`, interlaced frames only), so the method and field-doubling choices in
   Preferences are ignored. Prune them to what mpv offers, or map them onto a
   `bwdif`/`yadif` filter that only runs on interlaced frames.
+  The base `OS::HwAcc` class survives only to answer `deintcaps.cpp` (and the
+  Windows code) with "no API"; remove it as part of this.
 - [ ] **bomi's own motion interpolator and GL scaler kernels** are inert, replaced by
   mpv's equivalents. Remove the dead code and any preferences that only drove it.
 
@@ -78,13 +80,7 @@ background and measurements behind each item.
 
 ## Before merging into master
 
-- [ ] Delete `src/mpv` and `src/ffmpeg` (174M). They are no longer built and are kept
-  only for bisecting.
-- [ ] Remove the vestigial `OS::HwAcc` stub and its references in the preferences code.
-- [ ] Rewrite README's Requirements and Compilation sections: the port needs system
-  `libmpv >= 2.0` and no longer builds ffmpeg/mpv in-tree.
-- [ ] Switch `_branch` in `arch/PKGBUILD` back to `master`.
-- [ ] Remove the disabled filter-layer sources once their replacements are in.
+- [ ] Merge PR #1 (maintainer). `legacy` already preserves the pre-port `master`.
 
 ## Done since the port started
 
@@ -109,6 +105,9 @@ background and measurements behind each item.
   refresh-rate changes (only the startup path verified; single monitor here)
 - [x] MPRIS album art captured through the render path (`PlayEngine::grabFrame()`),
   so it works under hardware decoding; it includes subtitles if visible
+- [x] Merge prep: vendored mpv, FFmpeg build scripts, the unbuilt filter layer and
+  bomi's VA-API/VDPAU code removed; README build sections rewritten; PKGBUILD
+  fetches `master`; pre-port `master` kept as the `legacy` branch
 - [x] Audio chain as one lavfi graph in `af`: `dynaudnorm` (normalizer), `volume`
   (volume × amp, so the soft clip sees the full gain as in bomi's mixer),
   10 × `equalizer`, `asoftclip=type=sin`; tempo scaler via `audio-pitch-correction`

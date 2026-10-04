@@ -7,8 +7,7 @@
 # Point _repo at a local checkout (file:///path/to/bomi) if you want to package
 # work in progress -- commit it there first.
 _repo=https://github.com/kragol/bomi
-# The libmpv port has not been merged yet; switch back to master when it is.
-_branch=libmpv-port
+_branch=master
 
 _pkgbase=bomi
 pkgname=$_pkgbase-git
