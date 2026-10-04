@@ -289,9 +289,6 @@ retried since.
 * **The normalizer gain readout in the play info panel is empty.** `dynaudnorm` does
   the normalizing now and does not report its current gain.
 * **DVD menu hit-testing is gone** with the `disc-mouse-on-button` property.
-* **`display-fps-override` is set once at startup.** Correct for one display; moving
-  the window to a second monitor at a different refresh rate will not re-sync it. Run
-  one display at a time, or see the plan for the dynamic version.
 * **`vsync-ratio` in the play info panel looks wrong** — it reads 1.4–3.0 where ~6
   would be expected for 24fps content on a 143.84Hz output. It may be counting render
   callbacks rather than vsyncs under `vo=libmpv`. Worth understanding before trusting

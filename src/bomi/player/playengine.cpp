@@ -1,5 +1,6 @@
 #include "playengine.hpp"
 #include "playengine_p.hpp"
+#include <QScreen>
 #include "app.hpp"
 #include "audio/audionormalizeroption.hpp"
 #include "subtitle/subtitlemodel.hpp"
@@ -299,6 +300,25 @@ auto PlayEngine::initializeGL(const QQuickWindow *w, QOpenGLContext *ctx) -> voi
     d->mpv.initializeGL(ctx);
     connect(w, &QQuickWindow::frameSwapped,
             &d->mpv, &Mpv::frameSwapped, Qt::DirectConnection);
+    // display-fps-override is set once at startup (vo=libmpv cannot detect the
+    // display itself); follow the window to another screen, or a mode change on
+    // its screen, so display sync keeps timing against the right refresh rate.
+    // Runs on the render thread, so hop to the engine's thread for the rest.
+    QMetaObject::invokeMethod(this, [this, w] () {
+        if (d->followingScreen)
+            return; // initializeGL() runs again when the scene graph is rebuilt
+        d->followingScreen = true;
+        auto follow = [this] (QScreen *screen) {
+            disconnect(d->screenConnection);
+            if (!screen)
+                return;
+            d->setDisplayFps(screen->refreshRate());
+            d->screenConnection = connect(screen, &QScreen::refreshRateChanged,
+                                          this, [this] (qreal hz) { d->setDisplayFps(hz); });
+        };
+        connect(w, &QWindow::screenChanged, this, follow);
+        follow(w->screen());
+    }, Qt::QueuedConnection);
 }
 
 auto PlayEngine::finalizeGL(QOpenGLContext */*ctx*/) -> void

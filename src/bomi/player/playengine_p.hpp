@@ -115,6 +115,14 @@ struct PlayEngine::Data {
     bool filterResync = false, audioOnly = false, useIntrplDown = false;
 
     QStringList hwCodecs;
+    QMetaObject::Connection screenConnection;
+    qreal displayFps = -1;
+    bool followingScreen = false;
+    auto setDisplayFps(qreal hz) -> void
+    {
+        if (hz > 0 && _Change(displayFps, hz))
+            mpv.setAsync("display-fps-override", hz);
+    }
     // Colour adjustment shader files handed to mpv, oldest first, and a serial
     // for naming them; see updateColorShader().
     QStringList colorShaders;

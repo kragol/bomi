@@ -62,8 +62,6 @@ background and measurements behind each item.
   is empty with hwdec on. Reuse the render-path snapshot capture instead.
 - [ ] **DVD menu hit-testing** went with `disc-mouse-on-button`. Check whether modern
   mpv's dvdnav exposes anything equivalent, or drop the feature.
-- [ ] **`display-fps-override` is set once at startup.** Update it when the window
-  moves to a monitor with a different refresh rate.
 - [ ] **`vsync-ratio` in the play info panel** reads 1.4–3.0 where about 6 is expected
   for 24fps on 143.84Hz. Find out what it counts under `vo=libmpv` before trusting
   the display-sync figures.
@@ -111,6 +109,8 @@ background and measurements behind each item.
 - [x] Snapshot without subtitles: two captures through bomi's render path,
   the second with `sub-visibility` briefly off. (`screenshot-raw` fails under
   hardware decoding without advanced control.)
+- [x] `display-fps-override` follows the window's screen and that screen's
+  refresh-rate changes (only the startup path verified; single monitor here)
 - [x] Audio chain as one lavfi graph in `af`: `dynaudnorm` (normalizer), `volume`
   (volume × amp, so the soft clip sees the full gain as in bomi's mixer),
   10 × `equalizer`, `asoftclip=type=sin`; tempo scaler via `audio-pitch-correction`
