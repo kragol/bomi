@@ -2,7 +2,7 @@
 
   The playback engine is now the system libmpv (>= 2.0) instead of a vendored,
   patched 2016 mpv with a pinned FFmpeg 4.0.1. The old version lives on as the
-  `legacy` branch (0.9.11).
+  `legacy` branch (0.9.12).
 
   * New: hardware decoding through mpv (nvdec, VA-API, Vulkan...), configurable
     in preferences, codec list read from libmpv

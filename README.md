@@ -21,10 +21,10 @@ system libmpv.
 
 ### Branches
 
-* **`master`** builds against the system **libmpv** (>= 2.0, i.e. mpv 0.30 or
+* **`master`** (0.10.x) builds against the system **libmpv** (>= 2.0, i.e. mpv 0.30 or
   later) through mpv's render API, and against whatever FFmpeg that libmpv uses.
   Nothing is vendored. This is where development happens.
-* **`legacy`** is bomi as it was before the libmpv port: the vendored, patched
+* **`legacy`** (0.9.12, tag `v0.9.12`) is bomi as it was before the libmpv port: the vendored, patched
   mpv (client API 1.18, early 2016) in `src/mpv`, linked statically against a
   pinned in-tree FFmpeg 4.0.1, with bomi's own audio and video filters running
   inside mpv's filter chains. It is kept on purpose, for two reasons:
