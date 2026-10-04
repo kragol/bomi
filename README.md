@@ -219,9 +219,9 @@ SigLevel = Optional TrustAll
 Server = file:///home/YOUR_USER/pkgrepo
 ```
 
-Rebuilding after new commits bumps `pkgver` (commits since v0.9.11, counted from
-that commit's hash because the GitHub repository carries no tags), so the new
-build sorts above the installed one and shows up as a normal update.
+Rebuilding after new commits bumps `pkgver` (commits since the 0.10.0 base, counted
+from a fixed commit hash so clones without tags work too), so the new build sorts
+above the installed one and shows up as a normal update.
 
 ## Known issues in this fork
 
