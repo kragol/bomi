@@ -72,6 +72,25 @@ background and measurements behind each item.
   build-depends name `ffmpeg-bomi` and codec libraries). Update them for the
   system libmpv or drop them; `legacy` keeps the working versions.
 
+- [ ] **Find Subtitle (Tools > Find Subtitle) delivers an advert instead of
+  subtitles.** It uses the opensubtitles.org XML-RPC API anonymously
+  (`subtitle/opensubtitlesfinder.cpp`, user agent `CMPlayerXmlRpcClient v0.1`).
+  Checked 2026-10-04: login and search still work (a query returned 10 results
+  with download links), but an anonymous download returns a one-cue subtitle
+  reading "Become OpenSubtitles.org VIP member to get subtitles". Not a libmpv
+  port regression; the provider changed. Options, roughly in order:
+  - Move to the **OpenSubtitles.com REST API** (`api.opensubtitles.com/api/v1`), as
+    SMPlayer does. It needs an API key (a registered consumer, sent as an
+    `Api-Key` header) and, for downloads, the user's own opensubtitles.com
+    login, so add username/password fields in Preferences. Downloads are
+    quota-limited per account (check the current limits). Searching by movie
+    hash should carry over: bomi already computes the OpenSubtitles 64-bit hash.
+  - Put a small provider interface behind the dialog, so a few popular
+    providers can sit side by side (look at what SMPlayer, VLC's VLSub and
+    subliminal support, and which providers still have a usable API).
+  - Whatever happens, recognise the VIP-advert subtitle and report it as an
+    error, rather than loading it as if it were real.
+
 ## Beyond the old bomi
 
 - [ ] **HDR output.** HDR sources are already tone-mapped to SDR correctly, which the
