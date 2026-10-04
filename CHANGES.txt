@@ -1,3 +1,36 @@
+0.10.0
+
+  The playback engine is now the system libmpv (>= 2.0) instead of a vendored,
+  patched 2016 mpv with a pinned FFmpeg 4.0.1. The old version lives on as the
+  `legacy` branch (0.9.12).
+
+  * New: hardware decoding through mpv (nvdec, VA-API, Vulkan...), configurable
+    in preferences, codec list read from libmpv
+  * New: display sync (video-sync=display-resample), Ctrl+Y; follows the
+    window's screen refresh rate
+  * New: HDR sources are tone-mapped to SDR by mpv
+  * New: subtitles on letterbox through mpv's sub-use-margins
+  * Mod: video frames are rendered from the scene-graph render thread, so GUI
+    activity no longer drops frames
+  * Mod: colour adjustment and Invert/Grayscale/Remap run as an mpv user shader
+    after tone mapping
+  * Mod: audio normalizer, equalizer, soft clip and amplifier run as a lavfi
+    graph (dynaudnorm, equalizer, asoftclip); tempo scaler is mpv's scaletempo2
+  * Mod: deinterlacing is mpv's --deinterlace=auto (bwdif, interlaced frames
+    only); the method choices in preferences are ignored
+  * Mod: motion smoothing and video scaling are mpv's; bomi's own interpolator
+    and scaler kernels are gone
+  * Mod: cache settings map onto mpv's demuxer cache (size, seconds, on disk)
+  * Fix: software decoding no longer runs a deinterlacer on every frame
+    (4K HEVC 10-bit: ~185% CPU instead of ~1000%)
+  * Fix: snapshots without subtitles, and MPRIS album art, work with hardware
+    decoding
+  * Not yet ported: spectrum visualizer, custom channel manipulation (see
+    TODO.md)
+  * Removed: DVD menu clicking, bomi's own VA-API/VDPAU support
+  * Build: needs libmpv >= 2.0 and the FFmpeg it uses; no more in-tree mpv or
+    FFmpeg, no Python < 3.12 or nasm
+
 0.9.11
 
   * New: save button for log viewer

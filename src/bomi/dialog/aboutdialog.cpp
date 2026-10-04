@@ -17,12 +17,15 @@ AboutDialog::AboutDialog(QWidget *parent)
 #define UI_LABEL_ARG(label, arg) d->ui.label->setText(d->ui.label->text().arg)
     UI_LABEL_ARG(version, arg(_L(cApp.version())));
     UI_LABEL_ARG(qt_info, arg(_L(qVersion()), _L(QT_VERSION_STR)));
-    UI_LABEL_ARG(copyright, arg(QDate::currentDate().year()).arg(tr("Lee, Byoung-young")));
-    UI_LABEL_ARG(contacts, arg(link("http://bomi-player.github.io") % "<br>"_a).
-                 arg(link("http://twitter.com/bomi_player") % "<br>"_a).
-                 arg(link("https://github.com/xylosper/bomi/issues") % "<br>"_a).
-                 arg("<a href=\"mailto:darklin20@gmail.com\">darklin20@gmail.com</a><br>"_a));
-    UI_LABEL_ARG(ivan, arg(_L("https://plus.google.com/u/1/117118228830713086299/posts")));
+    // xylosper's own work ended in 2016; the year is not "now".
+    UI_LABEL_ARG(copyright, arg(tr("Lee, Byoung-young")));
+    // This fork first; the original project's pages are history (see README).
+    // xylosper's Twitter and e-mail are no longer listed, and the logo credit's
+    // link pointed at Google+, which shut down in 2019.
+    UI_LABEL_ARG(contacts, arg(link("https://github.com/kragol/bomi"),
+                               link("https://github.com/kragol/bomi/issues"),
+                               link("http://bomi-player.github.io"),
+                               link("https://github.com/xylosper/bomi")));
 #undef UI_LABEL_ARG
     d->ui.license->setText(
        u"This program is free software; "

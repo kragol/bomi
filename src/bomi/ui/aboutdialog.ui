@@ -124,7 +124,7 @@
          <item>
           <widget class="QLabel" name="copyright">
            <property name="text">
-            <string notr="true">Copyright (C) 2008-%1 %2 A.K.A. xylosper</string>
+            <string notr="true">Copyright (C) 2008-2016 %1 A.K.A. xylosper</string>
            </property>
           </widget>
          </item>
@@ -153,10 +153,7 @@
             </sizepolicy>
            </property>
            <property name="text">
-            <string>Website: %1
-Twitter: %2
-Issue tracker: %3
-Developer's E-mail: %4</string>
+            <string>This fork: %1&lt;br&gt;Issue tracker: %2 (no support commitment)&lt;br&gt;&lt;br&gt;Original bomi by xylosper, inactive since 2016:&lt;br&gt;%3&lt;br&gt;%4</string>
            </property>
            <property name="openExternalLinks">
             <bool>true</bool>
@@ -185,7 +182,7 @@ Developer's E-mail: %4</string>
          <item>
           <widget class="QLabel" name="ivan">
            <property name="text">
-            <string>The logo is designed by Ivan from &lt;a href=&quot;%1&quot;&gt;Kotus Works&lt;/a&gt;.</string>
+            <string>The logo is designed by Ivan from Kotus Works.</string>
            </property>
            <property name="textFormat">
             <enum>Qt::RichText</enum>
