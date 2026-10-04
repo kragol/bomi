@@ -1002,23 +1002,43 @@ auto PlayEngine::Data::process(QEvent *event) -> void
     }
 }
 
+// mpv composites subtitles into the frame it renders for bomi, and its own
+// screenshot commands fail under hardware decoding without advanced control
+// (the software fallback cannot read CUDA frames). So both layers are captured
+// through bomi's render path, on two passes: first as displayed, then with
+// sub-visibility briefly off. The render thread only renders and posts the
+// image back; every core call (time-pos, sub-visibility) happens here, on the
+// GUI thread. Subtitles disappear from the screen for a frame or two.
 auto PlayEngine::Data::takeSnapshot() -> void
 {
     p->clearSnapshots();
-    const auto size = displaySize();
-    if (size.isEmpty()) {
+    if (displaySize().isEmpty()) {
         emit p->snapshotTaken();
         return;
     }
-    Fbo frame(size);
-    mpv.render(&frame);
-    // mpv composites OSD/subtitles into the same framebuffer as the video, so
-    // the two can no longer be captured separately. The frame therefore always
-    // carries whatever OSD was visible, and the separate OSD layer is empty.
-    ss.frame = frame.texture().toImage(QImage::Format_ARGB32);
-    ss.osd = QImage(size, QImage::Format_ARGB32_Premultiplied);
-    ss.osd.fill(Qt::transparent);
     ss.time = mpv.get<double>("time-pos") * 1e3;
+    ss.size = displaySize(); // the video's output size, so no letterbox bars
+    ss.stage = 1;
+    vr->updateForNewFrame(displaySize());
+}
+
+auto PlayEngine::Data::snapshotCaptured(int stage, const QImage &image) -> void
+{
+    if (stage == 1) {
+        ss.osd = image;
+        ss.hidSubtitles = mpv.get<bool>("sub-visibility");
+        if (ss.hidSubtitles) {
+            mpv.set("sub-visibility", false);
+            ss.stage = 2;
+            vr->updateForNewFrame(displaySize());
+            return;
+        }
+        ss.frame = image; // nothing to hide: both layers are the same
+    } else {
+        ss.frame = image;
+        if (ss.hidSubtitles)
+            mpv.setAsync("sub-visibility", true);
+    }
     emit p->snapshotTaken();
 }
 
@@ -1031,9 +1051,12 @@ auto PlayEngine::Data::renderVideoFrame(Fbo *frame) -> void
            "render queued frame(%%), avgfps: %%",
            frame->size(), info.video.output()->fps());
 
-    if (ss.take) {
-        takeSnapshot();
-        ss.take = false;
+    if (const int stage = ss.stage.exchange(0)) {
+        Fbo capture(ss.size);
+        mpv.render(&capture);
+        const auto image = capture.texture().toImage(QImage::Format_ARGB32);
+        QMetaObject::invokeMethod(p, [this, stage, image] ()
+            { snapshotCaptured(stage, image); }, Qt::QueuedConnection);
     }
 }
 

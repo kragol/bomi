@@ -18,9 +18,9 @@ background and measurements behind each item.
   - *What it costs:* with the flag set, any wait from the render thread on a thread
     using libmpv becomes a permanent freeze of the mpv core, not a warning. Fix these
     first:
-    - [ ] `PlayEngine::Data::renderVideoFrame()` runs `takeSnapshot()` on the render
-      thread, which calls `mpv.get("time-pos")`, a non-render API. Move snapshotting
-      (or at least that read) off the render thread.
+    - [x] Snapshots no longer make core calls on the render thread: `time-pos` and
+      `sub-visibility` are handled on the GUI thread, and the render pass only
+      renders the capture and posts it back.
     - [ ] Hidden or minimised window: Qt stops rendering, so nothing calls
       `mpv_render_context_update()`, and the decoder can block waiting for it.
       Service it from the render-thread `Waker` even when no frame is drawn. In this
@@ -56,8 +56,10 @@ background and measurements behind each item.
 
 ## Smaller regressions
 
-- [ ] **Snapshot without subtitles** captures them anyway. Try `screenshot video`, or
-  toggle `sub-visibility` around the capture.
+- [ ] **MPRIS album art** (`Mpris` → `PlayEngine::snapshot(bool)`) uses
+  `screenshot-raw`, which fails under hardware decoding without advanced control
+  ("Input image format cuda not supported by libswscale" in the log), so album art
+  is empty with hwdec on. Reuse the render-path snapshot capture instead.
 - [ ] **DVD menu hit-testing** went with `disc-mouse-on-button`. Check whether modern
   mpv's dvdnav exposes anything equivalent, or drop the feature.
 - [ ] **`display-fps-override` is set once at startup.** Update it when the window
@@ -106,6 +108,9 @@ background and measurements behind each item.
 - [x] Cache settings applied again (`cache`, `demuxer-max-bytes`, `cache-secs`,
   `cache-on-disk`; of the old KiB-based options only `cache-secs` was still
   accepted), and the cache readout reads `demuxer-cache-state`
+- [x] Snapshot without subtitles: two captures through bomi's render path,
+  the second with `sub-visibility` briefly off. (`screenshot-raw` fails under
+  hardware decoding without advanced control.)
 - [x] Audio chain as one lavfi graph in `af`: `dynaudnorm` (normalizer), `volume`
   (volume × amp, so the soft clip sees the full gain as in bomi's mixer),
   10 × `equalizer`, `asoftclip=type=sin`; tempo scaler via `audio-pitch-correction`

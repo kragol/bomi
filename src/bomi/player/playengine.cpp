@@ -1169,8 +1169,7 @@ auto PlayEngine::setVideoRotation(Rotation r) -> void
 
 auto PlayEngine::takeSnapshot() -> void
 {
-    d->ss.take = true;
-    d->vr->updateForNewFrame(d->displaySize());
+    d->takeSnapshot();
 }
 
 auto PlayEngine::snapshot(QImage *frame, QImage *osd) -> int

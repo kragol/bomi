@@ -2,6 +2,7 @@
 #define PLAYENGINE_P_HPP
 
 #include "playengine.hpp"
+#include <atomic>
 #include "mpv_helper.hpp"
 #include "mpv.hpp"
 #include "mrlstate_p.hpp"
@@ -140,7 +141,12 @@ struct PlayEngine::Data {
         SpeedMeasure<quint64> measure{5, 20};
     } frames;
 
-    struct { QImage osd, frame; bool take = false; int time = 0; } ss;
+    // Snapshot capture, see takeSnapshot(). stage is the capture the render
+    // thread should make on its next pass: 1 with subtitles, 2 without.
+    struct {
+        QImage osd, frame; int time = 0; QSize size;
+        std::atomic<int> stage{0}; bool hidSubtitles = false;
+    } ss;
     QPoint mouse;
 
     auto resync(bool force = false) -> void;
@@ -198,6 +204,7 @@ struct PlayEngine::Data {
         return true;
     }
     auto takeSnapshot() -> void;
+    auto snapshotCaptured(int stage, const QImage &image) -> void;
     auto localCopy() -> QSharedPointer<MrlState>;
     auto onLoad() -> void;
     auto onUnload() -> void;

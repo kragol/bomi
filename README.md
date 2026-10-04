@@ -286,9 +286,6 @@ retried since.
 
 ### Smaller regressions
 
-* **Snapshots cannot separate video from subtitles.** mpv composites OSD and subtitles
-  into the same framebuffer as the video, so "save without subtitles" captures them
-  anyway.
 * **The normalizer gain readout in the play info panel is empty.** `dynaudnorm` does
   the normalizing now and does not report its current gain.
 * **DVD menu hit-testing is gone** with the `disc-mouse-on-button` property.
