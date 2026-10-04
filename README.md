@@ -291,9 +291,6 @@ retried since.
   anyway.
 * **The normalizer gain readout in the play info panel is empty.** `dynaudnorm` does
   the normalizing now and does not report its current gain.
-* **The cache readout always says Unavailable.** `cache-used` and `cache-size` were
-  removed from mpv; the equivalent lives in the `demuxer-cache-state` map and has not
-  been rewired. Caching itself is unaffected.
 * **DVD menu hit-testing is gone** with the `disc-mouse-on-button` property.
 * **`display-fps-override` is set once at startup.** Correct for one display; moving
   the window to a second monitor at a different refresh rate will not re-sync it. Run

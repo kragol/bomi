@@ -56,8 +56,6 @@ background and measurements behind each item.
 
 ## Smaller regressions
 
-- [ ] **Cache readout** always says Unavailable. Rewire it from the removed
-  `cache-used`/`cache-size` to the `demuxer-cache-state` map.
 - [ ] **Snapshot without subtitles** captures them anyway. Try `screenshot video`, or
   toggle `sub-visibility` around the capture.
 - [ ] **DVD menu hit-testing** went with `disc-mouse-on-button`. Check whether modern
@@ -105,6 +103,9 @@ background and measurements behind each item.
   longer drop video frames (`547add1f`)
 - [x] `arch/PKGBUILD` builds the libmpv port against system mpv/ffmpeg, with
   soname-versioned dependencies and a tag-independent `pkgver()`
+- [x] Cache settings applied again (`cache`, `demuxer-max-bytes`, `cache-secs`,
+  `cache-on-disk`; of the old KiB-based options only `cache-secs` was still
+  accepted), and the cache readout reads `demuxer-cache-state`
 - [x] Audio chain as one lavfi graph in `af`: `dynaudnorm` (normalizer), `volume`
   (volume × amp, so the soft clip sees the full gain as in bomi's mixer),
   10 × `equalizer`, `asoftclip=type=sin`; tempo scaler via `audio-pitch-correction`

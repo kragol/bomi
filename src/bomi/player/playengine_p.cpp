@@ -473,12 +473,14 @@ auto PlayEngine::Data::onLoad() -> void
     const auto cache = local->d->cache.get(mrl);
     t.caching = cache.kb > 0LL;
     if (t.caching) {
-        mpv.setAsync("file-local-options/cache", cache.kb);
-        mpv.setAsync("file-local-options/cache-initial", local->d->cache.playback_kb(cache.kb));
-        mpv.setAsync("file-local-options/cache-seek-min", local->d->cache.seeking_kb(cache.kb));
+        // The old stream cache took its size in KiB through --cache; mpv now
+        // caches in the demuxer, sized by demuxer-max-bytes, and --cache is just
+        // yes/no/auto. cache-initial, cache-seek-min and cache-file-size are gone
+        // with no equivalent (the on-disk cache is bounded by demuxer-max-bytes).
+        mpv.setAsync("file-local-options/cache", "yes"_b);
+        mpv.setAsync("file-local-options/demuxer-max-bytes", QByteArray::number(cache.kb * 1024));
         mpv.setAsync("file-local-options/cache-secs", cache.sec);
-        mpv.setAsync("file-local-options/cache-file", cache.file ? "TMP"_b : ""_b);
-        mpv.setAsync("file-local-options/cache-file-size", local->d->cache.file_kb);
+        mpv.setAsync("file-local-options/cache-on-disk", cache.file);
     } else
         mpv.setAsync("file-local-options/cache", "no"_b);
 
@@ -588,9 +590,21 @@ auto PlayEngine::Data::observe() -> void
     mpv.observeState("paused-for-cache", [=] (bool b) { post(Buffering, b); });
     mpv.observeState("seeking", [=] (bool s) { post(Seeking, s); });
 
-    // cache-used and cache-size were removed. The nearest modern equivalents live
-    // in the demuxer-cache-state map rather than as scalar byte counts, so the
-    // cache readout stays at zero for now instead of reporting wrong units.
+    // cache-used and cache-size (KiB) were removed. Used is now fw-bytes in the
+    // demuxer-cache-state map, the packets buffered ahead of playback, and size
+    // is the forward capacity, demuxer-max-bytes. Both are read on each cache
+    // state change so they start reporting as soon as caching does, and stay at
+    // zero (shown as Unavailable) when bomi has not enabled caching, as before.
+    mpv.observe("demuxer-cache-state", [=] () {
+        if (!t.caching)
+            return QPoint();
+        const auto state = mpv.get<QVariant>("demuxer-cache-state").toMap();
+        const auto max = mpv.get<QVariant>("demuxer-max-bytes").toLongLong();
+        return QPoint(state[u"fw-bytes"_q].toLongLong() / 1024, max / 1024);
+    }, [=] (QPoint cache) {
+        info.cache.setUsed(cache.x());
+        info.cache.setSize(cache.y());
+    });
 
     mpv.observe("seekable", [=] () {
         return t.seekable >= 0 ? !!t.seekable : mpv.get<bool>("seekable");
