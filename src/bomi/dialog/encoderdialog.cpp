@@ -356,39 +356,33 @@ auto EncoderDialog::run() -> QString
         const auto color = [] (const QColor &color) { return color.name(QColor::HexArgb).toLatin1(); };
         const auto &style = d->style;
         const auto &font = style.font;
-        d->mpv->setOption("sub-text-color", color(font.color));
-        QStringList fontStyles;
-        if (font.bold())
-            fontStyles.append(u"Bold"_q);
-        if (font.italic())
-            fontStyles.append(u"Italic"_q);
-        QString family = font.family();
-        if (!fontStyles.isEmpty())
-            family += ":style="_a % fontStyles.join(' '_q);
+        // Same mapping as PlayEngine::Data::updateSubtitleStyle(): mpv renamed
+        // the sub-text-* options, and draws a box or a shadow, not both.
         const double factor = font.size * 720.0;
-        d->mpv->setOption("sub-text-font", family.toUtf8());
-        d->mpv->setOption("sub-text-font-size", _n(factor));
-        const auto &outline = style.outline;
         const auto scaled = [factor] (double v)
             { return qBound(0., v*factor, 10.); };
-        if (outline.enabled) {
-            d->mpv->setOption("sub-text-border-size", _n(scaled(outline.width)));
-            d->mpv->setOption("sub-text-border-color", color(outline.color));
-        } else
-            d->mpv->setOption("sub-text-border-size", "0.0");
-        const auto &bbox = style.bbox;
-        if (bbox.enabled)
-            d->mpv->setOption("sub-text-back-color", color(bbox.color));
-        else
-            d->mpv->setOption("sub-text-back-color", color(Qt::transparent));
+        d->mpv->setOption("sub-font", font.family().toUtf8());
+        d->mpv->setOption("sub-font-size", _n(factor));
+        d->mpv->setOption("sub-color", color(font.color));
+        d->mpv->setOption("sub-bold", font.bold() ? "yes" : "no");
+        d->mpv->setOption("sub-italic", font.italic() ? "yes" : "no");
+        const auto &outline = style.outline;
+        d->mpv->setOption("sub-outline-size", outline.enabled ? _n(scaled(outline.width)) : "0.0");
+        d->mpv->setOption("sub-outline-color", color(outline.color));
         auto norm = [] (const QPointF &p) { return sqrt(p.x()*p.x() + p.y()*p.y()); };
+        const auto &bbox = style.bbox;
         const auto &shadow = style.shadow;
-        if (shadow.enabled) {
-            d->mpv->setOption("sub-text-shadow-color", color(shadow.color));
-            d->mpv->setOption("sub-text-shadow-offset", _n(scaled(norm(shadow.offset))));
+        if (bbox.enabled) {
+            d->mpv->setOption("sub-border-style", "background-box");
+            d->mpv->setOption("sub-back-color", color(bbox.color));
+            d->mpv->setOption("sub-shadow-offset",
+                              _n(scaled(qMax(bbox.padding.x(), bbox.padding.y()))));
         } else {
-            d->mpv->setOption("sub-text-shadow-color", color(Qt::transparent));
-            d->mpv->setOption("sub-text-shadow-offset", "0.0");
+            d->mpv->setOption("sub-border-style", "outline-and-shadow");
+            d->mpv->setOption("sub-back-color",
+                              color(shadow.enabled ? shadow.color : QColor(Qt::transparent)));
+            d->mpv->setOption("sub-shadow-offset",
+                              shadow.enabled ? _n(scaled(norm(shadow.offset))) : "0.0");
         }
         // these should be applied?
         //    d->mpv.setAsync("ass-force-margins", d->vr->overlayOnLetterbox() && override); };
