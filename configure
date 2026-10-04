@@ -16,24 +16,20 @@ has_arg() {
 qtsdk=
 kern=`uname -s`
 njobs=
-mpv_args=
 os=
 win=
 mkspec=
 if [ "$kern" = "Darwin" ]; then
     os="osx"
-    mpv_args="$mpv_args --enable-coreaudio --enable-vda-hwaccel" #
     njobs=`sysctl hw.ncpu | awk '{print $2}'`
     mkspec=macx-clang
     echo "configure for OS X..."
 elif [ "$kern" = "Linux" ]; then
     os="linux"
-    mpv_args="$mpv_args --enable-alsa --enable-oss-audio"
     njobs=$(nproc)
     echo "configure for Linux..."
 elif [[ "$kern" = MINGW* ]]; then
     os="win"
-    mpv_args="$mpv_args --enable-dsound --enable-wasapi --enable-dxva2-hwaccel"
     njobs=$(nproc)
     mkspec=win32-g++
 	if [[ "$kern" = MINGW64* ]]; then
@@ -136,7 +132,6 @@ release=
 # runs after argument parsing and would silently override --disable-vaapi and
 # friends, and would point skindir/importdir at the source tree.
 developer=
-python=autodetect
 cc=gcc
 cxx=g++
 qmake=autodetect
@@ -151,7 +146,6 @@ mo() {
 config_opts="""
 --help|display this help and exit
 --cc=COMPILER|C compiler (corresponding C++ compiler will be detected)|$cc
---python=PYTHON|python used to run mpv's waf build (needs < 3.12)|autodetect
 --win=ARCH|32 for 32bit or 64 for 64bit(only Windows)|$win
 --qtsdk=QTSDK|directory for Qt SDK|
 --qmake=QMAKE|qmake executable|$qmake
@@ -296,19 +290,6 @@ $(mf vdpau "enable VDPAU support for harware acceleration" "vdpau")
 $(mf vaapi "enable VA-API support for harware acceleration" "libva libva-glx libva-x11")
 """
 
-add_mpv() {
-    mpv_args="$mpv_args --$1-$2"
-}
-setup_features() {
-    add_mpv $jack jack
-    add_mpv $pulseaudio pulse
-    add_mpv $cdda cdda
-    add_mpv $samba libsmbclient
-    add_mpv $vdpau vdpau
-    add_mpv $vdpau vdpau-gl-x11
-    add_mpv $vaapi vaapi
-    add_mpv $vaapi vaapi-glx
-}
 
 options="""
 $config_opts
@@ -514,7 +495,6 @@ check_feature_one() {
 loop_options "$feature_opts" check_feature_one
 
 setup_dirs
-setup_features
 setup_build
 
 add_define BOMI_SKINS_PATH "\"$skindir\""
