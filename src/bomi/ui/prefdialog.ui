@@ -303,57 +303,6 @@
           </widget>
          </item>
          <item>
-          <widget class="QGroupBox" name="subtitle_finder">
-           <property name="title">
-            <string>Subtitle finder</string>
-           </property>
-           <layout class="QVBoxLayout" name="verticalLayout_25">
-            <item>
-             <widget class="QCheckBox" name="preserve_downloaded_subtitles">
-              <property name="text">
-               <string>Preserve downloaded subtitles</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <layout class="QFormLayout" name="formLayout_2">
-              <item row="0" column="0">
-               <widget class="QLabel" name="label_2">
-                <property name="text">
-                 <string>File Name Format</string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="1">
-               <widget class="QLineEdit" name="preserve_file_name_format">
-                <property name="toolTip">
-                 <string>Available formatting placeholders:
-%MEDIA_NAME%: the name of media file (extension is excluded)
-%SUBTITLE_NAME%: the name of subtitle file (extension is excluded)
-%SUBTITLE_EXT%: the extension of subtitle file</string>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="0">
-               <widget class="QLabel" name="label_3">
-                <property name="text">
-                 <string>Fallback Folder</string>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="1">
-               <widget class="QLineEdit" name="preserve_fallback_folder">
-                <property name="toolTip">
-                 <string>This is a fallback folder to save downloaded subtitles when original folder is not writable.</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-           </layout>
-          </widget>
-         </item>
-         <item>
           <spacer name="verticalSpacer_11">
            <property name="orientation">
             <enum>Qt::Vertical</enum>
@@ -1270,6 +1219,107 @@
             </size>
            </property>
           </spacer>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="sub_find">
+        <layout class="QVBoxLayout" name="verticalLayout_sub_find">
+         <item>
+          <widget class="QGroupBox" name="subtitle_finder">
+           <property name="title">
+            <string>Subtitle finder</string>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_25">
+            <item>
+             <widget class="QCheckBox" name="preserve_downloaded_subtitles">
+              <property name="text">
+               <string>Preserve downloaded subtitles</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <layout class="QFormLayout" name="formLayout_2">
+              <item row="0" column="0">
+               <widget class="QLabel" name="label_2">
+                <property name="text">
+                 <string>File Name Format</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QLineEdit" name="preserve_file_name_format">
+                <property name="toolTip">
+                 <string>Available formatting placeholders:
+%MEDIA_NAME%: the name of media file (extension is excluded)
+%SUBTITLE_NAME%: the name of subtitle file (extension is excluded)
+%SUBTITLE_EXT%: the extension of subtitle file</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QLabel" name="label_3">
+                <property name="text">
+                 <string>Fallback Folder</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QLineEdit" name="preserve_fallback_folder">
+                <property name="toolTip">
+                 <string>This is a fallback folder to save downloaded subtitles when original folder is not writable.</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <widget class="QTreeWidget" name="subliminal_providers">
+              <property name="toolTip">
+               <string>Subtitle providers of subliminal. Credentials are read from subliminal's configuration file, which bomi does not change.</string>
+              </property>
+              <property name="editTriggers">
+               <set>QAbstractItemView::NoEditTriggers</set>
+              </property>
+              <property name="selectionMode">
+               <enum>QAbstractItemView::NoSelection</enum>
+              </property>
+              <property name="rootIsDecorated">
+               <bool>false</bool>
+              </property>
+              <column>
+               <property name="text">
+                <string>Provider</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Searched</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Configured</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Accepts</string>
+               </property>
+              </column>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="subliminal_config">
+              <property name="wordWrap">
+               <bool>true</bool>
+              </property>
+              <property name="textInteractionFlags">
+               <set>Qt::TextSelectableByMouse</set>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
          </item>
         </layout>
        </widget>

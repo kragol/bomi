@@ -8,6 +8,7 @@
 #include "player/skin.hpp"
 #include "player/mrlstate.hpp"
 #include "misc/simplelistmodel.hpp"
+#include "subtitle/subliminalfinder.hpp"
 #include "ui_prefdialog.h"
 #include <QQmlProperty>
 #include <QElapsedTimer>
@@ -33,6 +34,7 @@ struct PrefDialog::Data {
     QHash<QObject*, QList<ValueWatcher*>> editorToWatcher;
     Pref orig;
     bool filling = false;
+    SubliminalFinder *subliminal = nullptr;
 
     auto retranslate() -> void
     {
@@ -58,6 +60,47 @@ struct PrefDialog::Data {
         }
         modified.clear();
         p->setWindowModified(false);
+    }
+    // Reread every time the dialog shows: the configuration file is edited
+    // outside bomi.
+    auto updateSubliminal() -> void
+    {
+        if (subliminal)
+            return;
+        ui.subliminal_providers->clear();
+        ui.subliminal_config->setText(tr("Checking subliminal..."));
+        subliminal = new SubliminalFinder(p);
+        connect(subliminal, &SubliminalFinder::stateChanged, p, [this] () {
+            const auto state = subliminal->state();
+            if (state == SubliminalFinder::Available)
+                fillSubliminal();
+            else if (state == SubliminalFinder::Unavailable)
+                ui.subliminal_config->setText(tr("subliminal is unavailable: %1")
+                                              .arg(subliminal->error()));
+            else
+                return;
+            subliminal->deleteLater();
+            subliminal = nullptr;
+        });
+    }
+    auto fillSubliminal() -> void
+    {
+        auto tree = ui.subliminal_providers;
+        for (const auto &provider : subliminal->providers()) {
+            auto item = new QTreeWidgetItem(tree);
+            item->setText(0, provider.name);
+            item->setText(1, provider.used ? tr("Yes") : tr("No"));
+            item->setText(2, provider.configured.join(", "_a));
+            item->setText(3, provider.error.isEmpty() ? provider.options.join(", "_a)
+                                                      : provider.error);
+        }
+        for (int i = 0; i < tree->columnCount(); ++i)
+            tree->resizeColumnToContents(i);
+        const auto file = subliminal->configFile();
+        ui.subliminal_config->setText(subliminal->hasConfigFile()
+            ? tr("Provider options, such as accounts, are read from %1.").arg(file)
+            : tr("Provider options, such as accounts, can be set in %1, "
+                 "which does not exist yet.").arg(file));
     }
 };
 
@@ -129,6 +172,7 @@ PrefDialog::PrefDialog(QWidget *parent)
     addCategory(tr("Subtitle"));
     addPage(tr("Load"), d->ui.sub_load, u":/img/application-x-subrip-32.png"_q);
     addPage(tr("Display"), d->ui.sub_appearance, u":/img/format-text-color-32.png"_q);
+    addPage(tr("Find"), d->ui.sub_find, u":/img/preferences-system-network-sharing.png"_q);
 
     addCategory(tr("User interface"));
     addPage(tr("Keyboard shortcuts"), d->ui.ui_shortcut, u":/img/preferences-desktop-keyboard-32.png"_q);
@@ -420,4 +464,5 @@ auto PrefDialog::showEvent(QShowEvent *event) -> void
 {
     QDialog::showEvent(event);
     d->ui.stack->show();
+    d->updateSubliminal();
 }
