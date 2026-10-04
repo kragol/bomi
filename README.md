@@ -12,6 +12,13 @@ For more details, please visit [bomi Project Page](http://bomi-player.github.io)
 
 ## About this fork
 
+> **This is the `legacy` branch:** bomi as it was before the port to the system
+> libmpv, with the vendored 2016 mpv and the pinned in-tree FFmpeg 4.0.1. It is
+> kept for regression testing against the pre-port behaviour, and as a base for
+> contributors who want to build on the vendored version. It receives no new
+> features; current development is on
+> [`master`](https://github.com/kragol/bomi/tree/master).
+
 This is a fork of [bm16ton/bomi](https://github.com/bm16ton/bomi), itself a fork of
 the original [xylosper/bomi](https://github.com/xylosper/bomi), which stopped in 2016.
 It carries the changes needed to build and run on a current Linux distribution
@@ -232,9 +239,9 @@ SigLevel = Optional TrustAll
 Server = file:///home/YOUR_USER/pkgrepo
 ```
 
-Rebuilding after a `git pull` bumps `pkgver` from
-`git describe`, so the new build sorts above the installed one and shows up as a
-normal update.
+Rebuilding after new commits bumps `pkgver` (commits since v0.9.11, counted from
+that commit's hash because the GitHub repository carries no tags), so the new
+build sorts above the installed one and shows up as a normal update.
 
 ## Known issues in this fork
 

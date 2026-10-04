@@ -7,7 +7,7 @@
 # Point _repo at a local checkout (file:///path/to/bomi) if you want to package
 # work in progress -- commit it there first.
 _repo=https://github.com/kragol/bomi
-_branch=master
+_branch=legacy
 
 # Interpreter used to run mpv's bundled waf, which predates Python 3.12 (it
 # needs imp and distutils). Leave empty to let ./configure autodetect -- it
@@ -79,9 +79,17 @@ source=("$_pkgbase::git+$_repo#branch=$_branch"
 sha256sums=('SKIP'
             'c61ef108430ccd02959e770a3e85a26c26723a60c998cfd0f29c204aa6776cca')
 
+# The GitHub repository carries no tags, so `git describe` has nothing to work
+# with in makepkg's clone. Count from the commit v0.9.11 points at instead, which
+# yields exactly what describe gave against a tagged local clone.
+_basever=0.9.11
+_basecommit=e9d6b9d299095492edb3f66628db0819bfde170a
+
 pkgver() {
   cd "$srcdir/$_pkgbase"
-  git describe --long --tags | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
+  printf "%s.r%s.g%s" "$_basever" \
+    "$(git rev-list --count $_basecommit..HEAD)" \
+    "$(git rev-parse --short=8 HEAD)"
 }
 
 prepare() {
