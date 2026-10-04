@@ -8,7 +8,10 @@ which is aimed for easy usage but also provides various powerful features and co
 Just install and enjoy it! There will be already what you expect.
 If you don't like, you can configure almost everything.
 
-For more details, please visit [bomi Project Page](http://bomi-player.github.io).
+The original [bomi project page](http://bomi-player.github.io) and
+[xylosper's repository](https://github.com/xylosper/bomi) describe bomi as it was in
+2016. They are kept here for reference but are no longer maintained, and they do not
+cover this fork; see "Legacy links" at the end.
 
 ## About this fork
 
@@ -270,13 +273,36 @@ build sorts above the installed one and shows up as a normal update.
   interpolation (Preferences > Video Processing) is the built-in mitigation. A proper fix
   means porting to a modern libmpv.
 
-## Contacts
+## Issues
 
-### [Issue Tracker](https://github.com/xylosper/bomi/issues)
-If you have problems or want some features, please report them in English, Korean, or Japanese.
+Issues for this fork go to its own tracker:
+**[github.com/kragol/bomi/issues](https://github.com/kragol/bomi/issues)**.
 
-### [E-mail](mailto:darklin20@gmail.com)
-If you want to contact me privately, please send me an e-mail.
+Please read this before posting. This is a personal fork, maintained for my own use.
+There is no support commitment: I do not plan to work through user reports, and I
+do not commit to reading them either, so an issue may sit unanswered. I may look
+through them once in a while and fix some, most likely when they affect me too.
+
+This `legacy` branch receives no new features, so problems that only affect it are
+the least likely to be acted on. If you can, check whether `master` (0.10.x, on the
+system libmpv) behaves the same. Issues that come with clear reproduction steps,
+the bomi version (Help > About bomi, or `pacman -Q bomi-git`) and the relevant log
+output stand the best chance.
+
+Please do not report problems with this fork to xylosper or on the original
+tracker; he has not worked on bomi since 2016 and this code is not his.
+
+## Legacy links
+
+These belong to the original bomi by xylosper and are inactive since 2016. They are
+useful for history (old issues and discussions, the 0.9.x documentation), not for
+this fork:
+
+* Project page: [bomi-player.github.io](http://bomi-player.github.io)
+* Repository: [github.com/xylosper/bomi](https://github.com/xylosper/bomi)
+* Issue tracker: [github.com/xylosper/bomi/issues](https://github.com/xylosper/bomi/issues)
+* The original README listed the author's e-mail address for private contact; it
+  is not repeated here, since he no longer maintains bomi.
 
 ## License
 
