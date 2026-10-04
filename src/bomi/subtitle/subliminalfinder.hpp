@@ -10,7 +10,7 @@ struct SubtitleLink {
 
 // A provider as the helper's check reports it.
 struct SubliminalProvider {
-    QString name, error;
+    QString name, site, error; // site: the website, e.g. "opensubtitles.org"
     QStringList options;     // what its configuration may set
     QStringList configured;  // "key: value", values hidden except usernames
     bool used = false;       // searched by bomi

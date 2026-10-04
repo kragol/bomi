@@ -81,6 +81,7 @@ struct SubliminalFinder::Data {
                 const auto po = value.toObject();
                 SubliminalProvider provider;
                 provider.name = po[u"name"_q].toString();
+                provider.site = po[u"site"_q].toString();
                 provider.error = po[u"error"_q].toString();
                 for (const auto &option : po[u"options"_q].toArray())
                     provider.options.push_back(option.toString());

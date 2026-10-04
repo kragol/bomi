@@ -1293,6 +1293,11 @@
               </column>
               <column>
                <property name="text">
+                <string>Name in subliminal.toml</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
                 <string>Searched</string>
                </property>
               </column>

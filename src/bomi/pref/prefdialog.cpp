@@ -88,10 +88,11 @@ struct PrefDialog::Data {
         auto tree = ui.subliminal_providers;
         for (const auto &provider : subliminal->providers()) {
             auto item = new QTreeWidgetItem(tree);
-            item->setText(0, provider.name);
-            item->setText(1, provider.used ? tr("Yes") : tr("No"));
-            item->setText(2, provider.configured.join(", "_a));
-            item->setText(3, provider.error.isEmpty() ? provider.options.join(", "_a)
+            item->setText(0, provider.site);
+            item->setText(1, provider.name);
+            item->setText(2, provider.used ? tr("Yes") : tr("No"));
+            item->setText(3, provider.configured.join(", "_a));
+            item->setText(4, provider.error.isEmpty() ? provider.options.join(", "_a)
                                                       : provider.error);
         }
         for (int i = 0; i < tree->columnCount(); ++i)

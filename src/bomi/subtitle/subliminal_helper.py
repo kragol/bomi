@@ -133,6 +133,22 @@ def configure_cache(region, version):
         region.configure('dogpile.cache.memory', replace_existing_backend=True)
 
 
+def provider_site(name):
+    """The website a provider talks to, e.g. "opensubtitles.org" for
+    "opensubtitles", from its server URL; its name if it has none."""
+    from urllib.parse import urlparse
+    from subliminal.extensions import provider_manager
+    try:
+        url = getattr(provider_manager[name].plugin, 'server_url', None)
+        host = urlparse(url).hostname if isinstance(url, str) else None
+    except Exception:
+        host = None
+    if not host:
+        return name
+    site = '.'.join(host.split('.')[-2:])  # drops api., www., vip-api.
+    return site + ' VIP' if name.endswith('vip') else site
+
+
 def provider_options(cls):
     options = []
     for name, param in inspect.signature(cls.__init__).parameters.items():
@@ -151,7 +167,8 @@ def check():
     used = providers_to_use(configs)
     providers = []
     for entry in sorted(entry_points(group='subliminal.providers'), key=lambda e: e.name):
-        info = {'name': entry.name, 'options': [], 'used': entry.name in used}
+        info = {'name': entry.name, 'site': provider_site(entry.name), 'options': [],
+                'used': entry.name in used}
         try:
             info['options'] = provider_options(entry.load())
         except Exception as e:  # a broken plugin
@@ -222,14 +239,17 @@ def search(args):
     found.sort(key=lambda pair: pair[0], reverse=True)
 
     cache = {}
+    sites = {}
     result = []
     for score, subtitle in found:
         key = '%s:%s' % (subtitle.provider_name, subtitle.id)
         if key in cache:
             continue
         cache[key] = subtitle
+        if subtitle.provider_name not in sites:
+            sites[subtitle.provider_name] = provider_site(subtitle.provider_name)
         result.append({'id': key,
-                       'provider': subtitle.provider_name,
+                       'provider': sites[subtitle.provider_name],
                        'language': language_code(subtitle.language),
                        'fileName': file_name(subtitle),
                        'hearingImpaired': bool(subtitle.hearing_impaired),
