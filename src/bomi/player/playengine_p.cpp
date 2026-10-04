@@ -1295,42 +1295,41 @@ auto PlayEngine::Data::updateSubtitleStyle() -> void
     style.font.size = qBound(0.0, style.font.size * (1.0 + params.sub_scale()), 1.0);
     sr->setStyle(style);
 
+    // Style for the subtitles mpv renders itself: embedded and mpv-loaded text
+    // tracks (bomi's own renderer handles the rest). These used to be the
+    // sub-text-* options, which modern mpv renamed and then partly merged, so
+    // the old names were all rejected and such subtitles fell back to mpv's
+    // defaults. Sizes in OsdStyle are fractions of the font size.
     const auto font = subStyle.font;
-    mpv.setAsync("options/sub-text-color", font.color.name(QColor::HexArgb).toLatin1());
-    QStringList fontStyles;
-    if (font.bold())
-        fontStyles.append(u"Bold"_q);
-    if (font.italic())
-        fontStyles.append(u"Italic"_q);
-    QString family = font.family();
-    if (!fontStyles.isEmpty())
-        family += ":style="_a % fontStyles.join(' '_q);
-    const double factor = font.size * 720.0;
-    mpv.setAsync("options/sub-text-font", family.toUtf8());
-    mpv.setAsync("options/sub-text-font-size", factor);
-    const auto &outline = style.outline;
-    const auto scaled = [factor] (double v)
-        { return qBound(0., v*factor, 10.); };
     const auto color = [] (const QColor &color)
         { return color.name(QColor::HexArgb).toLatin1(); };
-    if (outline.enabled) {
-        mpv.setAsync("options/sub-text-border-size", scaled(outline.width));
-        mpv.setAsync("options/sub-text-border-color", color(outline.color));
-    } else
-        mpv.setAsync("options/sub-text-border-size", 0.0);
-    const auto &bbox = style.bbox;
-    if (bbox.enabled)
-        mpv.setAsync("options/sub-text-back-color", color(bbox.color));
-    else
-        mpv.setAsync("options/sub-text-back-color", color(Qt::transparent));
+    const double factor = font.size * 720.0;
+    const auto scaled = [factor] (double v)
+        { return qBound(0., v*factor, 10.); };
+    mpv.setAsync("options/sub-font", font.family().toUtf8());
+    mpv.setAsync("options/sub-font-size", factor);
+    mpv.setAsync("options/sub-color", color(font.color));
+    mpv.setAsync("options/sub-bold", font.bold());
+    mpv.setAsync("options/sub-italic", font.italic());
+    const auto &outline = style.outline;
+    mpv.setAsync("options/sub-outline-size", outline.enabled ? scaled(outline.width) : 0.0);
+    mpv.setAsync("options/sub-outline-color", color(outline.color));
+    // mpv draws either a background box or a shadow, both coloured by
+    // sub-back-color and sized by sub-shadow-offset; the box wins if both are on.
     auto norm = [] (const QPointF &p) { return sqrt(p.x()*p.x() + p.y()*p.y()); };
+    const auto &bbox = style.bbox;
     const auto &shadow = style.shadow;
-    if (shadow.enabled) {
-        mpv.setAsync("options/sub-text-shadow-color", color(shadow.color));
-        mpv.setAsync("options/sub-text-shadow-offset", scaled(norm(shadow.offset)));
+    if (bbox.enabled) {
+        mpv.setAsync("options/sub-border-style", "background-box"_b);
+        mpv.setAsync("options/sub-back-color", color(bbox.color));
+        mpv.setAsync("options/sub-shadow-offset",
+                     scaled(qMax(bbox.padding.x(), bbox.padding.y())));
     } else {
-        mpv.setAsync("options/sub-text-shadow-color", color(Qt::transparent));
-        mpv.setAsync("options/sub-text-shadow-offset", 0.0);
+        mpv.setAsync("options/sub-border-style", "outline-and-shadow"_b);
+        mpv.setAsync("options/sub-back-color",
+                     color(shadow.enabled ? shadow.color : QColor(Qt::transparent)));
+        mpv.setAsync("options/sub-shadow-offset",
+                     shadow.enabled ? scaled(norm(shadow.offset)) : 0.0);
     }
 }
 
