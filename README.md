@@ -104,6 +104,13 @@ You have to prepare next libraries, too:
 Each item corresponds to its package name for `pkg-config` command except Qt and OpenGL.
 chardet, marked with (*), can be built in-tree.
 
+Optional at runtime, run as external tools:
+
+* `yt-dlp` -- playing streaming sites such as YouTube
+* [`subliminal`](https://github.com/Diaoul/subliminal) with `python3` -- Tools >
+  Find Subtitle. bomi runs a small helper script against subliminal's Python API;
+  without subliminal the dialog reports itself unavailable.
+
 ## Compilation
 
 In the below description, `$` means that you have to input the command in termnal/console

@@ -1,10 +1,9 @@
 #include "subtitlefinddialog.hpp"
 #include "mbox.hpp"
 #include "player/mrl.hpp"
-#include "misc/downloader.hpp"
 #include "misc/simplelistmodel.hpp"
 #include "misc/objectstorage.hpp"
-#include "subtitle/opensubtitlesfinder.hpp"
+#include "subtitle/subliminalfinder.hpp"
 #include "misc/locale.hpp"
 #include "ui_subtitlefinddialog.h"
 #include <QFileDialog>
@@ -13,7 +12,7 @@
 #include <QSortFilterProxyModel>
 
 enum CustomRole {
-    UrlRole = Qt::UserRole + 1,
+    IdRole = Qt::UserRole + 1,
     FileNameRole,
     LangCodeRole
 };
@@ -21,19 +20,19 @@ enum CustomRole {
 class SubtitleLinkModel
         : public SimpleListModel<SubtitleLink, QVector<SubtitleLink>> {
 public:
-    enum Column { Language, FileName, Date, ColumnCount };
+    enum Column { Language, FileName, Provider, ColumnCount };
     SubtitleLinkModel(QObject *parent = nullptr)
         : SimpleListModel(ColumnCount, parent) { }
     auto header(int column) const -> QString {
         switch (column) {
         case Language: return qApp->translate("SubtitleLinkModel", "Language");
         case FileName: return qApp->translate("SubtitleLinkModel", "File Name");
-        case Date:     return qApp->translate("SubtitleLinkModel", "Date");
+        case Provider: return qApp->translate("SubtitleLinkModel", "Provider");
         default:       return QString();
         }
     }
     auto roleData(int row, int /*column*/, int role) const -> QVariant {
-        if (role == UrlRole)      return at(row).url;
+        if (role == IdRole)       return at(row).id;
         if (role == FileNameRole) return at(row).fileName;
         if (role == LangCodeRole) return at(row).langCode;
         return QVariant();
@@ -42,7 +41,7 @@ public:
         switch (column) {
         case Language: return at(row).language;
         case FileName: return at(row).fileName;
-        case Date:     return at(row).date;
+        case Provider: return at(row).provider;
         default:       return QVariant();
         }
     }
@@ -72,13 +71,12 @@ SIA language(const QString &langCode) -> QString
 struct SubtitleFindDialog::Data {
     SubtitleFindDialog *p = nullptr;
     Ui::SubtitleFindDialog ui;
-    Downloader downloader;
-    OpenSubtitlesFinder *finder = nullptr;
+    SubliminalFinder *finder = nullptr;
     Mrl pending;
     SubtitleLinkModel model;
     LanguageFilterModel proxy;
     QString fileName;
-    QMap<QUrl, DownloadInfo> downloads;
+    QMap<QString, DownloadInfo> downloads; // by subtitle id
     QMap<QString, QString> languages; // code, name
     QTemporaryDir temp;
     QFileInfo mediaFile;
@@ -112,8 +110,22 @@ struct SubtitleFindDialog::Data {
         return size != ui.language->count();
     }
 
+    // subliminal needs the languages up front (OpenSubtitles.org used to return
+    // all of them): those ticked in the list, plus bomi's language and English.
+    auto searchLanguages() const -> QStringList
+    {
+        QStringList codes;
+        for (auto &code : ui.language->checkedData())
+            codes.push_back(code.toString());
+        codes.push_back(Locale::native().name().section('_'_q, 0, 0).toLower());
+        codes.push_back(u"en"_q);
+        codes.removeAll(QString());
+        codes.removeDuplicates();
+        return codes;
+    }
+
     void updateState() {
-        const bool ok = finder->isAvailable() && !downloader.isRunning();
+        const bool ok = finder->isAvailable();
         ui.open->setEnabled(ok);
         ui.find_file->setEnabled(ok);
         ui.find_info->setEnabled(ok);
@@ -129,6 +141,8 @@ struct SubtitleFindDialog::Data {
                 pending = Mrl();
                 p->find(mrl);
             }
+        } else if (finder->state() == SubliminalFinder::Unavailable) {
+            ui.prog->setRange(0, 1); // nothing is going to happen
         } else
             ui.prog->setRange(0, 0);
         updateStateText();
@@ -137,14 +151,14 @@ struct SubtitleFindDialog::Data {
     {
         auto text = [=] () {
             switch (finder->state()) {
-            case OpenSubtitlesFinder::Connecting:
-                return tr("Connecting...");
-            case OpenSubtitlesFinder::Finding:
+            case SubliminalFinder::Connecting:
+                return tr("Starting subliminal...");
+            case SubliminalFinder::Finding:
                 return tr("Finding...");
-            case OpenSubtitlesFinder::Unavailable:
-                return tr("Unavailable");
-            case OpenSubtitlesFinder::Error:
-                return tr("Error");
+            case SubliminalFinder::Downloading:
+                return tr("Downloading...");
+            case SubliminalFinder::Unavailable:
+                return tr("Unavailable: %1").arg(finder->error());
             default:
                 return tr("Available");
             }
@@ -232,19 +246,19 @@ SubtitleFindDialog::SubtitleFindDialog(QWidget *parent)
     d->ui.view->header()->resizeSection(0, 100);
     d->ui.view->header()->resizeSection(1, 450);
     d->ui.view->header()->resizeSection(2, 150);
-    d->finder = new OpenSubtitlesFinder;
+    d->finder = new SubliminalFinder;
     d->ui.open->set(PathButton::SingleFile, PathButton::Open);
-    connect(&d->downloader, &Downloader::started, [this] () { d->updateState(); });
-    connect(&d->downloader, &Downloader::progressed, [this] (qint64 written, qint64 total) {
-        d->ui.prog->setRange(0, total);
-        d->ui.prog->setValue(written);
-    });
-    connect(&d->downloader, &Downloader::finished, [this] () {
-        auto it = d->downloads.find(d->downloader.url());
-        Q_ASSERT(it != d->downloads.end());
-        d->writeData(*it, _Uncompress(d->downloader.data()));
+    connect(d->finder, &SubliminalFinder::downloaded, this,
+            [this] (const QString &id, const QByteArray &data, const QString &/*format*/) {
+        const auto it = d->downloads.find(id);
+        if (it == d->downloads.end())
+            return;
+        d->writeData(*it, data);
         d->downloads.erase(it);
-        d->updateState();
+    });
+    connect(d->finder, &SubliminalFinder::failed, this, [this] (const QString &error) {
+        d->downloads.clear();
+        MBox::warn(this, tr("Find Subtitle"), error, { BBox::Ok });
     });
     connect(d->ui.open, &PathButton::fileSelected,
             [this] (const QString &file) { if (!file.isEmpty()) find(file); });
@@ -253,11 +267,15 @@ SubtitleFindDialog::SubtitleFindDialog(QWidget *parent)
             find(d->mediaFile.absoluteFilePath());
     });
     connect(d->ui.find_info, &QPushButton::clicked, this, [=] () {
+        d->finder->setLanguages(d->searchLanguages());
         d->finder->find(d->ui.query->text(),
                         d->ui.season->value(), d->ui.episode->value());
     });
     connect(d->ui.find_name, &QPushButton::clicked,
-            this, [=] () { d->finder->find(d->ui.tag->text()); });
+            this, [=] () {
+        d->finder->setLanguages(d->searchLanguages());
+        d->finder->find(d->ui.tag->text());
+    });
     connect(d->ui.language, &CheckListWidget::checkedItemsChanged, [=] () {
         auto langs = d->ui.language->checkedData();
         d->proxy.langCodes.clear();
@@ -278,13 +296,13 @@ SubtitleFindDialog::SubtitleFindDialog(QWidget *parent)
             if (info.fileName.isEmpty())
                 return;
         }
-        const auto url = d->ui.view->currentIndex().data(UrlRole).toUrl();
-        if (d->downloader.start(url))
-            d->downloads[d->downloader.url()] = info;
+        const auto id = index.data(IdRole).toString();
+        if (d->finder->download(id))
+            d->downloads[id] = info;
     });
-    connect(d->finder, &OpenSubtitlesFinder::stateChanged, this,
+    connect(d->finder, &SubliminalFinder::stateChanged, this,
             [this] () { d->updateState(); });
-    connect(d->finder, &OpenSubtitlesFinder::found, this,
+    connect(d->finder, &SubliminalFinder::found, this,
             [this] (QVector<SubtitleLink> links) {
         // Select first entry of list
         d->ui.view->setCurrentIndex(d->ui.view->indexAt(QPoint()));
@@ -294,7 +312,7 @@ SubtitleFindDialog::SubtitleFindDialog(QWidget *parent)
     });
     d->updateStateText();
 
-    _SetWindowTitle(this, tr("Find Subtitle from OpenSubtitles.org"));
+    _SetWindowTitle(this, tr("Find Subtitle"));
     d->storage.setObject(this, u"subtitle_find_dialog"_q);
     d->storage.add("language", [=] () { return d->ui.language->toVariant(CheckListData); },
                    [=] (auto &var) { d->ui.language->setFromVariant(var, CheckListData); });
@@ -327,7 +345,10 @@ auto SubtitleFindDialog::find(const Mrl &mrl) -> void
     d->ui.fileName->setText(d->mediaFile.fileName());
     if (!d->finder->isAvailable()) {
         d->pending = mrl;
-    } else if (!d->finder->find(mrl)) {
+        return;
+    }
+    d->finder->setLanguages(d->searchLanguages());
+    if (!d->finder->find(mrl)) {
         const auto name = mrl.displayName();
         MBox::warn(this, tr("Find Subtitle"),
                    tr("Cannot find subtitles for %1.").arg(name),

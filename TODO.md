@@ -72,41 +72,17 @@ background and measurements behind each item.
   build-depends name `ffmpeg-bomi` and codec libraries). Update them for the
   system libmpv or drop them; `legacy` keeps the working versions.
 
-- [ ] **Find Subtitle (Tools > Find Subtitle) delivers an advert instead of
-  subtitles.** It uses the opensubtitles.org XML-RPC API anonymously
-  (`subtitle/opensubtitlesfinder.cpp`, user agent `CMPlayerXmlRpcClient v0.1`).
-  Checked 2026-10-04: login and search still work (a query returned 10 results
-  with download links), but an anonymous download returns a one-cue subtitle
-  reading "Become OpenSubtitles.org VIP member to get subtitles". Not a libmpv
-  port regression; the provider changed. Options, roughly in order:
-  - **Delegate to [subliminal](https://github.com/Diaoul/subliminal)**, worth trying
-    first. bomi already runs an external tool the same way for streaming sites
-    (`misc/youtubedl.cpp` runs yt-dlp), and subliminal's maintainers keep up with
-    provider and API churn, which is what broke this dialog. 2.6 ships 12
-    providers: addic7ed, bsplayer, gestdown, napiprojekt, opensubtitles,
-    opensubtitlescom, podnapisi, subtis, subtitulamos, tvsubtitles, and VIP
-    variants of the two opensubtitles ones. opensubtitles.com credentials can be
-    passed through (`--opensubtitlescom USER PASS`). The CLI
-    (`subliminal download -l <lang> <file>`) only fetches the best match next to
-    the video. To keep the dialog's list of candidates, use subliminal's Python
-    API (`list_subtitles`/`download_subtitles`) from a small helper script that
-    prints JSON. Make it an optional dependency, like yt-dlp. Note the packaging
-    is fragile on Arch: it comes from the AUR, and on 2026-10-04 the installed
-    2.6.0 failed to start because four AUR dependencies (python-knowit,
-    -pysubs2, -trakit, -enzyme) had not been rebuilt for Python 3.14, so detect
-    a broken install and say so.
-  - Move to the **OpenSubtitles.com REST API** (`api.opensubtitles.com/api/v1`), as
-    SMPlayer does. It needs an API key (a registered consumer, sent as an
-    `Api-Key` header) and, for downloads, the user's own opensubtitles.com
-    login, so add username/password fields in Preferences. Downloads are
-    quota-limited per account (check the current limits). Searching by movie
-    hash should carry over: bomi already computes the OpenSubtitles 64-bit hash.
-  - Put a small provider interface behind the dialog, so a few popular
-    providers can sit side by side (look at what SMPlayer, VLC's VLSub and
-    subliminal support, and which providers still have a usable API).
-  - Whatever happens, recognise the VIP-advert subtitle and report it as an
-    error, rather than loading it as if it were real.
-
+- [ ] **Find Subtitle: opensubtitles.com and provider settings.** The dialog now
+  runs on subliminal (`subtitle/subliminalfinder.cpp` plus the embedded
+  `subtitle/subliminal_helper.py`), which fixed the opensubtitles.org advert
+  problem: subliminal's own client still gets real subtitles. Still to do:
+  - Add opensubtitles.com username/password in Preferences and pass them to
+    subliminal: its search works without them, but downloads need an account,
+    so it is left out of the provider list for now.
+  - Let the user choose providers and search languages. Searches currently use
+    the languages ticked in the dialog, plus bomi's language and English.
+  - Show progress or allow cancelling: a search takes about 10-15 s, because
+    subliminal queries every provider.
 ## Beyond the old bomi
 
 - [ ] **HDR output.** HDR sources are already tone-mapped to SDR correctly, which the
@@ -148,6 +124,8 @@ background and measurements behind each item.
 - [x] Merge prep: vendored mpv, FFmpeg build scripts, the unbuilt filter layer and
   bomi's VA-API/VDPAU code removed; README build sections rewritten; PKGBUILD
   fetches `master`; pre-port `master` kept as the `legacy` branch
+- [x] Find Subtitle runs on subliminal (optional dependency), replacing the
+  opensubtitles.org XML-RPC client that only got adverts
 - [x] Audio chain as one lavfi graph in `af`: `dynaudnorm` (normalizer), `volume`
   (volume × amp, so the soft clip sees the full gain as in bomi's mixer),
   10 × `equalizer`, `asoftclip=type=sin`; tempo scaler via `audio-pitch-correction`
