@@ -1,3 +1,35 @@
+0.9.12 (legacy branch)
+
+  Maintenance release of the vendored-mpv bomi, after xylosper's 0.9.11. Current
+  development, on the system libmpv, is 0.10.0 on master.
+
+  From xylosper, after 0.9.11 (never released):
+  * New: option 'Load last played media on execution' (#381)
+  * New: try to open file if no media loaded when playback requested (#381)
+  * New: Qt version information in about dialog
+  * New: display log level for viewer in log viewer dialog
+  * Mod: accept wheel event in time slider (#379)
+  * Mod: show video size instead of window size on resized (#382)
+  * Fix: force muted state for zero volume (#376)
+  * Fix: regression which made volume too small
+  * Fix: skin 'Freya' was broken
+  * Fix: don't display title for DASH format audio, or video size with no video
+  * (Windows)Fix: --win-assoc/--win-assoc-default options didn't work (#374)
+
+  From contributors:
+  * Fix: Breeze and Breeze Dark skins (varlesh)
+  * Fix: typos, and Keywords in bomi.desktop (kehugter)
+  * Mod: builds a Debian package on current Debian/Ubuntu (bm16ton)
+
+  From this fork (kragol):
+  * Fix: builds on a modern toolchain (gcc 16, Qt 5.15): in-tree mpv and FFmpeg
+    4.0.1 pinned and patched, moc and gcc 16 crashes fixed
+  * Fix: runs under Plasma Wayland via XWayland, and degrades instead of
+    crashing natively
+  * Fix: preferences dialog hanging or never opening with many fonts installed,
+    and font drop-down behaviour
+  * New: Arch Linux package (arch/PKGBUILD)
+
 0.9.11
 
   * New: save button for log viewer
