@@ -56,10 +56,6 @@ background and measurements behind each item.
 
 ## Smaller regressions
 
-- [ ] **MPRIS album art** (`Mpris` → `PlayEngine::snapshot(bool)`) uses
-  `screenshot-raw`, which fails under hardware decoding without advanced control
-  ("Input image format cuda not supported by libswscale" in the log), so album art
-  is empty with hwdec on. Reuse the render-path snapshot capture instead.
 - [ ] **DVD menu hit-testing** went with `disc-mouse-on-button`. Check whether modern
   mpv's dvdnav exposes anything equivalent, or drop the feature.
 - [ ] **`vsync-ratio` in the play info panel** reads 1.4–3.0 where about 6 is expected
@@ -111,6 +107,8 @@ background and measurements behind each item.
   hardware decoding without advanced control.)
 - [x] `display-fps-override` follows the window's screen and that screen's
   refresh-rate changes (only the startup path verified; single monitor here)
+- [x] MPRIS album art captured through the render path (`PlayEngine::grabFrame()`),
+  so it works under hardware decoding; it includes subtitles if visible
 - [x] Audio chain as one lavfi graph in `af`: `dynaudnorm` (normalizer), `volume`
   (volume × amp, so the soft clip sees the full gain as in bomi's mixer),
   10 × `equalizer`, `asoftclip=type=sin`; tempo scaler via `audio-pitch-correction`

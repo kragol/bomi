@@ -1513,49 +1513,19 @@ auto PlayEngine::currentSubtitleStreamTrack() const -> StreamTrack
     return track ? *track : StreamTrack();
 }
 
-auto PlayEngine::snapshot(bool osd) const -> QImage
+auto PlayEngine::grabFrame(std::function<void(const QImage&)> &&done) -> void
 {
-    mpv_node values[2];
-    values[0].format = MPV_FORMAT_STRING;
-    values[0].u.string = const_cast<char*>("screenshot-raw");
-    values[1].format = MPV_FORMAT_STRING;
-    values[1].u.string = const_cast<char*>(osd ? "subtitles" : "video");
-
-    mpv_node_list list;
-    list.num = 2;
-    list.keys = nullptr;
-    list.values = values;
-
-    mpv_node args;
-    args.format = MPV_FORMAT_NODE_ARRAY;
-    args.u.list = &list;
-
-    mpv_node *res = new mpv_node;
-    int error = mpv_command_node(d->mpv.handle(), &args, res);
-    if (error != MPV_ERROR_SUCCESS) {
-        delete res;
-        return QImage();
+    // Through the render path like snapshots: screenshot-raw fails under hardware
+    // decoding without advanced control.
+    const auto size = d->displaySize();
+    if (size.isEmpty()) {
+        done(QImage());
+        return;
     }
-
-    Q_ASSERT(res->format == MPV_FORMAT_NODE_MAP);
-    QSize s; int stride = 0;
-    mpv_byte_array bytes { nullptr, 0 };
-    for (int i = 0; i < res->u.list->num; ++i) {
-        const char *key = res->u.list->keys[i];
-        const auto &node = res->u.list->values[i];
-        if (!qstrcmp(key, "w"))
-            s.rwidth() = node.u.int64;
-        else if (!qstrcmp(key, "h"))
-            s.rheight() = node.u.int64;
-        else if (!qstrcmp(key, "stride"))
-            stride = node.u.int64;
-        else if (!qstrcmp(key, "format"))
-            {}
-        else if (!qstrcmp(key, "data"))
-            bytes = *node.u.ba;
-    }
-    return QImage((uchar*)bytes.data, s.width(), s.height(), stride, QImage::Format_RGB32,
-                  [] (void *p) { auto res = (mpv_node*)p; mpv_free_node_contents(res); delete res;}, res);
+    d->grab.done = std::move(done);
+    d->grab.size = size;
+    d->grab.pending = true;
+    d->vr->updateForNewFrame(size);
 }
 
 auto PlayEngine::setVideoSettings(const VideoSettings &s) -> void

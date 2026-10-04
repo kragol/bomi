@@ -1051,12 +1051,22 @@ auto PlayEngine::Data::renderVideoFrame(Fbo *frame) -> void
            "render queued frame(%%), avgfps: %%",
            frame->size(), info.video.output()->fps());
 
+    auto capture = [this] (const QSize &size) {
+        Fbo fbo(size);
+        mpv.render(&fbo);
+        return fbo.texture().toImage(QImage::Format_ARGB32);
+    };
     if (const int stage = ss.stage.exchange(0)) {
-        Fbo capture(ss.size);
-        mpv.render(&capture);
-        const auto image = capture.texture().toImage(QImage::Format_ARGB32);
+        const auto image = capture(ss.size);
         QMetaObject::invokeMethod(p, [this, stage, image] ()
             { snapshotCaptured(stage, image); }, Qt::QueuedConnection);
+    }
+    if (grab.pending.exchange(false)) {
+        const auto image = capture(grab.size);
+        QMetaObject::invokeMethod(p, [this, image] () {
+            if (auto done = std::move(grab.done))
+                done(image);
+        }, Qt::QueuedConnection);
     }
 }
 

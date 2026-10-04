@@ -126,7 +126,9 @@ public:
     auto currentAudioStreamTrack() const -> StreamTrack;
     auto currentSubtitleStreamTrack() const -> StreamTrack;
     auto frameSize() const -> QSize;
-    auto snapshot(bool osd = false) const -> QImage;
+    // Asynchronous: calls done on this thread with the frame as displayed, or a
+    // null image when there is no video. See PlayEngine::Data::takeSnapshot().
+    auto grabFrame(std::function<void(const QImage&)> &&done) -> void;
 
     auto setAudioFiles(const QStringList &files) -> void;
     auto addAudioFiles(const QStringList &files) -> void;

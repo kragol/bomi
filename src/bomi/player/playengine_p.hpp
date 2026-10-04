@@ -155,6 +155,11 @@ struct PlayEngine::Data {
         QImage osd, frame; int time = 0; QSize size;
         std::atomic<int> stage{0}; bool hidSubtitles = false;
     } ss;
+    // A one-pass capture for grabFrame(), independent of snapshots.
+    struct {
+        std::atomic<bool> pending{false}; QSize size;
+        std::function<void(const QImage&)> done;
+    } grab;
     QPoint mouse;
 
     auto resync(bool force = false) -> void;
