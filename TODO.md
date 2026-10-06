@@ -83,6 +83,18 @@ background and measurements behind each item.
     the languages ticked in the dialog, plus bomi's language and English.
   - Show progress or allow cancelling: a search takes about 10-15 s, because
     subliminal queries every provider.
+
+## Playback history drawer
+
+- [ ] **Readable columns.**
+  - Size columns as fractions of the drawer width instead of fixed pixels (`HistoryView.qml:62-66`); the fixed widths are far too narrow on HiDPI. Drop the 40% width cap (`BaseApp.qml:98`).
+  - Location: elide in the middle, so the start (which drive) and the end (which folder) both stay visible. Drop the filename, which repeats Name (`historymodel.cpp:284`).
+  - Latest Playback (`historymodel.cpp:282`, now `Qt::ISODate`): time only for today (`14:23`), `Yesterday 23:40` for yesterday (late-night viewing crosses midnight), the date alone for anything older.
+  - Hover tooltip with the full name and full path.
+- [ ] **Make resizing and horizontal scrolling discoverable.** Both already work (header dots; wheel tilt or Alt+wheel). Show a resize cursor over the separators, show a horizontal scroll bar when content overflows, and save dragged widths (as fractions) in the settings. `ModelView.qml` is shared with the playlist drawer.
+- [ ] **Follow-up: date format preference** for Latest Playback (relative, ISO, locale short/long).
+- [ ] **Stars** (low priority; most useful for streaming URLs such as TV channels). They are favourites: starred entries sort first and survive "Clear history", but nothing in the UI says so. Clicking one turns every star white. Leads: `setStarred()` resets the whole model instead of emitting `dataChanged`, and the icon binds to the non-reactive `history.isStarred(row)` instead of the `star` role. The "off" icon (`img/fav-off.png`) is almost fully transparent. Add a tooltip that explains what a star does.
+
 ## Beyond the old bomi
 
 - [ ] **HDR output.** HDR sources are already tone-mapped to SDR correctly, which the
