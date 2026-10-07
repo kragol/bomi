@@ -8,6 +8,14 @@ struct SubtitleLink {
     QString id; // subliminal's "<provider>:<subtitle id>", for download()
 };
 
+// A provider as the helper's check reports it.
+struct SubliminalProvider {
+    QString name, site, error; // site: the website, e.g. "opensubtitles.org"
+    QStringList options;     // what its configuration may set
+    QStringList configured;  // "key: value", values hidden except usernames
+    bool used = false;       // searched by bomi
+};
+
 // Finds and downloads subtitles through subliminal, which keeps up with the
 // subtitle providers (opensubtitles.org, podnapisi, addic7ed, ...). It runs a
 // small Python helper (subliminal_helper.py, compiled in as a resource) with
@@ -31,6 +39,11 @@ public:
     auto state() const -> State;
     auto isAvailable() const -> bool { return state() == Available; }
     auto error() const -> QString;
+    // Reported by the start check; empty until the finder is available.
+    auto providers() const -> QVector<SubliminalProvider>;
+    // subliminal's configuration file, where provider credentials go.
+    auto configFile() const -> QString;
+    auto hasConfigFile() const -> bool;
 signals:
     void stateChanged();
     void found(const QVector<SubtitleLink> &links);

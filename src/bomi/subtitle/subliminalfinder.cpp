@@ -14,6 +14,9 @@ struct SubliminalFinder::Data {
     State state = Unavailable;
     QString error, helper, cache, out, pendingId;
     QStringList languages;
+    QVector<SubliminalProvider> providers;
+    QString configFile;
+    bool hasConfigFile = false;
     QTemporaryDir temp;
     QProcess proc;
     enum Command { None, Check, Search, Download } command = None;
@@ -68,10 +71,28 @@ struct SubliminalFinder::Data {
             return;
         }
         switch (cmd) {
-        case Check:
-            _Info("Using subliminal %%.", doc.object()[u"version"_q].toString());
+        case Check: {
+            const auto o = doc.object();
+            _Info("Using subliminal %%.", o[u"version"_q].toString());
+            configFile = o[u"config"_q].toString();
+            hasConfigFile = o[u"configFound"_q].toBool();
+            providers.clear();
+            for (const auto &value : o[u"providers"_q].toArray()) {
+                const auto po = value.toObject();
+                SubliminalProvider provider;
+                provider.name = po[u"name"_q].toString();
+                provider.site = po[u"site"_q].toString();
+                provider.error = po[u"error"_q].toString();
+                for (const auto &option : po[u"options"_q].toArray())
+                    provider.options.push_back(option.toString());
+                for (const auto &entry : po[u"configured"_q].toArray())
+                    provider.configured.push_back(entry.toString());
+                provider.used = po[u"used"_q].toBool();
+                providers.push_back(provider);
+            }
             setState(Available);
             break;
+        }
         case Search: {
             QVector<SubtitleLink> links;
             for (const auto &value : doc.array()) {
@@ -187,4 +208,19 @@ auto SubliminalFinder::state() const -> State
 auto SubliminalFinder::error() const -> QString
 {
     return d->error;
+}
+
+auto SubliminalFinder::providers() const -> QVector<SubliminalProvider>
+{
+    return d->providers;
+}
+
+auto SubliminalFinder::configFile() const -> QString
+{
+    return d->configFile;
+}
+
+auto SubliminalFinder::hasConfigFile() const -> bool
+{
+    return d->hasConfigFile;
 }

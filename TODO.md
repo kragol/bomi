@@ -72,13 +72,14 @@ background and measurements behind each item.
   build-depends name `ffmpeg-bomi` and codec libraries). Update them for the
   system libmpv or drop them; `legacy` keeps the working versions.
 
+- [ ] **Main checkout no longer builds master** (`MPV_EXPORT does not name a type` in `/usr/include/mpv/render.h`). This is not the branch's code: a fresh checkout of master builds, as the `libmpv-port` worktree does. The checkout's generated top-level `Makefile` comes from the legacy `configure`. It still has the `build-mpv` target and puts `build/lib/pkgconfig` first in `PKG_CONFIG_PATH`, so pkg-config finds the vendored `mpv.pc`, and the vendored `build/include/mpv/client.h` shadows the system one.
+  - Fix the checkout: rerun `./configure` (the PKGBUILD flags), remove the vendored leftovers (`build/include`, `build/lib`, the untracked `build-mpv` and `src/mpv/`), then `make`.
+  - Fix master's `configure` too: it still prepends `/opt/ffmpeg-bomi` and `/opt/libass-bomi` to `PKG_CONFIG_PATH`, which is pointless without the vendored build. Better still, make `configure` or `make` refuse to run with a vendored `build/lib/pkgconfig` present, so switching from `legacy` fails loudly.
 - [ ] **Find Subtitle: opensubtitles.com and provider settings.** The dialog now
   runs on subliminal (`subtitle/subliminalfinder.cpp` plus the embedded
   `subtitle/subliminal_helper.py`), which fixed the opensubtitles.org advert
   problem: subliminal's own client still gets real subtitles. Still to do:
-  - Add opensubtitles.com username/password in Preferences and pass them to
-    subliminal: its search works without them, but downloads need an account,
-    so it is left out of the provider list for now.
+  - [x] opensubtitles.com accounts: read from subliminal's own `subliminal.toml` and listed read-only in Preferences > Subtitle > Find. Downloads with a real account verified 2026-10-07.
   - Let the user choose providers and search languages. Searches currently use
     the languages ticked in the dialog, plus bomi's language and English.
   - Show progress or allow cancelling: a search takes about 10-15 s, because

@@ -4,7 +4,9 @@
 # directory by SubliminalFinder and run with the system python3. Commands, each printing one JSON document on stdout:
 #
 #   check
-#       {"version": "2.6.0"} if subliminal imports.
+#       If subliminal imports: its version, the configuration file and the
+#       providers, each with the options it accepts, the ones the configuration
+#       sets (values hidden except usernames) and whether bomi searches it.
 #   search --cache FILE --languages en,fr [--video PATH | --name NAME]
 #       A list of candidates, best first. The subtitle objects are pickled to
 #       FILE so that download can fetch one without searching again.
@@ -13,17 +15,38 @@
 #
 # Errors print {"error": "..."} and exit with status 1. Provider failures are
 # logged by subliminal on stderr and the provider is skipped.
+#
+# Provider credentials come from subliminal's own configuration file, the one
+# its command line reads (~/.config/subliminal/subliminal.toml, or
+# $SUBLIMINAL_CONFIG); bomi never writes it. Each [provider.NAME] table is
+# passed to that provider as is, e.g.
+#
+#   [provider.opensubtitlescom]
+#   username = "..."
+#   password = "..."
 
 import argparse
+import inspect
 import json
 import logging
+import os
 import pickle
 import sys
+from datetime import timedelta
 
-# opensubtitlescom needs the user's own account to download, and the *vip
-# variants need a paid one; without credentials their results cannot be fetched.
+# Providers searched by default.
 PROVIDERS = ['addic7ed', 'bsplayer', 'gestdown', 'napiprojekt', 'opensubtitles',
              'podnapisi', 'subtis', 'subtitulamos', 'tvsubtitles']
+# opensubtitlescom needs the user's own account to download, and the *vip
+# variants need a paid one; they are searched only when configured.
+ACCOUNT_PROVIDERS = ['opensubtitlescom', 'opensubtitlescomvip', 'opensubtitlesvip']
+# Configuration values shown as they are; anything else is shown as "set".
+SHOWN_VALUES = {'username'}
+# Defaults under the user's configuration. opensubtitlescom pages through every
+# result by default, but the API refuses pages past 20 and the provider then
+# drops all results; 5 pages (about 250 subtitles) is plenty.
+DEFAULT_CONFIGS = {'opensubtitlescom': {'max_result_pages': 5},
+                   'opensubtitlescomvip': {'max_result_pages': 5}}
 
 # What opensubtitles.org serves instead of a subtitle when it wants a VIP account.
 ADVERT = b'osdb.link/vip'
@@ -32,6 +55,130 @@ ADVERT = b'osdb.link/vip'
 def fail(message):
     print(json.dumps({'error': message}))
     sys.exit(1)
+
+
+class FirstError(logging.Handler):
+    """Remembers subliminal's first error, which names the cause: providers
+    fail by logging, and later errors only report the consequences."""
+
+    def __init__(self):
+        super().__init__(logging.ERROR)
+        self.message = ''
+
+    def emit(self, record):
+        if self.message:
+            return
+        e = record.exc_info[1] if record.exc_info else None
+        if e is None:
+            self.message = record.getMessage()
+        else:
+            name, text = type(e).__name__, str(e)
+            self.message = name if text in ('', name) else '%s: %s' % (name, text)
+
+
+first_error = FirstError()
+
+
+def config_path():
+    from platformdirs import PlatformDirs
+    path = os.environ.get('SUBLIMINAL_CONFIG')
+    if path:
+        return os.path.expanduser(path)
+    return os.fspath(PlatformDirs('subliminal').user_config_path / 'subliminal.toml')
+
+
+def load_provider_configs():
+    """The [provider.NAME] tables of subliminal's configuration, or {}."""
+    import tomllib
+    try:
+        with open(config_path(), 'rb') as file:
+            toml = tomllib.load(file)
+    except FileNotFoundError:
+        return {}
+    except Exception as e:
+        logging.warning('ignoring %s: %s', config_path(), e)
+        return {}
+    providers = toml.get('provider', {})
+    if not isinstance(providers, dict):
+        return {}
+    return {name: table for name, table in providers.items() if isinstance(table, dict)}
+
+
+def providers_to_use(configs):
+    return PROVIDERS + [name for name in ACCOUNT_PROVIDERS if name in configs]
+
+
+def with_defaults(configs):
+    merged = {name: dict(table) for name, table in DEFAULT_CONFIGS.items()}
+    for name, table in configs.items():
+        merged.setdefault(name, {}).update(table)
+    return merged
+
+
+def configure_cache(region, version):
+    # A file cache, so a login token outlives this process. bomi keeps its own,
+    # one per subliminal version: an older version's entries may not read back.
+    from platformdirs import PlatformDirs
+    try:
+        cache_dir = PlatformDirs('bomi').user_cache_path
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        name = 'subliminal-%s.dbm' % version
+        for old in cache_dir.glob('subliminal-*.dbm*'):
+            if not old.name.startswith(name):
+                old.unlink()
+        region.configure('dogpile.cache.dbm', expiration_time=timedelta(days=30),
+                         arguments={'filename': os.fspath(cache_dir / name)})
+    except Exception as e:
+        logging.warning('using a memory cache: %s', e)
+        region.configure('dogpile.cache.memory', replace_existing_backend=True)
+
+
+def provider_site(name):
+    """The website a provider talks to, e.g. "opensubtitles.org" for
+    "opensubtitles", from its server URL; its name if it has none."""
+    from urllib.parse import urlparse
+    from subliminal.extensions import provider_manager
+    try:
+        url = getattr(provider_manager[name].plugin, 'server_url', None)
+        host = urlparse(url).hostname if isinstance(url, str) else None
+    except Exception:
+        host = None
+    if not host:
+        return name
+    site = '.'.join(host.split('.')[-2:])  # drops api., www., vip-api.
+    return site + ' VIP' if name.endswith('vip') else site
+
+
+def provider_options(cls):
+    options = []
+    for name, param in inspect.signature(cls.__init__).parameters.items():
+        if name in ('self', 'timeout') or param.kind in (param.VAR_POSITIONAL,
+                                                         param.VAR_KEYWORD):
+            continue
+        options.append(name)
+    return options
+
+
+def check():
+    import subliminal
+    from importlib.metadata import entry_points
+
+    configs = load_provider_configs()
+    used = providers_to_use(configs)
+    providers = []
+    for entry in sorted(entry_points(group='subliminal.providers'), key=lambda e: e.name):
+        info = {'name': entry.name, 'site': provider_site(entry.name), 'options': [],
+                'used': entry.name in used}
+        try:
+            info['options'] = provider_options(entry.load())
+        except Exception as e:  # a broken plugin
+            info['error'] = '%s: %s' % (type(e).__name__, e)
+        info['configured'] = ['%s: %s' % (key, value if key in SHOWN_VALUES else 'set')
+                              for key, value in configs.get(entry.name, {}).items()]
+        providers.append(info)
+    print(json.dumps({'version': subliminal.__version__, 'config': config_path(),
+                      'configFound': os.path.isfile(config_path()),
+                      'providers': providers}))
 
 
 def language_code(language):
@@ -79,7 +226,9 @@ def search(args):
     else:
         fail('Nothing to search for')
 
-    subtitles = list_subtitles({video}, languages, providers=PROVIDERS).get(video, [])
+    configs = load_provider_configs()
+    subtitles = list_subtitles({video}, languages, providers=providers_to_use(configs),
+                               provider_configs=with_defaults(configs)).get(video, [])
     found = []
     for subtitle in subtitles:
         try:
@@ -90,14 +239,17 @@ def search(args):
     found.sort(key=lambda pair: pair[0], reverse=True)
 
     cache = {}
+    sites = {}
     result = []
     for score, subtitle in found:
         key = '%s:%s' % (subtitle.provider_name, subtitle.id)
         if key in cache:
             continue
         cache[key] = subtitle
+        if subtitle.provider_name not in sites:
+            sites[subtitle.provider_name] = provider_site(subtitle.provider_name)
         result.append({'id': key,
-                       'provider': subtitle.provider_name,
+                       'provider': sites[subtitle.provider_name],
                        'language': language_code(subtitle.language),
                        'fileName': file_name(subtitle),
                        'hearingImpaired': bool(subtitle.hearing_impaired),
@@ -115,9 +267,13 @@ def download(args):
     subtitle = cache.get(args.id)
     if subtitle is None:
         fail('Unknown subtitle %s; search again' % args.id)
-    download_subtitles([subtitle], providers=PROVIDERS)
+    configs = load_provider_configs()
+    download_subtitles([subtitle], providers=providers_to_use(configs),
+                       provider_configs=with_defaults(configs))
     content = subtitle.content or b''
     if not content:
+        if first_error.message:
+            fail('%s failed: %s' % (subtitle.provider_name, first_error.message))
         fail('%s returned nothing' % subtitle.provider_name)
     if ADVERT in content[:500]:
         fail('%s returned an advert instead of a subtitle' % subtitle.provider_name)
@@ -128,6 +284,7 @@ def download(args):
 
 def main():
     logging.basicConfig(level=logging.WARNING, stream=sys.stderr)
+    logging.getLogger('subliminal').addHandler(first_error)
     parser = argparse.ArgumentParser()
     commands = parser.add_subparsers(dest='command', required=True)
     commands.add_parser('check')
@@ -147,11 +304,11 @@ def main():
         from subliminal import region
     except Exception as e:  # missing, or broken by a Python upgrade
         fail('subliminal is not usable: %s' % e)
-    region.configure('dogpile.cache.memory')
+    configure_cache(region, subliminal.__version__)
 
     try:
         if args.command == 'check':
-            print(json.dumps({'version': subliminal.__version__}))
+            check()
         elif args.command == 'search':
             search(args)
         else:

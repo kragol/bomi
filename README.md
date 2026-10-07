@@ -111,6 +111,16 @@ Optional at runtime, run as external tools:
   Find Subtitle. bomi runs a small helper script against subliminal's Python API;
   without subliminal the dialog reports itself unavailable.
 
+  Provider accounts are read from subliminal's own configuration file, `~/.config/subliminal/subliminal.toml` (or `$SUBLIMINAL_CONFIG`), which bomi never writes. opensubtitles.com, for one, needs a (free) account to download:
+
+  ```toml
+  [provider.opensubtitlescom]
+  username = "..."
+  password = "..."
+  ```
+
+  Preferences > Subtitle > Find lists the providers, what each accepts and what the file sets.
+
 ## Compilation
 
 In the below description, `$` means that you have to input the command in termnal/console
