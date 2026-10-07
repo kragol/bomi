@@ -109,10 +109,9 @@ Optional at runtime, run as external tools:
 * `yt-dlp` -- playing streaming sites such as YouTube
 * [`subliminal`](https://github.com/Diaoul/subliminal) with `python3` -- Tools >
   Find Subtitle. bomi runs a small helper script against subliminal's Python API;
-  without subliminal the dialog reports itself unavailable. Provider accounts are
-  read from subliminal's own configuration file,
-  `~/.config/subliminal/subliminal.toml` (or `$SUBLIMINAL_CONFIG`), which bomi
-  never writes; opensubtitles.com, for one, needs a (free) account to download:
+  without subliminal the dialog reports itself unavailable.
+
+  Provider accounts are read from subliminal's own configuration file, `~/.config/subliminal/subliminal.toml` (or `$SUBLIMINAL_CONFIG`), which bomi never writes. opensubtitles.com, for one, needs a (free) account to download:
 
   ```toml
   [provider.opensubtitlescom]
@@ -120,8 +119,7 @@ Optional at runtime, run as external tools:
   password = "..."
   ```
 
-  Preferences > Subtitle > Find lists the providers, what each accepts and what
-  the file sets.
+  Preferences > Subtitle > Find lists the providers, what each accepts and what the file sets.
 
 ## Compilation
 
