@@ -107,9 +107,15 @@ background and measurements behind each item.
   Qt 5 cannot provide. That means Qt 6 plus Wayland colour management (KDE supports
   it). The colour shader hooks `OUTPUT`, so it would need revisiting, because OUTPUT
   would then be PQ.
+  - The libmpv render API only offers the `vo_gpu` renderer, not `gpu-next` (libplacebo). Switch to `gpu-next` when libmpv offers it (mpv issue #10810, PR #16818); nothing to do before then.
 - [ ] **Native Wayland / Qt 6** in general (currently out of scope).
 - [ ] **Expose mpv's HDR tone-mapping options** (`tone-mapping`, `hdr-compute-peak`,
   `target-peak`) in preferences, since mpv now does the work.
+- [ ] **Gamma correction** in the colour dialog (neither `legacy` nor master has it).
+  - *What libmpv offers:* the `gamma` property (-100..100, mapped to 8^(v/100), applied as `pow(clamp(rgb, 0, 1), 1/g)`), which SMPlayer simply sets (`set gamma <v>`). mpv applies it before colour management, in whatever state the pipeline is in. For SDR that gives the same picture as the shader below (a power curve commutes with the transfer function). For HDR it either bends the PQ signal before tone mapping or, in linear light (motion interpolation, or linear/sigmoid upscaling, which bomi enables), clips everything above SDR white before tone mapping, so the effect would change with window size and settings. The same reason the other colour controls went into the shader (`8486a288`).
+  - *Suggested:* add `Gamma` to `VideoColor::Type`; the dialog, the Video > Adjust Color step actions, JSON and the OSD message follow through `for_type()`. In `PlayEngine::Data::updateColorShader()` apply `pow(clamp(rgb, 0, 1), vec3(1/g))` after the matrix, with mpv's mapping so values mean the same as in mpv and SMPlayer, and skip the shader only when the matrix is identity *and* gamma is 0.
+  - Make `"gamma"` optional in `VideoColor::setFromJson()` (it returns false on a missing key), so states saved before the change still load.
+  - Cheapest fallback if HDR does not matter: `mpv.setAsync("gamma", v)` instead of the shader line. It saves only a few lines, since the `VideoColor` plumbing is needed either way.
 
 ## Before merging into master
 
