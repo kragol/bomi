@@ -96,6 +96,10 @@ background and measurements behind each item.
 - [ ] **Follow-up: date format preference** for Latest Playback (relative, ISO, locale short/long).
 - [ ] **Stars** (low priority; most useful for streaming URLs such as TV channels). They are favourites: starred entries sort first and survive "Clear history", but nothing in the UI says so. Clicking one turns every star white. Leads: `setStarred()` resets the whole model instead of emitting `dataChanged`, and the icon binds to the non-reactive `history.isStarred(row)` instead of the `star` role. The "off" icon (`img/fav-off.png`) is almost fully transparent. Add a tooltip that explains what a star does.
 
+## Dialogs
+
+- [ ] **Hard-coded left column widths are too narrow on HiDPI.** Several dialogs fix the width of their left column (labels or page list) in pixels, so text is cut off or cramped on a HiDPI screen. Let the layout size these from their contents (or scale by font metrics) instead. Leads, not yet checked one by one: Preferences page tree fixed at 200 px min and max (`ui/prefdialog.ui:18-24`); 150 px label columns in `ui/osdstyle_widget.ui` and `ui/subtitlefinddialog.ui`; 100 px in `ui/subtitleviewer.ui`; 75 px in `ui/opendvddialog.ui`. Also check the `setFixedWidth`/`setMinimumWidth` calls in `dialog/audioequalizerdialog.cpp`, `dialog/videocolordialog.cpp` and `misc/logviewer.cpp`.
+
 ## Beyond the old bomi
 
 - [ ] **HDR output.** HDR sources are already tone-mapped to SDR correctly, which the
