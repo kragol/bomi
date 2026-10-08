@@ -8,6 +8,11 @@ PRECOMPILED_HEADER = stdafx.hpp
 precompile_header:!isEmpty(PRECOMPILED_HEADER): DEFINES += USING_PCH
 DESTDIR = $${PWD}/../../build
 LIB_DIR = $${DESTDIR}/lib
+# A build of the legacy branch leaves its vendored mpv headers here, and they
+# shadow the system libmpv's ("MPV_EXPORT does not name a type").
+exists($${DESTDIR}/include/mpv/client.h) {
+    error("Vendored mpv found in build/include from the legacy branch. Remove it, e.g. with 'git clean -fdx -e .claude', then rerun ./configure.")
+}
 INCLUDEPATH += kiss_fft
 LIBS += -L$${LIB_DIR} -lbz2 -lz
 

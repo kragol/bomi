@@ -72,9 +72,9 @@ background and measurements behind each item.
   build-depends name `ffmpeg-bomi` and codec libraries). Update them for the
   system libmpv or drop them; `legacy` keeps the working versions.
 
-- [ ] **Main checkout no longer builds master** (`MPV_EXPORT does not name a type` in `/usr/include/mpv/render.h`). This is not the branch's code: a fresh checkout of master builds, as the `libmpv-port` worktree does. The checkout's generated top-level `Makefile` comes from the legacy `configure`. It still has the `build-mpv` target and puts `build/lib/pkgconfig` first in `PKG_CONFIG_PATH`, so pkg-config finds the vendored `mpv.pc`, and the vendored `build/include/mpv/client.h` shadows the system one.
+- [x] **Main checkout no longer builds master** (`MPV_EXPORT does not name a type` in `/usr/include/mpv/render.h`). This is not the branch's code: a fresh checkout of master builds, as the `libmpv-port` worktree does. The checkout's generated top-level `Makefile` comes from the legacy `configure`. It still has the `build-mpv` target and puts `build/lib/pkgconfig` first in `PKG_CONFIG_PATH`, so pkg-config finds the vendored `mpv.pc`, and the vendored `build/include/mpv/client.h` shadows the system one.
   - [x] Fix the checkout: done 2026-10-08 (`git clean -fdx -e .claude`, then `./configure` and `make`).
-  - Fix master's `configure` too: it still prepends `/opt/ffmpeg-bomi` and `/opt/libass-bomi` to `PKG_CONFIG_PATH`, which is pointless without the vendored build. Better still, make `configure` or `make` refuse to run with a vendored `build/lib/pkgconfig` present, so switching from `legacy` fails loudly.
+  - [x] Fix master's `configure` too: the `/opt/ffmpeg-bomi` and `/opt/libass-bomi` `PKG_CONFIG_PATH` entries are gone, and `bomi.pro` stops qmake with an explanation when the vendored `build/include/mpv/client.h` is present. The guard is in qmake rather than `configure` because a stale `legacy` Makefile still runs master's `bomi.pro`; it checks the mpv header, not `build/lib/pkgconfig`, because `build-libchardet` legitimately installs there.
 - [ ] **Find Subtitle: opensubtitles.com and provider settings.** The dialog now
   runs on subliminal (`subtitle/subliminalfinder.cpp` plus the embedded
   `subtitle/subliminal_helper.py`), which fixed the opensubtitles.org advert
