@@ -167,7 +167,6 @@ struct VideoRenderer::Data {
     FboSet frame, osd;
 
     QSize sourceSize{0, 1};
-    QTimer sizeChecker;
     RenderFrameFunc render = nullptr;
     FrameUpdateFunc frameUpdate = nullptr;
 
@@ -267,15 +266,6 @@ VideoRenderer::VideoRenderer(QQuickItem *parent)
     setAcceptHoverEvents(true);
     setAcceptedMouseButtons(Qt::AllButtons);
     setFlag(ItemAcceptsDrops, true);
-    connect(&d->sizeChecker, &QTimer::timeout, [this] () {
-        if (_Change(d->frame.size, d->fboSizeHint()) |
-                _Change(d->osd.size, d->osdSizeHint())) {
-            d->redraw = true;
-            reserve(UpdateAll);
-        }
-    });
-    d->sizeChecker.setInterval(300);
-    d->sizeChecker.setSingleShot(true);
 }
 
 VideoRenderer::~VideoRenderer() {
@@ -491,7 +481,6 @@ auto VideoRenderer::sizeHint() const -> QSize
 auto VideoRenderer::updatePolish() -> void
 {
     Super::updatePolish();
-    d->sizeChecker.stop();
     QRectF letter;
     if (_Change(d->vtx, d->frameRect({0, 0, width(), height()}, d->offset, &letter)))
         reserve(UpdateGeometry, false);
@@ -519,7 +508,15 @@ auto VideoRenderer::updatePolish() -> void
         const auto g = d->onLetterbox ? rect() : d->letterbox->screen();
         d->overlay->setGeometry(g);
     }
-    d->sizeChecker.start();
+    // Resize the framebuffer right away. It is item-sized, so until it follows
+    // the item the old one is stretched over it, old letterbox bars included;
+    // the debounce that used to sit here made that visible for ~0.5 s after
+    // every fullscreen switch.
+    if (_Change(d->frame.size, d->fboSizeHint()) |
+            _Change(d->osd.size, d->osdSizeHint())) {
+        d->redraw = true;
+        reserve(UpdateAll);
+    }
 }
 
 auto VideoRenderer::setFlipped(bool horizontal, bool vertical) -> void
