@@ -251,6 +251,7 @@ auto PlayEngine::Data::updateVideoSubOptions() -> void
                          && OGL::is16bitFramebufferFormatSupported();
     const bool rgba16 = vr->framebufferObjectFormat() == OGL::RGBA16_UNorm;
     const auto color = colorMatrix(s);
+    const int gamma = s->video_color().gamma();
     mutex.unlock();
 
     setScalerProperties("scale"_b, scale);
@@ -269,6 +270,10 @@ auto PlayEngine::Data::updateVideoSubOptions() -> void
     mpv.setAsync("sigmoid-upscaling", sigmoid);
     mpv.setAsync("interpolation", interpolation);
     mpv.setAsync("fbo-format", rgba16 ? "rgba16"_b : "rgba"_b);
+    // mpv's own gamma (-100..100, the same scale as SMPlayer's). Unlike the
+    // matrix it acts before colour management, so on HDR sources it bends the
+    // signal ahead of tone mapping rather than the final SDR picture.
+    mpv.setAsync("gamma", gamma);
     updateColorShader(color);
 }
 

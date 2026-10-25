@@ -64,7 +64,7 @@ VideoColorDialog::VideoColorDialog(QWidget *parent)
     connect(close, &QPushButton::clicked, this, &QDialog::reject);
     close->setAutoDefault(true);
     close->setDefault(true);
-    grid->addWidget(bbox, 7 + 1, 0, 1, -1);
+    grid->addWidget(bbox, VideoColor::TypeMax + 1, 0, 1, -1);
 
     setLayout(grid);
     setMinimumWidth(400);
