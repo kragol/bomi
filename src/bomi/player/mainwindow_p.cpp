@@ -664,6 +664,7 @@ auto MainWindow::Data::applyPref() -> void
     color.s(u"contrast"_q)->setValue(p.steps().color_pct);
     color.s(u"hue"_q)->setValue(p.steps().color_pct);
     color.s(u"saturation"_q)->setValue(p.steps().color_pct);
+    color.s(u"gamma"_q)->setValue(p.steps().color_pct);
     color.s(u"red"_q)->setValue(p.steps().color_pct);
     color.s(u"green"_q)->setValue(p.steps().color_pct);
     color.s(u"blue"_q)->setValue(p.steps().color_pct);

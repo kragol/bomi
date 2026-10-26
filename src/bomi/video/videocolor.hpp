@@ -9,7 +9,7 @@ class QMatrix4x4;
 
 class VideoColor {
 public:
-    enum Type {Brightness = 0, Contrast, Hue, Saturation, Red, Green, Blue, TypeMax};
+    enum Type {Brightness = 0, Contrast, Hue, Saturation, Gamma, Red, Green, Blue, TypeMax};
     template<class T> using Array = std::array<T, TypeMax>;
 //    VideoColor(int b, int c, int s, int h): m{{b, c, s, h}} {}
     VideoColor() = default;
@@ -28,6 +28,7 @@ public:
     auto saturation() const -> int { return m[Saturation]; }
     auto contrast() const -> int { return m[Contrast]; }
     auto hue() const -> int { return m[Hue]; }
+    auto gamma() const -> int { return m[Gamma]; }
     auto red() const -> int { return m[Red]; }
     auto green() const -> int { return m[Green]; }
     auto blue() const -> int { return m[Blue]; }
@@ -38,6 +39,7 @@ public:
     auto setContrast(int v) -> void { m[Contrast] = clip(v); }
     auto setHue(int v) -> void { m[Hue] = clip(v); }
     auto isZero() const -> bool;
+    auto isMatrixZero() const -> bool;
     auto matrix() const -> QMatrix4x4;
     auto getText(Type type) const -> QString;
     auto packed() const -> qint64;
@@ -63,7 +65,7 @@ private:
     auto matYCbCrToRgb(ColorSpace c, ColorRange r) const -> QMatrix4x4;
     static auto clip(int v) -> int { return qBound(-100, v, 100); }
     static Array<QString> s_names;
-    Array<int> m{{0, 0, 0, 0, 0, 0, 0}};
+    Array<int> m{{0, 0, 0, 0, 0, 0, 0, 0}};
 
 };
 
@@ -100,6 +102,16 @@ inline auto VideoColor::isZero() const -> bool
 {
     for (int i = 0; i < TypeMax; ++i) {
         if (m[i])
+            return false;
+    }
+    return true;
+}
+
+// Gamma is left to mpv's own property and is not part of matrix().
+inline auto VideoColor::isMatrixZero() const -> bool
+{
+    for (int i = 0; i < TypeMax; ++i) {
+        if (i != Gamma && m[i])
             return false;
     }
     return true;

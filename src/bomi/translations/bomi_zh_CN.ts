@@ -1,4 +1,6 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="zh_CN" version="2.1">
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE TS>
+<TS version="2.1" language="zh_CN">
 <context>
     <name>AboutDialog</name>
     <message>
@@ -17,43 +19,56 @@
         <translation>版本: %1</translation>
     </message>
     <message>
-        <location filename="../ui/aboutdialog.ui" line="149"/>
+        <location filename="../ui/aboutdialog.ui" line="120"/>
+        <source>Using Qt %1, Compiled against Qt %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../ui/aboutdialog.ui" line="156"/>
+        <source>This fork: %1&lt;br&gt;Issue tracker: %2 (no support commitment)&lt;br&gt;&lt;br&gt;Original bomi by xylosper, inactive since 2016:&lt;br&gt;%3&lt;br&gt;%4</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../ui/aboutdialog.ui" line="185"/>
+        <source>The logo is designed by Ivan from Kotus Works.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Website: %1
 Twitter: %2
 Issue tracker: %3
 Developer&apos;s E-mail: %4</source>
-        <translation>网站: %1
+        <translation type="vanished">网站: %1
 Twitter: %2
 问题跟踪: %3
 开发者的邮箱地址: %4</translation>
     </message>
     <message>
-        <location filename="../ui/aboutdialog.ui" line="181"/>
         <source>The logo is designed by Ivan from &lt;a href=&quot;%1&quot;&gt;Kotus Works&lt;/a&gt;.</source>
-        <translation>此标志由 &lt;a href=&quot;%1&quot;&gt;Kotus Works&lt;/a&gt; 的 Ivan 设计。</translation>
+        <translation type="vanished">此标志由 &lt;a href=&quot;%1&quot;&gt;Kotus Works&lt;/a&gt; 的 Ivan 设计。</translation>
     </message>
     <message>
-        <location filename="../ui/aboutdialog.ui" line="197"/>
+        <location filename="../ui/aboutdialog.ui" line="201"/>
         <source>Special thanks to Mingyu Jo and Donghyun Ha for naming.</source>
         <translation>特别感谢 Mingyu Jo 和 Donghyun Ha 提供名称。</translation>
     </message>
     <message>
-        <location filename="../ui/aboutdialog.ui" line="223"/>
+        <location filename="../ui/aboutdialog.ui" line="227"/>
         <source>License</source>
         <translation>许可协议</translation>
     </message>
     <message>
-        <location filename="../ui/aboutdialog.ui" line="257"/>
+        <location filename="../ui/aboutdialog.ui" line="261"/>
         <source>View Full Text of GPL</source>
         <translation>查看 GPL 的完整文本</translation>
     </message>
     <message>
-        <location filename="../dialog/aboutdialog.cpp" line="19"/>
+        <location filename="../dialog/aboutdialog.cpp" line="21"/>
         <source>Lee, Byoung-young</source>
         <translation>Lee, Byoung-young</translation>
     </message>
     <message>
-        <location filename="../dialog/aboutdialog.cpp" line="49"/>
+        <location filename="../dialog/aboutdialog.cpp" line="53"/>
         <source>Close</source>
         <translation>关闭</translation>
     </message>
@@ -445,17 +460,17 @@ Right click: %2</source>
 <context>
     <name>ChannelManipulationWidget</name>
     <message>
-        <location filename="../widget/channelmanipulationwidget.cpp" line="109"/>
+        <location filename="../widget/channelmanipulationwidget.cpp" line="114"/>
         <source>Layout:</source>
         <translation>布局:</translation>
     </message>
     <message>
-        <location filename="../widget/channelmanipulationwidget.cpp" line="121"/>
+        <location filename="../widget/channelmanipulationwidget.cpp" line="126"/>
         <source>Inputs</source>
         <translation>输入</translation>
     </message>
     <message>
-        <location filename="../widget/channelmanipulationwidget.cpp" line="126"/>
+        <location filename="../widget/channelmanipulationwidget.cpp" line="131"/>
         <source>Outputs</source>
         <translation>输出</translation>
     </message>
@@ -660,49 +675,49 @@ This requires much more CPU or GPU usage.</source>
         <translation>音频编码器</translation>
     </message>
     <message>
-        <location filename="../dialog/encoderdialog.cpp" line="108"/>
+        <location filename="../dialog/encoderdialog.cpp" line="110"/>
         <source>Start</source>
         <translation>开始</translation>
     </message>
     <message>
-        <location filename="../dialog/encoderdialog.cpp" line="230"/>
+        <location filename="../dialog/encoderdialog.cpp" line="232"/>
         <source>Encoder: %1</source>
         <translation>编码器: %1</translation>
     </message>
     <message>
-        <location filename="../dialog/encoderdialog.cpp" line="250"/>
-        <location filename="../dialog/encoderdialog.cpp" line="281"/>
-        <location filename="../dialog/encoderdialog.cpp" line="421"/>
+        <location filename="../dialog/encoderdialog.cpp" line="252"/>
+        <location filename="../dialog/encoderdialog.cpp" line="283"/>
+        <location filename="../dialog/encoderdialog.cpp" line="417"/>
         <source>Encoder</source>
         <translation>编码器</translation>
     </message>
     <message>
-        <location filename="../dialog/encoderdialog.cpp" line="257"/>
+        <location filename="../dialog/encoderdialog.cpp" line="259"/>
         <source>No video stream exists.</source>
         <translation>不存在视频流。</translation>
     </message>
     <message>
-        <location filename="../dialog/encoderdialog.cpp" line="265"/>
+        <location filename="../dialog/encoderdialog.cpp" line="267"/>
         <source>Range is too short.</source>
         <translation>范围太短。</translation>
     </message>
     <message>
-        <location filename="../dialog/encoderdialog.cpp" line="268"/>
+        <location filename="../dialog/encoderdialog.cpp" line="270"/>
         <source>Folder does not exists.</source>
         <translation>文件夹不存在。</translation>
     </message>
     <message>
-        <location filename="../dialog/encoderdialog.cpp" line="270"/>
+        <location filename="../dialog/encoderdialog.cpp" line="272"/>
         <source>File name is empty.</source>
         <translation>文件名为空。</translation>
     </message>
     <message>
-        <location filename="../dialog/encoderdialog.cpp" line="273"/>
+        <location filename="../dialog/encoderdialog.cpp" line="275"/>
         <source>Failed to create file.</source>
         <translation>创建文件失败。</translation>
     </message>
     <message>
-        <location filename="../dialog/encoderdialog.cpp" line="422"/>
+        <location filename="../dialog/encoderdialog.cpp" line="418"/>
         <source>Do you want to cancel current encoding and close window?</source>
         <translation>您想取消当前的编码任务并关闭窗口吗？</translation>
     </message>
@@ -1517,9 +1532,8 @@ This requires much more CPU or GPU usage.</source>
 <context>
     <name>HwAccCodecBox</name>
     <message>
-        <location filename="../pref/prefwidgets.cpp" line="18"/>
         <source>Not supported</source>
-        <translation>不支持</translation>
+        <translation type="vanished">不支持</translation>
     </message>
 </context>
 <context>
@@ -1645,27 +1659,27 @@ This requires much more CPU or GPU usage.</source>
 <context>
     <name>LogViewer</name>
     <message>
-        <location filename="../ui/logviewer.ui" line="44"/>
+        <location filename="../ui/logviewer.ui" line="22"/>
         <source>Level Filter</source>
         <translation>级别过滤器</translation>
     </message>
     <message>
-        <location filename="../ui/logviewer.ui" line="57"/>
+        <location filename="../ui/logviewer.ui" line="35"/>
         <source>Context Filter</source>
         <translation>上下文过滤器</translation>
     </message>
     <message>
-        <location filename="../ui/logviewer.ui" line="74"/>
+        <location filename="../ui/logviewer.ui" line="77"/>
         <source>Autoscroll</source>
         <translation>自动滚动</translation>
     </message>
     <message>
-        <location filename="../ui/logviewer.ui" line="97"/>
+        <location filename="../ui/logviewer.ui" line="100"/>
         <source>Save</source>
         <translation>保存</translation>
     </message>
     <message>
-        <location filename="../ui/logviewer.ui" line="106"/>
+        <location filename="../ui/logviewer.ui" line="109"/>
         <source>Clear</source>
         <translation>清空</translation>
     </message>
@@ -1701,18 +1715,28 @@ This requires much more CPU or GPU usage.</source>
         <source>Failed to open file to save.</source>
         <translation>保存时打开文件失败。</translation>
     </message>
+    <message>
+        <location filename="../misc/logviewer.cpp" line="245"/>
+        <source>Log viewer is disabled. Turn it on in preferences and restart bomi.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../misc/logviewer.cpp" line="247"/>
+        <source>Maximum log level: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MainWindow</name>
     <message>
         <location filename="../player/mainwindow_m.cpp" line="168"/>
-        <location filename="../player/mainwindow_m.cpp" line="727"/>
-        <location filename="../player/mainwindow_m.cpp" line="749"/>
+        <location filename="../player/mainwindow_m.cpp" line="744"/>
+        <location filename="../player/mainwindow_m.cpp" line="766"/>
         <source>Open File</source>
         <translation>打开文件</translation>
     </message>
     <message>
-        <location filename="../player/mainwindow_m.cpp" line="694"/>
+        <location filename="../player/mainwindow_m.cpp" line="711"/>
         <source>Open Subtitle</source>
         <translation>打开字幕</translation>
     </message>
@@ -1729,7 +1753,7 @@ Cannot open the media.</source>
 无法打开媒体。</translation>
     </message>
     <message>
-        <location filename="../player/mainwindow_m.cpp" line="897"/>
+        <location filename="../player/mainwindow_m.cpp" line="914"/>
         <source>Auto-shutdown is canceled.</source>
         <translation>自动关机已取消。</translation>
     </message>
@@ -1746,7 +1770,7 @@ Please wait for a while.</source>
         <translation>JSON-RPC 服务器错误</translation>
     </message>
     <message>
-        <location filename="../player/mainwindow_p.cpp" line="795"/>
+        <location filename="../player/mainwindow_p.cpp" line="800"/>
         <source>Error on loading skin</source>
         <translation>加载皮肤时出错</translation>
     </message>
@@ -1766,7 +1790,7 @@ Please wait for a while.</source>
         <translation>跳至下一黑色帧</translation>
     </message>
     <message>
-        <location filename="../player/mainwindow_m.cpp" line="734"/>
+        <location filename="../player/mainwindow_m.cpp" line="751"/>
         <source>Save File</source>
         <translation>保存文件</translation>
     </message>
@@ -1836,73 +1860,78 @@ Please wait for a while.</source>
         <translation>高级色度提升器设置</translation>
     </message>
     <message>
-        <location filename="../player/mainwindow_m.cpp" line="660"/>
+        <location filename="../player/mainwindow_m.cpp" line="602"/>
+        <source>Display Sync</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../player/mainwindow_m.cpp" line="677"/>
         <source>Open Audio File</source>
         <translation>打开音频文件</translation>
     </message>
     <message>
-        <location filename="../player/mainwindow_m.cpp" line="799"/>
+        <location filename="../player/mainwindow_m.cpp" line="816"/>
         <source>Shuffle Playlist</source>
         <translation>随机播放列表</translation>
     </message>
     <message>
-        <location filename="../player/mainwindow_m.cpp" line="810"/>
+        <location filename="../player/mainwindow_m.cpp" line="827"/>
         <source>Repeat Playlist</source>
         <translation>循环播放列表</translation>
     </message>
     <message>
-        <location filename="../player/mainwindow_m.cpp" line="818"/>
+        <location filename="../player/mainwindow_m.cpp" line="835"/>
         <source>Clear History</source>
         <translation>清空历史记录</translation>
     </message>
     <message>
-        <location filename="../player/mainwindow_m.cpp" line="818"/>
+        <location filename="../player/mainwindow_m.cpp" line="835"/>
         <source>Do you really want clear playback history?</source>
         <translation>您确定要清除播放历史记录吗？</translation>
     </message>
     <message>
-        <location filename="../player/mainwindow_m.cpp" line="869"/>
+        <location filename="../player/mainwindow_m.cpp" line="886"/>
         <source>Downloaded</source>
         <translation>已下载</translation>
     </message>
     <message>
-        <location filename="../player/mainwindow_m.cpp" line="881"/>
+        <location filename="../player/mainwindow_m.cpp" line="898"/>
         <source>Exit bomi when the playlist has finished.</source>
         <translation>播放列表完成时退出 bomi。</translation>
     </message>
     <message>
-        <location filename="../player/mainwindow_m.cpp" line="882"/>
+        <location filename="../player/mainwindow_m.cpp" line="899"/>
         <source>Auto-exit is canceled.</source>
         <translation>自动退出已取消。</translation>
     </message>
     <message>
-        <location filename="../player/mainwindow_m.cpp" line="888"/>
+        <location filename="../player/mainwindow_m.cpp" line="905"/>
         <source>Auto-shutdown</source>
         <translation>自动关机</translation>
     </message>
     <message>
-        <location filename="../player/mainwindow_m.cpp" line="889"/>
-        <location filename="../player/mainwindow_m.cpp" line="894"/>
+        <location filename="../player/mainwindow_m.cpp" line="906"/>
+        <location filename="../player/mainwindow_m.cpp" line="911"/>
         <source>The system will shut down when the play list has finished.</source>
         <translation>系统将在播放列表完成后自动关机。</translation>
     </message>
     <message>
-        <location filename="../player/mainwindow_m.cpp" line="956"/>
+        <location filename="../player/mainwindow_m.cpp" line="973"/>
         <source>Current Title/Edition</source>
         <translation>当前标题/版本</translation>
     </message>
     <message>
-        <location filename="../player/mainwindow.cpp" line="469"/>
+        <location filename="../player/mainwindow.cpp" line="472"/>
         <source>bomi will be running in the system tray when the window closed.</source>
         <translation>bomi 在窗口关闭后将继续在系统托盘中运行。</translation>
     </message>
     <message>
-        <location filename="../player/mainwindow.cpp" line="472"/>
+        <location filename="../player/mainwindow.cpp" line="475"/>
         <source>You can change this behavior in the preferences. If you want to exit bomi, please use &apos;Exit&apos; menu.</source>
         <translation>您可以在首选项中更改此行为。如果您想退出 bomi，请使用“退出”菜单。</translation>
     </message>
     <message>
-        <location filename="../player/mainwindow_m.cpp" line="957"/>
+        <location filename="../player/mainwindow_m.cpp" line="974"/>
         <source>Current Chapter</source>
         <translation>当前章节</translation>
     </message>
@@ -1938,12 +1967,12 @@ Please wait for a while.</source>
         <translation>A-B 循环</translation>
     </message>
     <message>
-        <location filename="../player/mainwindow.cpp" line="468"/>
+        <location filename="../player/mainwindow.cpp" line="471"/>
         <source>System Tray Icon</source>
         <translation>系统托盘图标</translation>
     </message>
     <message>
-        <location filename="../player/mainwindow.cpp" line="475"/>
+        <location filename="../player/mainwindow.cpp" line="478"/>
         <source>Do not display this message again</source>
         <translation>不再显示此信息</translation>
     </message>
@@ -2319,12 +2348,12 @@ One of GL_BGRA8 and GL_BGRA16 must be supported at least.</source>
 GL_BGRA8 和 GL_BGRA16 至少要支持一种。</translation>
     </message>
     <message>
-        <location filename="../player/main.cpp" line="67"/>
+        <location filename="../player/main.cpp" line="80"/>
         <source>OpenGL Error</source>
         <translation>OpenGL 错误</translation>
     </message>
     <message>
-        <location filename="../player/main.cpp" line="68"/>
+        <location filename="../player/main.cpp" line="81"/>
         <source>Error: %1
 
 Failed to check OpenGL support.
@@ -2374,9 +2403,8 @@ It may help to update driver of graphics card.</source>
 <context>
     <name>OpenSubtitlesFinder</name>
     <message>
-        <location filename="../subtitle/opensubtitlesfinder.cpp" line="45"/>
         <source>Cannot connect to server</source>
-        <translation>无法连接到服务器</translation>
+        <translation type="vanished">无法连接到服务器</translation>
     </message>
 </context>
 <context>
@@ -2569,52 +2597,57 @@ It may help to update driver of graphics card.</source>
 <context>
     <name>PlayEngine</name>
     <message>
-        <location filename="../player/playengine_p.cpp" line="705"/>
+        <location filename="../player/playengine_p.cpp" line="847"/>
         <source>Title %1</source>
         <translation>标题 %1</translation>
     </message>
     <message>
-        <location filename="../player/playengine_p.cpp" line="705"/>
+        <location filename="../player/playengine_p.cpp" line="847"/>
         <source>Edition %1</source>
         <translation>版本 %1</translation>
     </message>
     <message>
-        <location filename="../player/playengine.cpp" line="1194"/>
+        <location filename="../player/playengine.cpp" line="1248"/>
         <source>Playing</source>
         <translation>正在播放</translation>
     </message>
     <message>
-        <location filename="../player/playengine.cpp" line="1192"/>
+        <location filename="../player/playengine.cpp" line="1246"/>
         <source>Stopped</source>
         <translation>已停止</translation>
     </message>
     <message>
-        <location filename="../player/playengine.cpp" line="1176"/>
+        <location filename="../player/playengine.cpp" line="1005"/>
+        <source>Autoselect audio output device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../player/playengine.cpp" line="1230"/>
         <source>Loading</source>
         <translation>载入中</translation>
     </message>
     <message>
-        <location filename="../player/playengine.cpp" line="1178"/>
+        <location filename="../player/playengine.cpp" line="1232"/>
         <source>Searching</source>
         <translation>搜索中</translation>
     </message>
     <message>
-        <location filename="../player/playengine.cpp" line="1180"/>
+        <location filename="../player/playengine.cpp" line="1234"/>
         <source>Buffering</source>
         <translation>缓冲中</translation>
     </message>
     <message>
-        <location filename="../player/playengine.cpp" line="1182"/>
+        <location filename="../player/playengine.cpp" line="1236"/>
         <source>Seeking</source>
         <translation>跳转中</translation>
     </message>
     <message>
-        <location filename="../player/playengine.cpp" line="1198"/>
+        <location filename="../player/playengine.cpp" line="1252"/>
         <source>Error</source>
         <translation>错误</translation>
     </message>
     <message>
-        <location filename="../player/playengine.cpp" line="1196"/>
+        <location filename="../player/playengine.cpp" line="1250"/>
         <source>Paused</source>
         <translation>已暂停</translation>
     </message>
@@ -2679,19 +2712,19 @@ It may help to update driver of graphics card.</source>
     </message>
     <message>
         <location filename="../imports/bomi/PlayInfoView.qml" line="67"/>
-        <location filename="../imports/bomi/PlayInfoView.qml" line="105"/>
+        <location filename="../imports/bomi/PlayInfoView.qml" line="119"/>
         <source>Decoder</source>
         <translation>解码器</translation>
     </message>
     <message>
         <location filename="../imports/bomi/PlayInfoView.qml" line="68"/>
-        <location filename="../imports/bomi/PlayInfoView.qml" line="106"/>
+        <location filename="../imports/bomi/PlayInfoView.qml" line="120"/>
         <source>Filter </source>
         <translation>过滤器</translation>
     </message>
     <message>
         <location filename="../imports/bomi/PlayInfoView.qml" line="69"/>
-        <location filename="../imports/bomi/PlayInfoView.qml" line="107"/>
+        <location filename="../imports/bomi/PlayInfoView.qml" line="121"/>
         <source>Output </source>
         <translation>输出</translation>
     </message>
@@ -2711,27 +2744,52 @@ It may help to update driver of graphics card.</source>
         <translation>已显示帧</translation>
     </message>
     <message>
-        <location filename="../imports/bomi/PlayInfoView.qml" line="92"/>
+        <location filename="../imports/bomi/PlayInfoView.qml" line="85"/>
+        <source>Display Sync</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../imports/bomi/PlayInfoView.qml" line="88"/>
+        <source>Active</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../imports/bomi/PlayInfoView.qml" line="89"/>
+        <source>Inactive</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../imports/bomi/PlayInfoView.qml" line="93"/>
+        <source> vsync/frame, </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../imports/bomi/PlayInfoView.qml" line="94"/>
+        <source> late</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../imports/bomi/PlayInfoView.qml" line="106"/>
         <source>Hardware Acceleration</source>
         <translation>硬件加速</translation>
     </message>
     <message>
-        <location filename="../imports/bomi/PlayInfoView.qml" line="97"/>
+        <location filename="../imports/bomi/PlayInfoView.qml" line="111"/>
         <source>Deinterlacer</source>
         <translation>去交错</translation>
     </message>
     <message>
-        <location filename="../imports/bomi/PlayInfoView.qml" line="111"/>
+        <location filename="../imports/bomi/PlayInfoView.qml" line="125"/>
         <source>Normalizer</source>
         <translation>规范器</translation>
     </message>
     <message>
-        <location filename="../imports/bomi/PlayInfoView.qml" line="115"/>
+        <location filename="../imports/bomi/PlayInfoView.qml" line="129"/>
         <source>Driver</source>
         <translation>驱动程序</translation>
     </message>
     <message>
-        <location filename="../imports/bomi/PlayInfoView.qml" line="127"/>
+        <location filename="../imports/bomi/PlayInfoView.qml" line="141"/>
         <source>%1 #%2: Codec=%3, Title=%4, Language=%5, Encoding=%6</source>
         <translation>%1 #%2: 编码器=%3, 标题=%4, 语言=%5, 编码=%6</translation>
     </message>
@@ -2765,7 +2823,7 @@ It may help to update driver of graphics card.</source>
 <context>
     <name>Pref</name>
     <message>
-        <location filename="../pref/pref.cpp" line="169"/>
+        <location filename="../pref/pref.cpp" line="215"/>
         <source>70</source>
         <comment>This is default value for accuracy to enfoce auto-detected subtitle encoding in preferences. Higher value means that auto-detection will be applied only if the result is more reliable.</comment>
         <translation>70</translation>
@@ -2774,7 +2832,7 @@ It may help to update driver of graphics card.</source>
 <context>
     <name>PrefDialog</name>
     <message>
-        <location filename="../pref/prefdialog.cpp" line="279"/>
+        <location filename="../pref/prefdialog.cpp" line="327"/>
         <source>Preferences</source>
         <translation>首选项</translation>
     </message>
@@ -2784,17 +2842,17 @@ It may help to update driver of graphics card.</source>
         <translation>打开媒体文件时生成播放列表</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="373"/>
+        <location filename="../ui/prefdialog.ui" line="322"/>
         <source>Play</source>
         <translation>播放</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="409"/>
+        <location filename="../ui/prefdialog.ui" line="358"/>
         <source>Auto-pausing</source>
         <translation>自动暂停</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="415"/>
+        <location filename="../ui/prefdialog.ui" line="364"/>
         <source>Pause when minimized</source>
         <translation>最小化时</translation>
     </message>
@@ -2804,7 +2862,7 @@ It may help to update driver of graphics card.</source>
         <translation>打开一个文件时，添加接下来的文件到播放列表。</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1552"/>
+        <location filename="../ui/prefdialog.ui" line="1613"/>
         <source>Disable screensaver while playing</source>
         <translation>播放时禁用屏幕保护</translation>
     </message>
@@ -2814,77 +2872,77 @@ It may help to update driver of graphics card.</source>
         <translation>生成播放列表</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1131"/>
+        <location filename="../ui/prefdialog.ui" line="1099"/>
         <source>Volume Normalizer</source>
         <translation>音量规范器</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1177"/>
+        <location filename="../ui/prefdialog.ui" line="1145"/>
         <source>Codec to allow hardware-acceleration</source>
         <translation>允许进行硬件加速的编/解码器</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1536"/>
+        <location filename="../ui/prefdialog.ui" line="1597"/>
         <source>Run only single bomi application at the same time</source>
         <translation>同时只能运行一个 bomi 应用程序</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1588"/>
+        <location filename="../ui/prefdialog.ui" line="1649"/>
         <source>Use Lion-style fullscreen mode</source>
         <translation>使用 Lion 式全屏模式</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1839"/>
+        <location filename="../ui/prefdialog.ui" line="1907"/>
         <source>You may need to restart bomi to apply the changes </source>
         <translation>您可能需要重启 bomi 才能应用更改</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1422"/>
+        <location filename="../ui/prefdialog.ui" line="1483"/>
         <source>System tray</source>
         <translation>系统托盘</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1428"/>
+        <location filename="../ui/prefdialog.ui" line="1489"/>
         <source>Show system tray icon</source>
         <translation>显示系统托盘图标</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1438"/>
+        <location filename="../ui/prefdialog.ui" line="1499"/>
         <source>Hide the window rather than quit when closed </source>
         <translation>关闭时隐藏窗口而不是退出</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="942"/>
-        <location filename="../pref/prefdialog.cpp" line="129"/>
+        <location filename="../ui/prefdialog.ui" line="891"/>
+        <location filename="../pref/prefdialog.cpp" line="173"/>
         <source>Subtitle</source>
         <translation>字幕</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="425"/>
+        <location filename="../ui/prefdialog.ui" line="374"/>
         <source>Apply to video only</source>
         <translation>仅应用到视频</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="445"/>
+        <location filename="../ui/prefdialog.ui" line="394"/>
         <source>Remember image slides history</source>
         <translation>记住图像幻灯片历史</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="621"/>
-        <location filename="../ui/prefdialog.ui" line="958"/>
-        <location filename="../ui/prefdialog.ui" line="1294"/>
-        <location filename="../pref/prefdialog.cpp" line="127"/>
-        <location filename="../pref/prefdialog.cpp" line="130"/>
+        <location filename="../ui/prefdialog.ui" line="570"/>
+        <location filename="../ui/prefdialog.ui" line="907"/>
+        <location filename="../ui/prefdialog.ui" line="1355"/>
+        <location filename="../pref/prefdialog.cpp" line="171"/>
+        <location filename="../pref/prefdialog.cpp" line="174"/>
         <source>Load</source>
         <translation>载入</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="452"/>
+        <location filename="../ui/prefdialog.ui" line="401"/>
         <source>Save and restore state per media playback</source>
         <translation>保存和恢复每个媒体的播放状态</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1823"/>
+        <location filename="../ui/prefdialog.ui" line="1891"/>
         <source>Locale</source>
         <translation>语言区域</translation>
     </message>
@@ -2900,7 +2958,7 @@ It may help to update driver of graphics card.</source>
     </message>
     <message>
         <location filename="../ui/prefdialog.ui" line="225"/>
-        <location filename="../ui/prefdialog.ui" line="1979"/>
+        <location filename="../ui/prefdialog.ui" line="2047"/>
         <source>Format</source>
         <translation>格式</translation>
     </message>
@@ -2911,7 +2969,7 @@ It may help to update driver of graphics card.</source>
     </message>
     <message>
         <location filename="../ui/prefdialog.ui" line="245"/>
-        <location filename="../ui/prefdialog.ui" line="1409"/>
+        <location filename="../ui/prefdialog.ui" line="1470"/>
         <source>Default</source>
         <translation>默认</translation>
     </message>
@@ -2921,22 +2979,22 @@ It may help to update driver of graphics card.</source>
         <translation>保存在</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="308"/>
+        <location filename="../ui/prefdialog.ui" line="1230"/>
         <source>Subtitle finder</source>
         <translation>字幕查找器</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="314"/>
+        <location filename="../ui/prefdialog.ui" line="1236"/>
         <source>Preserve downloaded subtitles</source>
         <translation>保留已下载的字幕</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="323"/>
+        <location filename="../ui/prefdialog.ui" line="1245"/>
         <source>File Name Format</source>
         <translation>文件名格式</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="330"/>
+        <location filename="../ui/prefdialog.ui" line="1252"/>
         <source>Available formatting placeholders:
 %MEDIA_NAME%: the name of media file (extension is excluded)
 %SUBTITLE_NAME%: the name of subtitle file (extension is excluded)
@@ -2947,251 +3005,301 @@ It may help to update driver of graphics card.</source>
 %SUBTITLE_EXT%: 字幕文件扩展名</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="340"/>
+        <location filename="../ui/prefdialog.ui" line="1262"/>
         <source>Fallback Folder</source>
         <translation>备用文件夹</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="347"/>
+        <location filename="../ui/prefdialog.ui" line="1269"/>
         <source>This is a fallback folder to save downloaded subtitles when original folder is not writable.</source>
         <translation>当原文件夹不可写入时的备用文件夹，用以保存已下载的字幕。</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1706"/>
+        <location filename="../ui/prefdialog.ui" line="1774"/>
         <source>Controls</source>
         <translation>控制</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1930"/>
+        <location filename="../ui/prefdialog.ui" line="1998"/>
         <source>Streaming</source>
         <translation>流媒体</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="399"/>
+        <location filename="../ui/prefdialog.ui" line="348"/>
         <source>Ignore when switching to next item in playlist</source>
         <translation>在切换到播放列表中的下一个项目时忽略</translation>
     </message>
     <message>
         <location filename="../ui/prefdialog.ui" line="173"/>
-        <location filename="../ui/prefdialog.ui" line="638"/>
-        <location filename="../ui/prefdialog.ui" line="704"/>
-        <location filename="../ui/prefdialog.ui" line="733"/>
+        <location filename="../ui/prefdialog.ui" line="587"/>
+        <location filename="../ui/prefdialog.ui" line="653"/>
+        <location filename="../ui/prefdialog.ui" line="682"/>
         <location filename="../misc/stepinfo.cpp" line="41"/>
         <source> sec</source>
         <translation>秒</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="438"/>
+        <location filename="../ui/prefdialog.ui" line="387"/>
         <source>Use precise seeking regardless of key frame</source>
         <translation>使用精确跳转，无论是否为关键帧</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="489"/>
+        <location filename="../ui/prefdialog.ui" line="438"/>
         <source>Audio output device (Restart required)</source>
         <translation>音频输出设备（需要重启）</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="497"/>
+        <location filename="../ui/prefdialog.ui" line="446"/>
         <source>Name</source>
         <translation>名称</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="526"/>
+        <location filename="../ui/prefdialog.ui" line="475"/>
         <source>Volume control</source>
         <translation>音量控制</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="586"/>
+        <location filename="../ui/prefdialog.ui" line="535"/>
         <source>Channel Manipulation</source>
         <translation>声道控制</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="632"/>
+        <location filename="../ui/prefdialog.ui" line="581"/>
         <source>Default Cache</source>
         <translation>默认缓存</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="657"/>
+        <location filename="../ui/prefdialog.ui" line="606"/>
         <source>Local files</source>
         <translation>本地文件</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="667"/>
+        <location filename="../ui/prefdialog.ui" line="616"/>
         <source>Network media</source>
         <translation>网络媒体</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="796"/>
-        <location filename="../ui/prefdialog.ui" line="812"/>
-        <location filename="../ui/prefdialog.ui" line="828"/>
-        <location filename="../ui/prefdialog.ui" line="872"/>
+        <location filename="../ui/prefdialog.ui" line="745"/>
+        <location filename="../ui/prefdialog.ui" line="761"/>
+        <location filename="../ui/prefdialog.ui" line="777"/>
+        <location filename="../ui/prefdialog.ui" line="821"/>
         <source> MiB</source>
         <translation> MiB</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="862"/>
+        <location filename="../ui/prefdialog.ui" line="811"/>
         <source>Maximum cache file size</source>
         <translation>缓存文件最大大小</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="888"/>
-        <location filename="../ui/prefdialog.ui" line="901"/>
+        <location filename="../ui/prefdialog.ui" line="837"/>
+        <location filename="../ui/prefdialog.ui" line="850"/>
         <source> KiB</source>
         <translation> KiB</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1024"/>
+        <location filename="../ui/prefdialog.ui" line="973"/>
         <source>Prefer external files to internal tracks</source>
         <translation>相比内嵌，更偏好外部文件</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1107"/>
+        <location filename="../ui/prefdialog.ui" line="1056"/>
         <source>Motion Smoothing</source>
         <translation>运动平滑</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1143"/>
+        <location filename="../ui/prefdialog.ui" line="1063"/>
+        <source>Frame Timing</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../ui/prefdialog.ui" line="1069"/>
+        <source>Time video against the display refresh rate instead of the audio clock, resampling audio to match. This removes judder when the frame rate does not divide the refresh rate evenly. Turn it off to use the audio clock, which never resamples audio.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../ui/prefdialog.ui" line="1072"/>
+        <source>Synchronise video to the display refresh rate</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../ui/prefdialog.ui" line="1111"/>
         <source>Resynchronize audio/video whenever filter toggled</source>
         <translation>过滤器切换时重新同步音视频</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1217"/>
+        <location filename="../ui/prefdialog.ui" line="1172"/>
         <source>When display time is not specified in subtitle, calculate interval with this value.</source>
         <translation>当字幕中未指定显示时间时，使用此值计算间隔。</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1223"/>
+        <location filename="../ui/prefdialog.ui" line="1178"/>
         <source> msec/character</source>
         <translation>毫秒/字符</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1455"/>
+        <location filename="../ui/prefdialog.ui" line="1278"/>
+        <source>Subtitle providers of subliminal. Credentials are read from subliminal&apos;s configuration file, which bomi does not change.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../ui/prefdialog.ui" line="1291"/>
+        <source>Provider</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../ui/prefdialog.ui" line="1296"/>
+        <source>Name in subliminal.toml</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../ui/prefdialog.ui" line="1301"/>
+        <source>Searched</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../ui/prefdialog.ui" line="1306"/>
+        <source>Configured</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../ui/prefdialog.ui" line="1311"/>
+        <source>Accepts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../ui/prefdialog.ui" line="1516"/>
         <source>Use &amp;JSON-RPC interface</source>
         <translation>使用 &amp;JSON-RPC 接口</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1467"/>
+        <location filename="../ui/prefdialog.ui" line="1528"/>
         <source>Connection</source>
         <translation>连接</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1486"/>
+        <location filename="../ui/prefdialog.ui" line="1547"/>
         <source>Protocol</source>
         <translation>协议</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1505"/>
+        <location filename="../ui/prefdialog.ui" line="1566"/>
         <source>Address</source>
         <translation>地址</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1517"/>
+        <location filename="../ui/prefdialog.ui" line="1578"/>
         <source>Port</source>
         <translation>端口</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1906"/>
+        <location filename="../ui/prefdialog.ui" line="1663"/>
+        <source>Load last played media on execution</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../ui/prefdialog.ui" line="1974"/>
         <source>Action</source>
         <translation>操作</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1911"/>
+        <location filename="../ui/prefdialog.ui" line="1979"/>
         <source>Step</source>
         <translation>步幅</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1919"/>
+        <location filename="../ui/prefdialog.ui" line="1987"/>
         <source>Adjust Window Size</source>
         <translation>调整窗口大小</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1995"/>
+        <location filename="../ui/prefdialog.ui" line="2063"/>
         <source>Username</source>
         <translation>用户名</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="2002"/>
+        <location filename="../ui/prefdialog.ui" line="2070"/>
         <source>Username for SMB/CIFS protocol.
-You don't need to specify to this if geust is allowed.
+You don&apos;t need to specify to this if geust is allowed.
 You can specify workgroup in the form of &apos;workgroup;username&apos;.</source>
         <translation>SMB/CIFS 协议的用户名。
 如果允许游客，您不需要指定此项。
 您可以以“工作组;用户名”的形式指定工作组。</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="2011"/>
+        <location filename="../ui/prefdialog.ui" line="2079"/>
         <source>Password</source>
         <translation>密码</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="2018"/>
+        <location filename="../ui/prefdialog.ui" line="2086"/>
         <source>Password for given username.
 You don&apos;t need to specify to this if geust is allowed.</source>
         <translation>指定用户名的密码。
 如果允许游客，您不需要指定此项。</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="2029"/>
+        <location filename="../ui/prefdialog.ui" line="2097"/>
         <source>CAUTION: password will be stored in plain text!</source>
         <translation>提醒：密码将以纯文本形式存储！</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="2039"/>
+        <location filename="../ui/prefdialog.ui" line="2107"/>
         <source>Network folders</source>
         <translation>网络文件夹</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="2045"/>
+        <location filename="../ui/prefdialog.ui" line="2113"/>
         <source>Folders of network drives or NFS</source>
         <translation>网络设备或 NFS 的文件夹</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="965"/>
+        <location filename="../ui/prefdialog.ui" line="914"/>
         <source>Auto-selection</source>
         <translation>自动选择</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="971"/>
+        <location filename="../ui/prefdialog.ui" line="920"/>
         <source>Select subtitles from loaded ones automatically</source>
         <translation>从已加载的字幕中选择</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="989"/>
+        <location filename="../ui/prefdialog.ui" line="938"/>
         <source>Select next subtitles in automatically loaded subtitles.</source>
         <translation>选择下一个已自动加载的字幕。</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1002"/>
+        <location filename="../ui/prefdialog.ui" line="951"/>
         <source>Extension</source>
         <translation>扩展名</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1034"/>
+        <location filename="../ui/prefdialog.ui" line="983"/>
         <source>Encoding</source>
         <translation>编码</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1040"/>
+        <location filename="../ui/prefdialog.ui" line="989"/>
         <source>Open subtitle file with selected encoding.</source>
         <translation>采用选定的编码打开字幕文件。</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1100"/>
+        <location filename="../ui/prefdialog.ui" line="1049"/>
         <source>Deinterlacing</source>
         <translation>去交错</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1167"/>
+        <location filename="../ui/prefdialog.ui" line="1135"/>
         <source>Use hardware-accelerated decoding</source>
         <translation>使用硬件加速解码</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1277"/>
+        <location filename="../ui/prefdialog.ui" line="1338"/>
         <source>Preset</source>
         <translation>预设</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1332"/>
+        <location filename="../ui/prefdialog.ui" line="1393"/>
         <source>ID</source>
         <translation>ID</translation>
     </message>
@@ -3206,46 +3314,46 @@ You don&apos;t need to specify to this if geust is allowed.</source>
         <translation>指定时间后隐藏鼠标指针:</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="383"/>
+        <location filename="../ui/prefdialog.ui" line="332"/>
         <source>Resume playback</source>
         <translation>继续播放</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="389"/>
+        <location filename="../ui/prefdialog.ui" line="338"/>
         <source>Resume playback at last played position</source>
         <translation>继续播放上次播放的位置</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="723"/>
+        <location filename="../ui/prefdialog.ui" line="672"/>
         <source>Optical disc</source>
         <translation>光盘</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1307"/>
+        <location filename="../ui/prefdialog.ui" line="1368"/>
         <source>Menu</source>
         <translation>菜单</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1312"/>
-        <location filename="../ui/prefdialog.ui" line="1354"/>
+        <location filename="../ui/prefdialog.ui" line="1373"/>
+        <location filename="../ui/prefdialog.ui" line="1415"/>
         <source>Shortcut1</source>
         <translation>快捷方式 1</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1317"/>
-        <location filename="../ui/prefdialog.ui" line="1370"/>
+        <location filename="../ui/prefdialog.ui" line="1378"/>
+        <location filename="../ui/prefdialog.ui" line="1431"/>
         <source>Shortcut2</source>
         <translation>快捷方式 2</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1322"/>
-        <location filename="../ui/prefdialog.ui" line="1386"/>
+        <location filename="../ui/prefdialog.ui" line="1383"/>
+        <location filename="../ui/prefdialog.ui" line="1447"/>
         <source>Shortcut3</source>
         <translation>快捷方式 3</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1327"/>
-        <location filename="../ui/prefdialog.ui" line="1402"/>
+        <location filename="../ui/prefdialog.ui" line="1388"/>
+        <location filename="../ui/prefdialog.ui" line="1463"/>
         <source>Shortcut4</source>
         <translation>快捷方式 4</translation>
     </message>
@@ -3265,267 +3373,302 @@ You don&apos;t need to specify to this if geust is allowed.</source>
         <translation>询问在哪保存截图(&amp;K)</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="532"/>
+        <location filename="../ui/prefdialog.ui" line="481"/>
         <source>Use soft clipping</source>
         <translation>使用软限幅处理</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="539"/>
+        <location filename="../ui/prefdialog.ui" line="488"/>
         <source>Unmute when volume adjusted</source>
         <translation>调整音量时取消静音</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="548"/>
+        <location filename="../ui/prefdialog.ui" line="497"/>
         <source>Dynamic range</source>
         <translation>动态范围</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="555"/>
+        <location filename="../ui/prefdialog.ui" line="504"/>
         <source>Linear</source>
         <translation>线性</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="558"/>
+        <location filename="../ui/prefdialog.ui" line="507"/>
         <source> dB</source>
         <translation> dB</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="684"/>
+        <location filename="../ui/prefdialog.ui" line="633"/>
         <source>Demuxer</source>
         <translation>分路器</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="694"/>
+        <location filename="../ui/prefdialog.ui" line="643"/>
         <source>Total buffer</source>
         <translation>总缓冲器</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="772"/>
-        <location filename="../ui/prefdialog.ui" line="779"/>
-        <location filename="../ui/prefdialog.ui" line="786"/>
+        <location filename="../ui/prefdialog.ui" line="721"/>
+        <location filename="../ui/prefdialog.ui" line="728"/>
+        <location filename="../ui/prefdialog.ui" line="735"/>
         <source>Cache to file</source>
         <translation>缓存至文件</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="848"/>
+        <location filename="../ui/prefdialog.ui" line="797"/>
         <source>Minimum cache for playback</source>
         <translation>最小播放缓存</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="855"/>
+        <location filename="../ui/prefdialog.ui" line="804"/>
         <source>Minimum cache for seeking</source>
         <translation>最小跳转缓存</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1052"/>
+        <location filename="../ui/prefdialog.ui" line="1001"/>
         <source>Auto-detect encoding when accuracy is above</source>
         <translation>自动检测准确度高于此值的编码</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1204"/>
+        <location filename="../ui/prefdialog.ui" line="1159"/>
         <source>Display Time</source>
         <translation>显示时间</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1210"/>
+        <location filename="../ui/prefdialog.ui" line="1165"/>
         <source>Calculate display time when not specified</source>
         <translation>未指定时计算显示时间</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1448"/>
+        <location filename="../ui/prefdialog.ui" line="1509"/>
         <source>Logging (Restart required)</source>
         <translation>日志记录（需要重启）</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1543"/>
+        <location filename="../ui/prefdialog.ui" line="1604"/>
         <source>Save persistent data in application folder (restart required)</source>
         <translation>在应用程序文件夹保存持久性数据（需要重启）</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1581"/>
+        <location filename="../ui/prefdialog.ui" line="1642"/>
         <source>Resize to video resolution in windowed-mode when video is changed</source>
         <translation>视频被更改时重新调整窗口模式下的视频分辨率</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1595"/>
+        <location filename="../ui/prefdialog.ui" line="1656"/>
         <source>Use D-Bus interface for MPRISv2</source>
         <translation>对 MPRISv2 使用 D-Bus 接口</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1663"/>
+        <location filename="../ui/prefdialog.ui" line="1731"/>
         <source>Font</source>
         <translation>字体</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1686"/>
+        <location filename="../ui/prefdialog.ui" line="1754"/>
         <source>Fixed-width</source>
         <translation>固定宽度</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1715"/>
+        <location filename="../ui/prefdialog.ui" line="1783"/>
         <source>Background:</source>
         <translation>背景:</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1724"/>
+        <location filename="../ui/prefdialog.ui" line="1792"/>
         <source>Show default bo&amp;mi logo</source>
         <translation>显示默认 bo&amp;mi 标志</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1731"/>
+        <location filename="../ui/prefdialog.ui" line="1799"/>
         <source>Fi&amp;ll color:</source>
         <translation>填充颜色(&amp;L):</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1763"/>
+        <location filename="../ui/prefdialog.ui" line="1831"/>
         <source>Window style:</source>
         <translation>窗口样式:</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1775"/>
+        <location filename="../ui/prefdialog.ui" line="1843"/>
         <source>(Restart required)</source>
         <translation>（需要重启）</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1812"/>
+        <location filename="../ui/prefdialog.ui" line="1880"/>
         <source>Invert direction of mouse wheel scroll</source>
         <translation>反转鼠标滚轮方向</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1849"/>
+        <location filename="../ui/prefdialog.ui" line="1917"/>
         <source>Audio Priority</source>
         <translation>音频优先级</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1868"/>
+        <location filename="../ui/prefdialog.ui" line="1936"/>
         <source>Subtitle Priority</source>
         <translation>字幕优先级</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1887"/>
+        <location filename="../ui/prefdialog.ui" line="1955"/>
         <source>These options will be used to determine audio/subtitle priority.
 Regular expression is supported.</source>
         <translation>这些选项将被用于测定音频/字幕优先级。
 支持正则表达式。</translation>
     </message>
     <message>
-        <location filename="../pref/prefdialog.cpp" line="110"/>
+        <location filename="../pref/prefdialog.cpp" line="154"/>
         <source>Playback</source>
         <translation>播放</translation>
     </message>
     <message>
-        <location filename="../pref/prefdialog.cpp" line="124"/>
+        <location filename="../pref/prefdialog.cpp" line="168"/>
         <source>Audio</source>
         <translation>音频</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1669"/>
-        <location filename="../pref/prefdialog.cpp" line="107"/>
+        <location filename="../ui/prefdialog.ui" line="1737"/>
+        <location filename="../pref/prefdialog.cpp" line="151"/>
         <source>General</source>
         <translation>常规</translation>
     </message>
     <message>
-        <location filename="../pref/prefdialog.cpp" line="108"/>
+        <location filename="../pref/prefdialog.cpp" line="71"/>
+        <source>Checking subliminal...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../pref/prefdialog.cpp" line="78"/>
+        <source>subliminal is unavailable: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../pref/prefdialog.cpp" line="93"/>
+        <source>Yes</source>
+        <translation type="unfinished">是</translation>
+    </message>
+    <message>
+        <location filename="../pref/prefdialog.cpp" line="93"/>
+        <source>No</source>
+        <translation type="unfinished">否</translation>
+    </message>
+    <message>
+        <location filename="../pref/prefdialog.cpp" line="102"/>
+        <source>Provider options, such as accounts, are read from %1.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../pref/prefdialog.cpp" line="103"/>
+        <source>Provider options, such as accounts, can be set in %1, which does not exist yet.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../pref/prefdialog.cpp" line="152"/>
         <source>Application</source>
         <translation>应用程序</translation>
     </message>
     <message>
-        <location filename="../pref/prefdialog.cpp" line="109"/>
+        <location filename="../pref/prefdialog.cpp" line="153"/>
         <source>Open</source>
         <translation>打开</translation>
     </message>
     <message>
-        <location filename="../pref/prefdialog.cpp" line="112"/>
+        <location filename="../pref/prefdialog.cpp" line="156"/>
         <source>Language</source>
         <translation>语言</translation>
     </message>
     <message>
-        <location filename="../pref/prefdialog.cpp" line="113"/>
+        <location filename="../pref/prefdialog.cpp" line="157"/>
         <source>Network</source>
         <translation>网络</translation>
     </message>
     <message>
-        <location filename="../pref/prefdialog.cpp" line="114"/>
+        <location filename="../pref/prefdialog.cpp" line="158"/>
         <source>Miscellaneous</source>
         <translation>杂项</translation>
     </message>
     <message>
-        <location filename="../pref/prefdialog.cpp" line="116"/>
+        <location filename="../pref/prefdialog.cpp" line="160"/>
         <source>Appearance</source>
         <translation>外观</translation>
     </message>
     <message>
-        <location filename="../pref/prefdialog.cpp" line="118"/>
+        <location filename="../pref/prefdialog.cpp" line="162"/>
         <source>OSD</source>
         <translation>操作面板</translation>
     </message>
     <message>
-        <location filename="../pref/prefdialog.cpp" line="122"/>
+        <location filename="../pref/prefdialog.cpp" line="166"/>
         <source>Video Processing</source>
         <translation>视频处理</translation>
     </message>
     <message>
-        <location filename="../pref/prefdialog.cpp" line="131"/>
+        <location filename="../pref/prefdialog.cpp" line="175"/>
         <source>Display</source>
         <translation>显示</translation>
     </message>
     <message>
-        <location filename="../pref/prefdialog.cpp" line="133"/>
+        <location filename="../pref/prefdialog.cpp" line="176"/>
+        <source>Find</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../pref/prefdialog.cpp" line="178"/>
         <source>User interface</source>
         <translation>用户界面</translation>
     </message>
     <message>
-        <location filename="../pref/prefdialog.cpp" line="134"/>
+        <location filename="../pref/prefdialog.cpp" line="179"/>
         <source>Keyboard shortcuts</source>
         <translation>键盘快捷键</translation>
     </message>
     <message>
-        <location filename="../pref/prefdialog.cpp" line="135"/>
+        <location filename="../pref/prefdialog.cpp" line="180"/>
         <source>Mouse actions</source>
         <translation>鼠标操作</translation>
     </message>
     <message>
-        <location filename="../pref/prefdialog.cpp" line="136"/>
+        <location filename="../pref/prefdialog.cpp" line="181"/>
         <source>Control step</source>
         <translation>控制幅度</translation>
     </message>
     <message>
-        <location filename="../pref/prefdialog.cpp" line="182"/>
+        <location filename="../pref/prefdialog.cpp" line="230"/>
         <source>Ignore</source>
         <translation>忽略</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1640"/>
+        <location filename="../ui/prefdialog.ui" line="1708"/>
         <source>Skin</source>
         <translation>皮肤</translation>
     </message>
     <message>
-        <location filename="../pref/prefdialog.cpp" line="111"/>
+        <location filename="../pref/prefdialog.cpp" line="155"/>
         <source>Cache</source>
         <translation>缓存</translation>
     </message>
     <message>
-        <location filename="../pref/prefdialog.cpp" line="117"/>
+        <location filename="../pref/prefdialog.cpp" line="161"/>
         <source>Theme</source>
         <translation>主题</translation>
     </message>
     <message>
-        <location filename="../pref/prefdialog.cpp" line="120"/>
+        <location filename="../pref/prefdialog.cpp" line="164"/>
         <source>Video</source>
         <translation>视频</translation>
     </message>
     <message>
-        <location filename="../pref/prefdialog.cpp" line="121"/>
+        <location filename="../pref/prefdialog.cpp" line="165"/>
         <source>Hardware acceleration</source>
         <translation>硬件加速</translation>
     </message>
     <message>
-        <location filename="../pref/prefdialog.cpp" line="125"/>
+        <location filename="../pref/prefdialog.cpp" line="169"/>
         <source>Sound</source>
         <translation>声音</translation>
     </message>
     <message>
-        <location filename="../pref/prefdialog.cpp" line="126"/>
+        <location filename="../pref/prefdialog.cpp" line="170"/>
         <source>Audio filter</source>
         <translation>音频过滤器</translation>
     </message>
@@ -3540,12 +3683,12 @@ Regular expression is supported.</source>
         <translation>拖放打开</translation>
     </message>
     <message>
-        <location filename="../pref/prefdialog.cpp" line="249"/>
+        <location filename="../pref/prefdialog.cpp" line="297"/>
         <source>Movist</source>
         <translation>Movist</translation>
     </message>
     <message>
-        <location filename="../pref/prefdialog.cpp" line="39"/>
+        <location filename="../pref/prefdialog.cpp" line="41"/>
         <source>All</source>
         <translation>所有</translation>
     </message>
@@ -3570,7 +3713,7 @@ Regular expression is supported.</source>
         <translation>操作延迟超过 %1 秒将被判定为双击</translation>
     </message>
     <message>
-        <location filename="../ui/prefdialog.ui" line="1065"/>
+        <location filename="../ui/prefdialog.ui" line="1014"/>
         <location filename="../dialog/videocolordialog.cpp" line="49"/>
         <location filename="../misc/stepinfo.cpp" line="42"/>
         <location filename="../misc/windowsize.cpp" line="37"/>
@@ -3855,20 +3998,20 @@ Playback information
     <name>RootMenu</name>
     <message>
         <location filename="../player/rootmenu.cpp" line="279"/>
-        <location filename="../player/rootmenu.cpp" line="595"/>
+        <location filename="../player/rootmenu.cpp" line="596"/>
         <source>Open</source>
         <translation>打开</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="487"/>
-        <location filename="../player/rootmenu.cpp" line="522"/>
+        <location filename="../player/rootmenu.cpp" line="488"/>
+        <location filename="../player/rootmenu.cpp" line="523"/>
         <source>Open File</source>
         <translation>打开文件</translation>
     </message>
     <message>
         <location filename="../player/rootmenu.cpp" line="291"/>
-        <location filename="../player/rootmenu.cpp" line="598"/>
-        <location filename="../player/rootmenu.cpp" line="613"/>
+        <location filename="../player/rootmenu.cpp" line="599"/>
+        <location filename="../player/rootmenu.cpp" line="614"/>
         <source>Clear</source>
         <translation>清空</translation>
     </message>
@@ -3915,29 +4058,29 @@ Playback information
         <translation>章节</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="517"/>
+        <location filename="../player/rootmenu.cpp" line="518"/>
         <source>Subtitle</source>
         <translation>字幕</translation>
     </message>
     <message>
         <location filename="../player/rootmenu.cpp" line="377"/>
-        <location filename="../player/rootmenu.cpp" line="493"/>
-        <location filename="../player/rootmenu.cpp" line="553"/>
+        <location filename="../player/rootmenu.cpp" line="494"/>
+        <location filename="../player/rootmenu.cpp" line="554"/>
         <source>Select Next</source>
         <translation>选择下一项</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="472"/>
+        <location filename="../player/rootmenu.cpp" line="473"/>
         <source>Color Editor</source>
         <translation>颜色编辑器</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="554"/>
+        <location filename="../player/rootmenu.cpp" line="555"/>
         <source>Select All</source>
         <translation>全选</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="555"/>
+        <location filename="../player/rootmenu.cpp" line="556"/>
         <source>Hide</source>
         <translation>隐藏</translation>
     </message>
@@ -3967,12 +4110,12 @@ Playback information
         <translation>画面位置</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="525"/>
+        <location filename="../player/rootmenu.cpp" line="526"/>
         <source>Current Encoding</source>
         <translation>当前编码</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="526"/>
+        <location filename="../player/rootmenu.cpp" line="527"/>
         <source>Autodetect Encoding</source>
         <translation>自动检测编码</translation>
     </message>
@@ -4081,8 +4224,8 @@ Playback information
     </message>
     <message>
         <location filename="../player/rootmenu.cpp" line="360"/>
-        <location filename="../player/rootmenu.cpp" line="486"/>
-        <location filename="../player/rootmenu.cpp" line="518"/>
+        <location filename="../player/rootmenu.cpp" line="487"/>
+        <location filename="../player/rootmenu.cpp" line="519"/>
         <source>Track</source>
         <translation>轨道</translation>
     </message>
@@ -4197,87 +4340,92 @@ Playback information
         <translation>运动平滑</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="455"/>
+        <location filename="../player/rootmenu.cpp" line="454"/>
+        <source>Display Sync</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../player/rootmenu.cpp" line="456"/>
         <source>Filter</source>
         <translation>过滤器</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="458"/>
+        <location filename="../player/rootmenu.cpp" line="459"/>
         <source>Flip Vertically</source>
         <translation>垂直翻转</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="459"/>
+        <location filename="../player/rootmenu.cpp" line="460"/>
         <source>Flip Horizontally</source>
         <translation>水平翻转</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="464"/>
+        <location filename="../player/rootmenu.cpp" line="465"/>
         <source>Grayscale</source>
         <translation>灰阶</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="465"/>
+        <location filename="../player/rootmenu.cpp" line="466"/>
         <source>Invert Color</source>
         <translation>反转颜色</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="469"/>
+        <location filename="../player/rootmenu.cpp" line="470"/>
         <source>Disable Filters</source>
         <translation>禁用过滤器</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="500"/>
+        <location filename="../player/rootmenu.cpp" line="501"/>
         <source>Volume</source>
         <translation>音量</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="505"/>
+        <location filename="../player/rootmenu.cpp" line="506"/>
         <source>Amp</source>
         <translation>放大</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="513"/>
+        <location filename="../player/rootmenu.cpp" line="514"/>
         <source>Tempo Scaler</source>
         <translation>速度调整器</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="562"/>
+        <location filename="../player/rootmenu.cpp" line="563"/>
         <source>Override ASS</source>
         <translation>覆盖 ASS</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="565"/>
+        <location filename="../player/rootmenu.cpp" line="566"/>
         <source>Text Style</source>
         <translation>文字样式</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="587"/>
+        <location filename="../player/rootmenu.cpp" line="588"/>
         <source>Undo</source>
         <translation>撤销</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="588"/>
+        <location filename="../player/rootmenu.cpp" line="589"/>
         <source>Redo</source>
         <translation>重做</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="597"/>
+        <location filename="../player/rootmenu.cpp" line="598"/>
         <source>Regenerate</source>
         <translation>重新生成</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="601"/>
+        <location filename="../player/rootmenu.cpp" line="602"/>
         <source>Append Folder</source>
         <translation>追加文件夹</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="602"/>
+        <location filename="../player/rootmenu.cpp" line="603"/>
         <source>Append URL</source>
         <translation>追加 URL</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="617"/>
+        <location filename="../player/rootmenu.cpp" line="618"/>
         <source>Playback Information</source>
         <translation>播放信息</translation>
     </message>
@@ -4292,7 +4440,7 @@ Playback information
         <translation>下一帧</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="471"/>
+        <location filename="../player/rootmenu.cpp" line="472"/>
         <source>Adjust Color</source>
         <translation>调整颜色</translation>
     </message>
@@ -4327,20 +4475,20 @@ Playback information
         <translation>显示状态</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="488"/>
-        <location filename="../player/rootmenu.cpp" line="523"/>
+        <location filename="../player/rootmenu.cpp" line="489"/>
+        <location filename="../player/rootmenu.cpp" line="524"/>
         <source>Auto-load File</source>
         <translation>自动加载文件</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="489"/>
-        <location filename="../player/rootmenu.cpp" line="524"/>
+        <location filename="../player/rootmenu.cpp" line="490"/>
+        <location filename="../player/rootmenu.cpp" line="525"/>
         <source>Reload File</source>
         <translation>重新加载文件</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="490"/>
-        <location filename="../player/rootmenu.cpp" line="549"/>
+        <location filename="../player/rootmenu.cpp" line="491"/>
+        <location filename="../player/rootmenu.cpp" line="550"/>
         <source>Clear File</source>
         <translation>清除文件</translation>
     </message>
@@ -4373,44 +4521,44 @@ Playback information
         <translation>高品质缩放</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="463"/>
+        <location filename="../player/rootmenu.cpp" line="464"/>
         <source>Remap</source>
         <translation>重映射</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="485"/>
+        <location filename="../player/rootmenu.cpp" line="486"/>
         <source>Audio</source>
         <translation>音频</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="496"/>
-        <location filename="../player/rootmenu.cpp" line="578"/>
+        <location filename="../player/rootmenu.cpp" line="497"/>
+        <location filename="../player/rootmenu.cpp" line="579"/>
         <source>Sync</source>
         <translation>同步</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="501"/>
+        <location filename="../player/rootmenu.cpp" line="502"/>
         <source>Mute</source>
         <translation>静音</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="506"/>
+        <location filename="../player/rootmenu.cpp" line="507"/>
         <source>Equalizer</source>
         <translation>均衡器</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="512"/>
+        <location filename="../player/rootmenu.cpp" line="513"/>
         <source>Normalizer</source>
         <translation>规范器</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="567"/>
+        <location filename="../player/rootmenu.cpp" line="568"/>
         <source>Alignment</source>
         <translation>对齐</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="563"/>
-        <location filename="../player/rootmenu.cpp" line="569"/>
+        <location filename="../player/rootmenu.cpp" line="564"/>
+        <location filename="../player/rootmenu.cpp" line="570"/>
         <source>Position</source>
         <translation>位置</translation>
     </message>
@@ -4420,174 +4568,174 @@ Playback information
         <translation>暂停</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="564"/>
-        <location filename="../player/rootmenu.cpp" line="574"/>
+        <location filename="../player/rootmenu.cpp" line="565"/>
+        <location filename="../player/rootmenu.cpp" line="575"/>
         <source>Scale</source>
         <translation>尺寸</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="581"/>
+        <location filename="../player/rootmenu.cpp" line="582"/>
         <source>Bring Previous Lines</source>
         <translation>带到上一行</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="582"/>
+        <location filename="../player/rootmenu.cpp" line="583"/>
         <source>Bring Next Lines</source>
         <translation>带到下一行</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="586"/>
+        <location filename="../player/rootmenu.cpp" line="587"/>
         <source>Tools</source>
         <translation>工具</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="592"/>
+        <location filename="../player/rootmenu.cpp" line="593"/>
         <source>Playlist</source>
         <translation>播放列表</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="593"/>
-        <location filename="../player/rootmenu.cpp" line="612"/>
+        <location filename="../player/rootmenu.cpp" line="594"/>
+        <location filename="../player/rootmenu.cpp" line="613"/>
         <source>Show/Hide</source>
         <translation>显示/隐藏</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="596"/>
+        <location filename="../player/rootmenu.cpp" line="597"/>
         <source>Save</source>
         <translation>保存</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="600"/>
+        <location filename="../player/rootmenu.cpp" line="601"/>
         <source>Append File</source>
         <translation>追加文件</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="603"/>
+        <location filename="../player/rootmenu.cpp" line="604"/>
         <source>Remove</source>
         <translation>移除</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="605"/>
+        <location filename="../player/rootmenu.cpp" line="606"/>
         <source>Move Up</source>
         <translation>上移</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="606"/>
+        <location filename="../player/rootmenu.cpp" line="607"/>
         <source>Move Down</source>
         <translation>下移</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="608"/>
+        <location filename="../player/rootmenu.cpp" line="609"/>
         <source>Shuffle</source>
         <translation>随机</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="609"/>
+        <location filename="../player/rootmenu.cpp" line="610"/>
         <source>Repeat</source>
         <translation>循环</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="616"/>
+        <location filename="../player/rootmenu.cpp" line="617"/>
         <source>Subtitle Viewer</source>
         <translation>字幕查看器</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="618"/>
+        <location filename="../player/rootmenu.cpp" line="619"/>
         <source>Log Viewer</source>
         <translation>日志查看器</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="611"/>
+        <location filename="../player/rootmenu.cpp" line="612"/>
         <source>History</source>
         <translation>历史记录</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="615"/>
+        <location filename="../player/rootmenu.cpp" line="616"/>
         <source>Find Subtitle</source>
         <translation>查找字幕</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="621"/>
+        <location filename="../player/rootmenu.cpp" line="622"/>
         <source>Preferences</source>
         <translation>首选项</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="622"/>
+        <location filename="../player/rootmenu.cpp" line="623"/>
         <source>Associate Files</source>
         <translation>文件关联</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="625"/>
+        <location filename="../player/rootmenu.cpp" line="626"/>
         <source>Reload Skin</source>
         <translation>重新载入皮肤</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="629"/>
+        <location filename="../player/rootmenu.cpp" line="630"/>
         <source>Auto-exit</source>
         <translation>自动退出</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="630"/>
+        <location filename="../player/rootmenu.cpp" line="631"/>
         <source>Auto-shutdown</source>
         <translation>自动关机</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="633"/>
+        <location filename="../player/rootmenu.cpp" line="634"/>
         <source>Window</source>
         <translation>窗口</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="635"/>
+        <location filename="../player/rootmenu.cpp" line="636"/>
         <source>Remove Frame</source>
         <translation>移除框</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="652"/>
+        <location filename="../player/rootmenu.cpp" line="653"/>
         <source>Minimize</source>
         <translation>最小化</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="651"/>
+        <location filename="../player/rootmenu.cpp" line="652"/>
         <source>Maximize</source>
         <translation>最大化</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="645"/>
+        <location filename="../player/rootmenu.cpp" line="646"/>
         <source>Toggle Fullscreen</source>
         <translation>切换全屏</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="646"/>
+        <location filename="../player/rootmenu.cpp" line="647"/>
         <source>Enter Fullscreen</source>
         <translation>进入全屏</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="647"/>
+        <location filename="../player/rootmenu.cpp" line="648"/>
         <source>Exit Fullscreen</source>
         <translation>退出全屏</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="653"/>
+        <location filename="../player/rootmenu.cpp" line="654"/>
         <source>Close</source>
         <translation>关闭</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="656"/>
+        <location filename="../player/rootmenu.cpp" line="657"/>
         <source>Help</source>
         <translation>帮助</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="657"/>
+        <location filename="../player/rootmenu.cpp" line="658"/>
         <source>About bomi</source>
         <translation>关于 bomi</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="660"/>
+        <location filename="../player/rootmenu.cpp" line="661"/>
         <source>Show Context Menu</source>
         <translation>显示右键菜单</translation>
     </message>
     <message>
-        <location filename="../player/rootmenu.cpp" line="661"/>
+        <location filename="../player/rootmenu.cpp" line="662"/>
         <source>Exit</source>
         <translation>退出</translation>
     </message>
@@ -4674,9 +4822,13 @@ Playback information
 <context>
     <name>SmbAuthDialog</name>
     <message>
-        <location filename="../misc/smbauth.cpp" line="198"/>
         <source>Authentication Informations for SMB</source>
-        <translation>SMB 的身份验证信息</translation>
+        <translation type="vanished">SMB 的身份验证信息</translation>
+    </message>
+    <message>
+        <location filename="../misc/smbauth.cpp" line="198"/>
+        <source>Authentication Information for SMB</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../misc/smbauth.cpp" line="208"/>
@@ -4691,14 +4843,23 @@ Playback information
     <message>
         <location filename="../misc/smbauth.cpp" line="223"/>
         <source>No permission granted.
-Please confirm authentication informations and try again.</source>
-        <translation>未授予权限。
-请确认身份验证信息，然后再试。</translation>
+Please confirm authentication information and try again.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../misc/smbauth.cpp" line="226"/>
+        <source>Please input information for authentication.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No permission granted.
+Please confirm authentication informations and try again.</source>
+        <translation type="vanished">未授予权限。
+请确认身份验证信息，然后再试。</translation>
+    </message>
+    <message>
         <source>Please input informations for authentication.</source>
-        <translation>请输入身份验证信息。</translation>
+        <translation type="vanished">请输入身份验证信息。</translation>
     </message>
 </context>
 <context>
@@ -4768,57 +4929,57 @@ Please confirm authentication informations and try again.</source>
 <context>
     <name>SpeakerId</name>
     <message>
-        <location filename="../audio/channellayoutmap.cpp" line="232"/>
+        <location filename="../audio/channellayoutmap.cpp" line="182"/>
         <source>Front Left</source>
         <translation>左前</translation>
     </message>
     <message>
-        <location filename="../audio/channellayoutmap.cpp" line="233"/>
+        <location filename="../audio/channellayoutmap.cpp" line="183"/>
         <source>Front Right</source>
         <translation>右前</translation>
     </message>
     <message>
-        <location filename="../audio/channellayoutmap.cpp" line="234"/>
+        <location filename="../audio/channellayoutmap.cpp" line="184"/>
         <source>Front Center</source>
         <translation>正前</translation>
     </message>
     <message>
-        <location filename="../audio/channellayoutmap.cpp" line="235"/>
+        <location filename="../audio/channellayoutmap.cpp" line="185"/>
         <source>Low Frequency Effects</source>
         <translation>低音效果</translation>
     </message>
     <message>
-        <location filename="../audio/channellayoutmap.cpp" line="236"/>
+        <location filename="../audio/channellayoutmap.cpp" line="186"/>
         <source>Back Left</source>
         <translation>左后</translation>
     </message>
     <message>
-        <location filename="../audio/channellayoutmap.cpp" line="237"/>
+        <location filename="../audio/channellayoutmap.cpp" line="187"/>
         <source>Back Right</source>
         <translation>右后</translation>
     </message>
     <message>
-        <location filename="../audio/channellayoutmap.cpp" line="238"/>
+        <location filename="../audio/channellayoutmap.cpp" line="188"/>
         <source>Front Left-of-Center</source>
         <translation>左前中心</translation>
     </message>
     <message>
-        <location filename="../audio/channellayoutmap.cpp" line="239"/>
+        <location filename="../audio/channellayoutmap.cpp" line="189"/>
         <source>Front Right-of-Center</source>
         <translation>右前中心</translation>
     </message>
     <message>
-        <location filename="../audio/channellayoutmap.cpp" line="240"/>
+        <location filename="../audio/channellayoutmap.cpp" line="190"/>
         <source>Back Center</source>
         <translation>正后</translation>
     </message>
     <message>
-        <location filename="../audio/channellayoutmap.cpp" line="241"/>
+        <location filename="../audio/channellayoutmap.cpp" line="191"/>
         <source>Side Left</source>
         <translation>左侧</translation>
     </message>
     <message>
-        <location filename="../audio/channellayoutmap.cpp" line="242"/>
+        <location filename="../audio/channellayoutmap.cpp" line="192"/>
         <source>Side Right</source>
         <translation>右侧</translation>
     </message>
@@ -4873,11 +5034,28 @@ Please confirm authentication informations and try again.</source>
     </message>
 </context>
 <context>
+    <name>SubliminalFinder</name>
+    <message>
+        <location filename="../subtitle/subliminalfinder.cpp" line="68"/>
+        <source>Cannot run python3.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../subtitle/subliminalfinder.cpp" line="70"/>
+        <source>python3 or subliminal failed; see the log for details.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../subtitle/subliminalfinder.cpp" line="150"/>
+        <source>Cannot prepare the subliminal helper.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>SubtitleFindDialog</name>
     <message>
-        <location filename="../dialog/subtitlefinddialog.cpp" line="297"/>
         <source>Find Subtitle from OpenSubtitles.org</source>
-        <translation>查找 OpenSubtitles.org 上的字幕</translation>
+        <translation type="vanished">查找 OpenSubtitles.org 上的字幕</translation>
     </message>
     <message>
         <location filename="../ui/subtitlefinddialog.ui" line="147"/>
@@ -4936,69 +5114,83 @@ Please confirm authentication informations and try again.</source>
         <translation>关闭</translation>
     </message>
     <message>
-        <location filename="../dialog/subtitlefinddialog.cpp" line="141"/>
         <source>Connecting...</source>
-        <translation>正在连接...</translation>
+        <translation type="vanished">正在连接...</translation>
     </message>
     <message>
-        <location filename="../dialog/subtitlefinddialog.cpp" line="143"/>
+        <location filename="../dialog/subtitlefinddialog.cpp" line="155"/>
+        <source>Starting subliminal...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../dialog/subtitlefinddialog.cpp" line="157"/>
         <source>Finding...</source>
         <translation>查找中...</translation>
     </message>
     <message>
-        <location filename="../dialog/subtitlefinddialog.cpp" line="171"/>
-        <location filename="../dialog/subtitlefinddialog.cpp" line="210"/>
-        <location filename="../dialog/subtitlefinddialog.cpp" line="332"/>
+        <location filename="../dialog/subtitlefinddialog.cpp" line="159"/>
+        <source>Downloading...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../dialog/subtitlefinddialog.cpp" line="161"/>
+        <source>Unavailable: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../dialog/subtitlefinddialog.cpp" line="185"/>
+        <location filename="../dialog/subtitlefinddialog.cpp" line="224"/>
+        <location filename="../dialog/subtitlefinddialog.cpp" line="261"/>
+        <location filename="../dialog/subtitlefinddialog.cpp" line="315"/>
+        <location filename="../dialog/subtitlefinddialog.cpp" line="353"/>
         <source>Find Subtitle</source>
         <translation>查找字幕</translation>
     </message>
     <message>
-        <location filename="../dialog/subtitlefinddialog.cpp" line="172"/>
+        <location filename="../dialog/subtitlefinddialog.cpp" line="186"/>
         <source>A file with the same name already exists. Do you want overwrite it?</source>
         <translation>同名文件已经存在。您想覆盖它吗？</translation>
     </message>
     <message>
-        <location filename="../dialog/subtitlefinddialog.cpp" line="174"/>
+        <location filename="../dialog/subtitlefinddialog.cpp" line="188"/>
         <source>Overwrite</source>
         <translation>覆盖</translation>
     </message>
     <message>
-        <location filename="../dialog/subtitlefinddialog.cpp" line="175"/>
+        <location filename="../dialog/subtitlefinddialog.cpp" line="189"/>
         <source>Save as...</source>
         <translation>另存为...</translation>
     </message>
     <message>
-        <location filename="../dialog/subtitlefinddialog.cpp" line="183"/>
+        <location filename="../dialog/subtitlefinddialog.cpp" line="197"/>
         <source>Save As...</source>
         <translation>另存为...</translation>
     </message>
     <message>
-        <location filename="../dialog/subtitlefinddialog.cpp" line="181"/>
+        <location filename="../dialog/subtitlefinddialog.cpp" line="195"/>
         <source>Subtitle Files</source>
         <translation>字幕文件</translation>
     </message>
     <message>
-        <location filename="../dialog/subtitlefinddialog.cpp" line="145"/>
         <source>Unavailable</source>
-        <translation>不可用</translation>
+        <translation type="vanished">不可用</translation>
     </message>
     <message>
-        <location filename="../dialog/subtitlefinddialog.cpp" line="147"/>
         <source>Error</source>
-        <translation>错误</translation>
+        <translation type="vanished">错误</translation>
     </message>
     <message>
-        <location filename="../dialog/subtitlefinddialog.cpp" line="149"/>
+        <location filename="../dialog/subtitlefinddialog.cpp" line="163"/>
         <source>Available</source>
         <translation>可用</translation>
     </message>
     <message>
-        <location filename="../dialog/subtitlefinddialog.cpp" line="211"/>
+        <location filename="../dialog/subtitlefinddialog.cpp" line="225"/>
         <source>Cannot write file!</source>
         <translation>无法写入文件！</translation>
     </message>
     <message>
-        <location filename="../dialog/subtitlefinddialog.cpp" line="333"/>
+        <location filename="../dialog/subtitlefinddialog.cpp" line="354"/>
         <source>Cannot find subtitles for %1.</source>
         <translation>无法找到 %1 的字幕。</translation>
     </message>
@@ -5006,19 +5198,23 @@ Please confirm authentication informations and try again.</source>
 <context>
     <name>SubtitleLinkModel</name>
     <message>
-        <location filename="../dialog/subtitlefinddialog.cpp" line="29"/>
+        <location filename="../dialog/subtitlefinddialog.cpp" line="28"/>
         <source>Language</source>
         <translation>语言</translation>
     </message>
     <message>
-        <location filename="../dialog/subtitlefinddialog.cpp" line="30"/>
+        <location filename="../dialog/subtitlefinddialog.cpp" line="29"/>
         <source>File Name</source>
         <translation>文件名称</translation>
     </message>
     <message>
-        <location filename="../dialog/subtitlefinddialog.cpp" line="31"/>
+        <location filename="../dialog/subtitlefinddialog.cpp" line="30"/>
+        <source>Provider</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Date</source>
-        <translation>日期</translation>
+        <translation type="vanished">日期</translation>
     </message>
 </context>
 <context>
@@ -5135,85 +5331,99 @@ h:m:s
 <context>
     <name>VideoColor</name>
     <message>
-        <location filename="../video/videocolor.cpp" line="150"/>
+        <location filename="../video/videocolor.cpp" line="155"/>
         <source>Brightness %1</source>
         <translation>亮度 %1</translation>
     </message>
     <message>
-        <location filename="../video/videocolor.cpp" line="152"/>
+        <location filename="../video/videocolor.cpp" line="157"/>
         <source>Saturation %1</source>
         <translation>饱和度 %1</translation>
     </message>
     <message>
-        <location filename="../video/videocolor.cpp" line="154"/>
+        <location filename="../video/videocolor.cpp" line="159"/>
         <source>Contrast %1</source>
         <translation>对比度 %1</translation>
     </message>
     <message>
-        <location filename="../video/videocolor.cpp" line="156"/>
+        <location filename="../video/videocolor.cpp" line="161"/>
         <source>Hue %1</source>
         <translation>色调 %1</translation>
     </message>
     <message>
-        <location filename="../video/videocolor.cpp" line="158"/>
+        <location filename="../video/videocolor.cpp" line="163"/>
+        <source>Gamma %1</source>
+        <translation>伽马 %1</translation>
+    </message>
+    <message>
+        <location filename="../video/videocolor.cpp" line="165"/>
         <source>Red %1</source>
         <translation>红 %1</translation>
     </message>
     <message>
-        <location filename="../video/videocolor.cpp" line="160"/>
+        <location filename="../video/videocolor.cpp" line="167"/>
         <source>Green %1</source>
         <translation>绿 %1</translation>
     </message>
     <message>
-        <location filename="../video/videocolor.cpp" line="162"/>
+        <location filename="../video/videocolor.cpp" line="169"/>
         <source>Blue %1</source>
         <translation>蓝 %1</translation>
     </message>
     <message>
-        <location filename="../video/videocolor.cpp" line="164"/>
-        <location filename="../video/videocolor.cpp" line="186"/>
+        <location filename="../video/videocolor.cpp" line="171"/>
+        <location filename="../video/videocolor.cpp" line="195"/>
         <source>Reset</source>
         <translation>重置</translation>
     </message>
     <message>
-        <location filename="../video/videocolor.cpp" line="172"/>
+        <location filename="../video/videocolor.cpp" line="179"/>
         <source>Brightness</source>
         <translation>亮度</translation>
     </message>
     <message>
-        <location filename="../video/videocolor.cpp" line="174"/>
+        <location filename="../video/videocolor.cpp" line="181"/>
         <source>Saturation</source>
         <translation>饱和度</translation>
     </message>
     <message>
-        <location filename="../video/videocolor.cpp" line="176"/>
+        <location filename="../video/videocolor.cpp" line="183"/>
         <source>Contrast</source>
         <translation>对比度</translation>
     </message>
     <message>
-        <location filename="../video/videocolor.cpp" line="178"/>
+        <location filename="../video/videocolor.cpp" line="185"/>
         <source>Hue</source>
         <translation>色调</translation>
     </message>
     <message>
-        <location filename="../video/videocolor.cpp" line="180"/>
+        <location filename="../video/videocolor.cpp" line="187"/>
+        <source>Gamma</source>
+        <translation>伽马</translation>
+    </message>
+    <message>
+        <location filename="../video/videocolor.cpp" line="189"/>
         <source>Red</source>
         <translation>红</translation>
     </message>
     <message>
-        <location filename="../video/videocolor.cpp" line="182"/>
+        <location filename="../video/videocolor.cpp" line="191"/>
         <source>Green</source>
         <translation>绿</translation>
     </message>
     <message>
-        <location filename="../video/videocolor.cpp" line="184"/>
+        <location filename="../video/videocolor.cpp" line="193"/>
         <source>Blue</source>
         <translation>蓝</translation>
     </message>
     <message>
-        <location filename="../video/videocolor.cpp" line="192"/>
+        <location filename="../video/videocolor.cpp" line="201"/>
+        <source>B: %1%, C: %2%, H: %3%, S: %4%, Gamma: %8%, R:%5%, G: %6%, B: %7%</source>
+        <translation>亮度: %1%, 对比度: %2%, 色调: %3%, 饱和度: %4%, 伽马: %8%, 红:%5%, 绿: %6%, 蓝: %7%</translation>
+    </message>
+    <message>
         <source>B: %1%, C: %2%, H: %3%, S: %4%, R:%5%, G: %6%, B: %7%</source>
-        <translation>亮度: %1%, 对比度: %2%, 色调: %3%, 饱和度: %4%, 红:%5%, 绿: %6%, 蓝: %7%</translation>
+        <translation type="vanished">亮度: %1%, 对比度: %2%, 色调: %3%, 饱和度: %4%, 红:%5%, 绿: %6%, 蓝: %7%</translation>
     </message>
 </context>
 <context>
@@ -5253,14 +5463,14 @@ h:m:s
 <context>
     <name>bomi</name>
     <message>
-        <location filename="../skins/Breeze/bomi.qml" line="88"/>
+        <location filename="../skins/Breeze/bomi.qml" line="87"/>
         <location filename="../skins/Faenza-Zukitwo/bomi.qml" line="85"/>
         <location filename="../skins/Numix/bomi.qml" line="132"/>
         <source>Show/Hide Playlist</source>
         <translation>显示/隐藏播放列表</translation>
     </message>
     <message>
-        <location filename="../skins/Breeze/bomi.qml" line="88"/>
+        <location filename="../skins/Breeze/bomi.qml" line="87"/>
         <location filename="../skins/Faenza-Zukitwo/bomi.qml" line="85"/>
         <location filename="../skins/Numix/bomi.qml" line="132"/>
         <source>Show Playlist Menu</source>

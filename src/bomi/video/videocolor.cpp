@@ -13,6 +13,7 @@ static auto makeNameArray() -> VideoColor::Array<QString>
     names[VideoColor::Contrast]   = u"contrast"_q;
     names[VideoColor::Saturation] = u"saturation"_q;
     names[VideoColor::Hue]        = u"hue"_q;
+    names[VideoColor::Gamma]      = u"gamma"_q;
     names[VideoColor::Red]        = u"red"_q;
     names[VideoColor::Green]      = u"green"_q;
     names[VideoColor::Blue]       = u"blue"_q;
@@ -123,7 +124,7 @@ auto VideoColor::matRgbChannel() const -> QMatrix4x4
 
 auto VideoColor::matrix() const -> QMatrix4x4
 {
-    if (isZero())
+    if (isMatrixZero())
         return QMatrix4x4();
     // BT.709 is what bomi has always used here (see specs), and it suits the
     // display primaries the matrix now runs in.
@@ -158,6 +159,8 @@ auto VideoColor::formatText(Type type) -> QString
         return qApp->translate("VideoColor", "Contrast %1");
     case Hue:
         return qApp->translate("VideoColor", "Hue %1");
+    case Gamma:
+        return qApp->translate("VideoColor", "Gamma %1");
     case Red:
         return qApp->translate("VideoColor", "Red %1");
     case Green:
@@ -180,6 +183,8 @@ auto VideoColor::description(Type type) -> QString
         return qApp->translate("VideoColor", "Contrast");
     case Hue:
         return qApp->translate("VideoColor", "Hue");
+    case Gamma:
+        return qApp->translate("VideoColor", "Gamma");
     case Red:
         return qApp->translate("VideoColor", "Red");
     case Green:
@@ -194,9 +199,9 @@ auto VideoColor::description(Type type) -> QString
 auto VideoColor::description() const -> QString
 {
     return qApp->translate("VideoColor", "B: %1%, C: %2%, H: %3%, S: %4%, "
-                                         "R:%5%, G: %6%, B: %7%")
+                                         "Gamma: %8%, R:%5%, G: %6%, B: %7%")
             .arg(brightness()).arg(contrast()).arg(hue()).arg(saturation())
-            .arg(red()).arg(green()).arg(blue());
+            .arg(red()).arg(green()).arg(blue()).arg(gamma());
 }
 
 auto VideoColor::getText(Type type) const -> QString
@@ -243,9 +248,11 @@ auto VideoColor::setFromJson(const QJsonObject &json) -> bool
     bool ok = true;
     for_type([&] (Type type) {
         const auto it = json.find(name(type));
-        if (it == json.end())
-            ok = false;
-        else
+        if (it == json.end()) {
+            // States saved before gamma existed have no "gamma" key.
+            if (type != Gamma)
+                ok = false;
+        } else
             set(type, (*it).toInt());
     });
     return ok;
