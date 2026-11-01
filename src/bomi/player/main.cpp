@@ -1,4 +1,5 @@
 #include "main.hpp"
+#include "configure.hpp"
 #include "dialog/mbox.hpp"
 #include "json/jrserver.hpp"
 #include "player/jrplayer.hpp"
@@ -72,6 +73,8 @@ int main(int argc, char **argv) {
         format.setRenderableType(QSurfaceFormat::OpenGL);
         QSurfaceFormat::setDefaultFormat(format);
     }
+    // Matches the installed launcher, bomi.desktop or bomi<suffix>.desktop.
+    QGuiApplication::setDesktopFileName(_L("bomi" BOMI_SUFFIX));
     QApplication::setOrganizationName(u"xylosper"_q);
     QApplication::setOrganizationDomain(u"xylosper.net"_q);
     QApplication::setApplicationName(_L(cApp.name()));

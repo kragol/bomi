@@ -1,4 +1,5 @@
 #include "app.hpp"
+#include "configure.hpp"
 #include "mrl.hpp"
 #include "mainwindow.hpp"
 #include "misc/localconnection.hpp"
@@ -126,7 +127,7 @@ auto CommandParser::addOption(LineCmd cmd, const QStringList &names, const QStri
 }
 
 struct App::Data {
-    Data(App *p): p(p), connection(_L("net.xylosper.bomi"), nullptr) {}
+    Data(App *p): p(p), connection(_L("net.xylosper.bomi" BOMI_SUFFIX), nullptr) {}
 
     App *p = nullptr;
     bool gldebug = false;

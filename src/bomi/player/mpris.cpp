@@ -11,7 +11,7 @@ namespace mpris {
 RootObject::RootObject(QObject *parent)
     : QObject(parent)
 {
-    m_name = u"org.mpris.MediaPlayer2.bomi"_q;
+    m_name = _L("org.mpris.MediaPlayer2.bomi" BOMI_SUFFIX);
     auto bus = QDBusConnection::sessionBus();
     auto ok = bus.registerService(m_name);
     if (!ok) {

@@ -135,6 +135,7 @@ qmake=autodetect
 lrelease=autodetect
 macdeployqt=
 defaultskin=Ardis
+suffix=
 
 mo() {
     local value=$(eval echo \$$1)
@@ -153,6 +154,7 @@ config_opts="""
 --release|optimize for release
 --developer|configure for developers
 --defaultskin=SKIN|set SKIN as default skin|
+--suffix=SUFFIX|append SUFFIX to the executable, launcher, data and settings folders, to install next to another bomi|
 """
 
 config=
@@ -254,9 +256,9 @@ setup_dirs() {
     if [ -z "$icondir"   ]; then   icondir=$datadir/icons/hicolor;               fi
     if [ -z "$appdir"    ]; then    appdir=$datadir/applications;                fi
     if [ -z "$actiondir" ]; then actiondir=$datadir/apps/solid/actions;          fi
-    if [ -z "$skindir"   ]; then   skindir=$datadir/bomi/skins;                  fi
-    if [ -z "$transdir"  ]; then  transdir=$datadir/bomi/translations;           fi
-    if [ -z "$importdir" ]; then importdir=$datadir/bomi/imports;                fi
+    if [ -z "$skindir"   ]; then   skindir=$datadir/bomi$suffix/skins;           fi
+    if [ -z "$transdir"  ]; then  transdir=$datadir/bomi$suffix/translations;    fi
+    if [ -z "$importdir" ]; then importdir=$datadir/bomi$suffix/imports;         fi
 }
 
 jack=autodetect
@@ -488,6 +490,7 @@ loop_options "$feature_opts" check_feature_one
 setup_dirs
 setup_build
 
+add_define BOMI_SUFFIX "\"$suffix\""
 add_define BOMI_SKINS_PATH "\"$skindir\""
 add_define BOMI_IMPORTS_PATH "\"$importdir\""
 add_define BOMI_DEFAULT_SKIN "\"$defaultskin\""
@@ -515,7 +518,7 @@ cc=$(which $cc)
 cxx=$(which $cxx)
 
 parse_file "Makefile" os qmake lrelease PATH PKG_CONFIG_PATH prefix bindir datadir compdir mandir icondir appdir actiondir \
-    transdir skindir importdir parallel qtsdk macdeployqt
+    transdir skindir importdir parallel qtsdk macdeployqt suffix
 if [ "$os" = "win" ]; then
     cc=$(echo $cc | sed 's#/mingw#C:/msys64/mingw#g')
     cxx=$(echo $cxx | sed 's#/mingw#C:/msys64/mingw#g')

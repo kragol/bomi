@@ -1,4 +1,5 @@
 #include "global.hpp"
+#include "configure.hpp"
 #include <QJsonDocument>
 #include <QFileDialog>
 #include <zlib.h>
@@ -298,9 +299,12 @@ auto _WritablePath(Location loc, bool create) -> QString
     else {
         const auto std = static_cast<QStandardPaths::StandardLocation>(loc);
         path = QStandardPaths::writableLocation(std);
+        // A build installed next to another bomi (configure --suffix) keeps its
+        // own folders; the first run imports the plain bomi's settings, see
+        // _OldConfigPath().
         if (loc == Location::Config || loc == Location::Cache)
             path += '/'_q % qApp->organizationName()
-                  % '/'_q % qApp->applicationName();
+                  % '/'_q % qApp->applicationName() % _L(BOMI_SUFFIX);
     }
     if (create && !QDir().mkpath(path))
         return QString();

@@ -7,17 +7,17 @@
 # Point _repo at a local checkout (file:///path/to/bomi) if you want to package
 # work in progress -- commit it there first.
 _repo=https://github.com/kragol/bomi
-_branch=master
+_branch=qt6
 
+# The Qt 6 port, packaged to install next to bomi-git: everything it installs
+# is named bomi-qt6 (configure --suffix), and it keeps its settings in
+# ~/.config/xylosper/bomi-qt6, which its first run seeds from a copy of bomi's.
 _pkgbase=bomi
-pkgname=$_pkgbase-git
+_suffix=-qt6
+pkgname=$_pkgbase$_suffix-git
 pkgver=0.10.0.r0.g3c2a26e9
 pkgrel=1
-# The AUR bomi-git sits at 0.9.11.r65.*, and this fork's commit count restarts
-# lower, so without an epoch pacman would consider it a downgrade and never
-# offer it as an update.
-epoch=1
-pkgdesc="Powerful and easy-to-use GUI multimedia player based on mpv (kragol fork, git version)"
+pkgdesc="Powerful and easy-to-use GUI multimedia player based on mpv (kragol fork, Qt 6 port, git version)"
 arch=('x86_64')
 url="https://github.com/kragol/bomi"
 license=('GPL2')
@@ -45,8 +45,8 @@ optdepends=('yt-dlp: streaming website support including YouTube'
             'libaacs: AACS decryption for Blu-ray support'
             'libbdplus: BD+ decryption for Blu-ray support')
 
-provides=("$_pkgbase")
-conflicts=("$_pkgbase" 'cmplayer')
+provides=("$_pkgbase$_suffix")
+conflicts=("$_pkgbase$_suffix")
 
 # !lto: bomi's objects already get -flto from Qt's mkspec, which sets
 # CONFIG+=ltcg on this distribution, matching a plain `make`; makepkg's own
@@ -79,6 +79,7 @@ build() {
   # default -- pinning them keeps the package's dependencies from drifting
   # with whatever is installed here.
   ./configure \
+    --suffix=$_suffix \
     --prefix=/usr \
     --actiondir=/usr/share/solid/actions \
     --enable-jack \

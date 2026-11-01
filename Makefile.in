@@ -21,6 +21,9 @@ import_dir := @importdir@
 njobs := @parallel@
 qt_sdk := @qtsdk@
 macdeployqt := @macdeployqt@
+# Installed names get this appended (configure --suffix), e.g. bomi-qt6.
+suffix := @suffix@
+name := bomi$(suffix)
 
 export PATH := @PATH@
 
@@ -104,20 +107,25 @@ ifeq ($(os),linux)
 	$(install_dir) $(DEST_DIR)$(import_dir)
 	$(install_dir) $(DEST_DIR)$(trans_dir)
 #	$(install_dir) $(DEST_DIR)$(icon_dir)/scalable/apps
-	$(install_exe) build/$(bomi_exec) $(DEST_DIR)$(bin_dir)
-	$(install_file) bomi.desktop $(DEST_DIR)$(app_dir)
-	$(install_file) bomi-opendvd.desktop $(DEST_DIR)$(action_dir)
-	$(install_file) bomi.completion $(DEST_DIR)$(comp_dir)/bomi
+	$(install_exe) build/$(bomi_exec) $(DEST_DIR)$(bin_dir)/$(name)
+	sed -e 's/^Exec=bomi /Exec=$(name) /' -e 's/^Icon=bomi$$/Icon=$(name)/' -e 's/^Name=bomi$$/Name=$(name)/' \
+		bomi.desktop > build/$(name).desktop
+	$(install_file) build/$(name).desktop $(DEST_DIR)$(app_dir)
+	sed -e 's/^Exec=bomi /Exec=$(name) /' -e 's/^Icon=bomi$$/Icon=$(name)/' -e 's/with bomi$$/with $(name)/' \
+		bomi-opendvd.desktop > build/$(name)-opendvd.desktop
+	$(install_file) build/$(name)-opendvd.desktop $(DEST_DIR)$(action_dir)
+	sed 's/^complete -F _bomi bomi$$/complete -F _bomi $(name)/' bomi.completion > build/$(name).completion
+	$(install_file) build/$(name).completion $(DEST_DIR)$(comp_dir)/$(name)
 	gzip -cf bomi.1 > bomi.1.gz
-	$(install_file) bomi.1.gz $(DEST_DIR)$(man_dir)/man1/bomi.1.gz
-	$(install_file) icons/bomi16.png $(DEST_DIR)$(icon_dir)/16x16/apps/bomi.png
-	$(install_file) icons/bomi22.png $(DEST_DIR)$(icon_dir)/22x22/apps/bomi.png
-	$(install_file) icons/bomi24.png $(DEST_DIR)$(icon_dir)/24x24/apps/bomi.png
-	$(install_file) icons/bomi32.png $(DEST_DIR)$(icon_dir)/32x32/apps/bomi.png
-	$(install_file) icons/bomi48.png $(DEST_DIR)$(icon_dir)/48x48/apps/bomi.png
-	$(install_file) icons/bomi64.png $(DEST_DIR)$(icon_dir)/64x64/apps/bomi.png
-	$(install_file) icons/bomi128.png $(DEST_DIR)$(icon_dir)/128x128/apps/bomi.png
-	$(install_file) icons/bomi256.png $(DEST_DIR)$(icon_dir)/256x256/apps/bomi.png
+	$(install_file) bomi.1.gz $(DEST_DIR)$(man_dir)/man1/$(name).1.gz
+	$(install_file) icons/bomi16.png $(DEST_DIR)$(icon_dir)/16x16/apps/$(name).png
+	$(install_file) icons/bomi22.png $(DEST_DIR)$(icon_dir)/22x22/apps/$(name).png
+	$(install_file) icons/bomi24.png $(DEST_DIR)$(icon_dir)/24x24/apps/$(name).png
+	$(install_file) icons/bomi32.png $(DEST_DIR)$(icon_dir)/32x32/apps/$(name).png
+	$(install_file) icons/bomi48.png $(DEST_DIR)$(icon_dir)/48x48/apps/$(name).png
+	$(install_file) icons/bomi64.png $(DEST_DIR)$(icon_dir)/64x64/apps/$(name).png
+	$(install_file) icons/bomi128.png $(DEST_DIR)$(icon_dir)/128x128/apps/$(name).png
+	$(install_file) icons/bomi256.png $(DEST_DIR)$(icon_dir)/256x256/apps/$(name).png
 #	$(install_file) icons/bomi.svg $(DEST_DIR)$(icon_dir)/scalable/apps/bomi.svg
 	$(install_all) build/skins $(DEST_DIR)$(skin_dir)
 	$(install_all) build/imports $(DEST_DIR)$(import_dir)

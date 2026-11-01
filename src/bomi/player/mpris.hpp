@@ -1,6 +1,8 @@
 #ifndef MPRIS_HPP
 #define MPRIS_HPP
 
+#include "configure.hpp"
+
 namespace mpris {
 
 class MediaPlayer2 : public QDBusAbstractAdaptor {
@@ -25,7 +27,7 @@ public:
     auto canRaise() const -> bool { return true; }
     auto hasTrackList() const -> bool { return false; }
     auto identity() const -> QString { return QLatin1String("bomi"); }
-    auto desktopEntry() const -> QString { return QLatin1String("bomi"); }
+    auto desktopEntry() const -> QString { return QLatin1String("bomi" BOMI_SUFFIX); }
     auto supportedUriSchemes() const -> QStringList;
     auto supportedMimeTypes() const -> QStringList;
 public slots:
