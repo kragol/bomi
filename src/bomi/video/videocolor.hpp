@@ -107,7 +107,7 @@ inline auto VideoColor::isZero() const -> bool
     return true;
 }
 
-// Gamma is left to mpv's own property and is not part of matrix().
+// Gamma is a curve, not a linear map, so it is not part of matrix().
 inline auto VideoColor::isMatrixZero() const -> bool
 {
     for (int i = 0; i < TypeMax; ++i) {

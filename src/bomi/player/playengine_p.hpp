@@ -189,7 +189,7 @@ struct PlayEngine::Data {
     auto updateVideoScaler() -> void;
     auto setScalerProperties(const QByteArray &prefix, const QByteArray &opt) -> void;
     auto updateVideoSubOptions() -> void;
-    auto updateColorShader(const QMatrix4x4 &matrix) -> void;
+    auto updateColorShader(const QMatrix4x4 &matrix, int gamma) -> void;
     auto removeColorShaders(int keep) -> void;
     auto updateVideoRendererFboFormat() -> void;
     auto renderVideoFrame(Fbo *frame) -> void;
