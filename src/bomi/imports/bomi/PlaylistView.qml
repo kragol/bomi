@@ -40,7 +40,7 @@ Item {
 
     MouseArea {
         anchors.fill: parent
-        onWheel: wheel.accepted = true
+        onWheel: (wheel) => { wheel.accepted = true }
     }
 
     Rectangle {
@@ -99,7 +99,7 @@ Item {
 
         Connections {
             target: view.model;
-            onSelectedChanged: view.selectedIndex = target.selected
+            function onSelectedChanged() { view.selectedIndex = target.selected }
         }
 
         columns: B.ItemColumn { title: "Name"; role: "name"; width: 200; id: column}

@@ -318,17 +318,17 @@ Item {
         MouseArea {
             z: -1
             anchors.fill: parent
-            onPressed: {
+            onPressed: (mouse) => {
                 var index = list.getIndex(mouse.y)
                 if (index !== -1)
                     list.selectedIndex = index
             }
-            onDoubleClicked: {
+            onDoubleClicked: (mouse) => {
                 var index = list.getIndex(mouse.y)
                 if (index !== -1)
                     view.activated(index)
             }
-            onWheel: list.wheelScroll(wheel.angleDelta, wheel.pixelDelta)
+            onWheel: (wheel) => { list.wheelScroll(wheel.angleDelta, wheel.pixelDelta) }
         }
     }
     ScrollBar {

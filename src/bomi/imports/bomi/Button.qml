@@ -128,7 +128,7 @@ Item {
                 alpha: item.useMask ? 0 : -1
                 hoverEnabled: true
                 acceptedButtons: Qt.LeftButton | (action2 ? Qt.RightButton : 0)
-                onReleased: {
+                onReleased: (mouse) => {
                     var action = mouse.button & Qt.RightButton ? item.action2 : item.action
                     if (containsMouse && action)
                         B.App.execute(action)

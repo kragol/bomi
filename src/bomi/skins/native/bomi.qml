@@ -27,7 +27,7 @@ B.AppWithDock {
         onTriggered: text.content = engine.media.name
     }
 
-    Connections { target: engine.media; onNameChanged: text.content = target.name }
+    Connections { target: engine.media; function onNameChanged() { text.content = target.name }}
 
     bottomControls: Item {
         width: parent.width; height: top.height + (fs ? 0 : bottom.height)
@@ -39,16 +39,16 @@ B.AppWithDock {
                 id: layout; spacing: 0
                 width: parent.width - (fs ? (right.width + 10) : 0); height: implicitHeight
                 anchors.verticalCenter: parent.verticalCenter
-                MediaButton { iconName: "media-skip-backward"; action: "play/prev" }
+                MediaButton { iconName: "media-skip-backward"; actionId: "play/prev" }
                 MediaButton {
                     iconName: "media-playback-" + (engine.playing ? "pause" : "start")
-                    action: "play/play-pause"
+                    actionId: "play/play-pause"
                 }
-                MediaButton { iconName: "media-playback-stop"; action: "play/stop" }
-                MediaButton { iconName: "media-skip-forward"; action: "play/next" }
+                MediaButton { iconName: "media-playback-stop"; actionId: "play/stop" }
+                MediaButton { iconName: "media-skip-forward"; actionId: "play/next" }
                 B.TimeSlider {
                     id: timeslider; Layout.fillWidth: true;
-                    anchors.verticalCenter: parent.verticalCenter
+                    Layout.alignment: Qt.AlignVCenter
                 }
                 MediaButton {
                     id: volume
@@ -61,22 +61,22 @@ B.AppWithDock {
                             return "audio-volume-medium"
                         return "audio-volume-high"
                     }
-                    action: "audio/volume/mute"
+                    actionId: "audio/volume/mute"
                     checkable: true; checked: engine.muted
                 }
 
                 B.VolumeSlider {
                     id: volumeslider; width: 80;
-                    anchors.verticalCenter: parent.verticalCenter
+                    Layout.alignment: Qt.AlignVCenter
                 }
 
-                MediaButton { iconName: "audio-x-generic"; action: "audio/track" }
+                MediaButton { iconName: "audio-x-generic"; actionId: "audio/track" }
 
-                MediaButton { iconName: "text-x-generic"; action: "subtitle/track" }
+                MediaButton { iconName: "text-x-generic"; actionId: "subtitle/track" }
 
                 MediaButton {
                     iconName: "view-" + (fs ? "restore" : "fullscreen")
-                    action: "window/full"; checkable: true; checked: fs
+                    actionId: "window/full"; checkable: true; checked: fs
                 }
 
                 Item { visible: fs; width: 5; Layout.fillHeight: true }

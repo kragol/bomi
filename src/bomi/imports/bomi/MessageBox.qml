@@ -84,7 +84,7 @@ Rectangle {
             buttons: [B.ButtonBox.Cancel, B.ButtonBox.Ok]
             visible: buttons.length > 0
             width: 150; height: 25
-            anchors.horizontalCenter: parent.horizontalCenter
+            Layout.alignment: Qt.AlignHCenter
             source: Rectangle {
                 color: mouseArea.pressed ? Qt.rgba(1.0, 1.0, 1.0, 1.0)
                                          : Qt.rgba(0.3, 0.3, 0.3, 1.0)

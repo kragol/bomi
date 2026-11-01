@@ -27,7 +27,7 @@ Item {
     MouseArea {
         width: parent.width; height: 24
         z: toolStyle.z - 1
-        onPressed: mouse.accepted = false
+        onPressed: (mouse) => { mouse.accepted = false }
         Item {
             id: titleItem
             anchors.fill: parent

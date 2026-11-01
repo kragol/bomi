@@ -31,7 +31,7 @@ Item {
                 B.App.window.hideToolTip()
             showTimer.running = auto && hovered && target
         }
-        onPressed: mouse.accepted = status != __ToolVisible
+        onPressed: (mouse) => { mouse.accepted = status != __ToolVisible }
         onClicked: { if (!target.visible) display() }
 
         function display() { target.visible = true; hideTimer.run() }

@@ -93,6 +93,15 @@ auto registerType() -> void
     qRegisterMetaType<IntrplParamSetMap>("IntrplParamSetMap");
     qRegisterMetaType<AudioVisualizer::Type>();
     qRegisterMetaType<AudioVisualizer::Scale>();
+    // MrlState signals name this typedef; Qt 6 looks argument types up by name.
+    qRegisterMetaType<VideoEffects>("VideoEffects");
+    // Types QSettings stores as QVariants; Qt 6 finds their stream operators
+    // through the meta type, which has to be registered before loading.
+    qRegisterMetaType<Mrl>();
+    qRegisterMetaType<Playlist>();
+    qRegisterMetaType<EncodingInfo>();
+    qRegisterMetaType<Locale>();
+    qRegisterMetaType<QMap<QString, QString>>();
 
 }
 

@@ -32,9 +32,9 @@ Item {
         }
         Connections {
             target: B.App.engine.video.screen
-            onFrameRectChanged: cropbox.updateArea()
-            onWidthChanged: cropbox.updateArea()
-            onHeightChanged: cropbox.updateArea()
+            function onFrameRectChanged() { cropbox.updateArea() }
+            function onWidthChanged() { cropbox.updateArea() }
+            function onHeightChanged() { cropbox.updateArea() }
         }
 
         Item {
@@ -174,7 +174,7 @@ Item {
         video.y = (h - video.height) * 0.5
     }
 
-    Connections { target: engine; onZoomChanged: updateScreenSize() }
+    Connections { target: engine; function onZoomChanged() { updateScreenSize() }}
     onWidthChanged: updateScreenSize()
     onHeightChanged: updateScreenSize()
 
@@ -195,7 +195,7 @@ Item {
         visible: false
         Connections {
             target: B.App.download
-            onRunningChanged: {
+            function onRunningChanged() {
                 downloadMBox.visible = B.App.download.running
                 if (B.App.download.running)
                     B.App.topLevelItem.visible = true

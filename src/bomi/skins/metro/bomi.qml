@@ -194,12 +194,12 @@ B.AppWithDock {
     Component.onCompleted: {
         B.Settings.open(app.name)
         compact = B.Settings.getBool("compact", false)
-        B.Settings.close(app.name)
+        B.Settings.close()
     }
 
     Component.onDestruction: {
         B.Settings.open(app.name)
         B.Settings.set("compact", compact)
-        B.Settings.close(app.name)
+        B.Settings.close()
     }
 }

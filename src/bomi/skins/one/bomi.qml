@@ -21,7 +21,7 @@ B.AppWithFloating {
         MouseArea {
             id: mouse
             anchors.fill: parent
-            onPressed: mouse.accepted = false
+            onPressed: (mouse) => { mouse.accepted = false }
             hoverEnabled: true
             propagateComposedEvents: true
             onContainsMouseChanged: {
@@ -148,13 +148,13 @@ B.AppWithFloating {
                 }
                 hoverEnabled: true
 
-                onPressed: {
+                onPressed: (mouse) => {
                     var dx = mouse.x - c.x, dy = mouse.y - c.y
                     var rr = dx*dx + dy*dy
                     if (mouse.accepted = r1*r1 <= rr && rr <= r2*r2)
                         setRate(mouse.x, mouse.y)
                 }
-                onPositionChanged: {
+                onPositionChanged: (mouse) => {
                     if (pressed) setRate(mouse.x, mouse.y)
                     var dx = mouse.x - c.x, dy = mouse.y - c.y
                     var rr = dx*dx + dy*dy

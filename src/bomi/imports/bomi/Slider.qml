@@ -66,9 +66,9 @@ Item {
                 var r = w > 0 ? Math.max(0, Math.min(1, (x - handle.width * 0.5) / w)) : 0
                 return seeker.min + r * slider.range
             }
-            onPressed: seeker.value = valueAt(mouse.x)
-            onPositionChanged: if (pressed) seeker.value = valueAt(mouse.x)
-            onWheel: {
+            onPressed: (mouse) => { seeker.value = valueAt(mouse.x) }
+            onPositionChanged: (mouse) => { if (pressed) seeker.value = valueAt(mouse.x) }
+            onWheel: (wheel) => {
                 // Like Controls 1: a wheel notch moves the handle by 15 pixels.
                 if (acceptsWheel && slider.width > 0) {
                     var v = seeker.value + wheel.angleDelta.y / 8 * slider.range / slider.width

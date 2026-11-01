@@ -23,8 +23,8 @@ BaseApp {
             id: area
             anchors.fill: parent
             hoverEnabled: true
-            onPressed: { mouse.accepted = false; root.dismissTools() }
-            onReleased: mouse.accepted = false
+            onPressed: (mouse) => { mouse.accepted = false; root.dismissTools() }
+            onReleased: (mouse) => { mouse.accepted = false }
             onEntered: d.updateShown();
             onExited: d.updateShown();
             onPositionChanged: d.updateShown();
@@ -66,7 +66,7 @@ BaseApp {
 
     Connections {
         target: App.window.mouse
-        onCursorChanged: d.updateShown();
+        function onCursorChanged() { d.updateShown() }
     }
 
     QtObject {

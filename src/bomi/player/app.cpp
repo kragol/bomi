@@ -55,9 +55,14 @@ public:
                    const QString &def = QString()) -> void
         { addOption(cmd, QStringList(name), desc, valName, def); }
     auto option(LineCmd cmd) const -> QCommandLineOption { return m_options.value(cmd, s_dummy); }
-    auto isSet(LineCmd cmd) const -> bool { return m_parser.isSet(option(cmd)); }
-    auto value(LineCmd cmd) const -> QString  { return m_parser.value(option(cmd)); }
-    auto values(LineCmd cmd) const -> QStringList { return m_parser.values(option(cmd)); }
+    // Options that exist only on some platforms are not added on the others;
+    // Qt 6 warns when asked about an option it does not know.
+    auto isSet(LineCmd cmd) const -> bool
+        { return m_options.contains(cmd) && m_parser.isSet(option(cmd)); }
+    auto value(LineCmd cmd) const -> QString
+        { return m_options.contains(cmd) ? m_parser.value(option(cmd)) : QString(); }
+    auto values(LineCmd cmd) const -> QStringList
+        { return m_options.contains(cmd) ? m_parser.values(option(cmd)) : QStringList(); }
     auto parse(const QStringList &args) -> void { m_parser.process(args); }
     auto name(LineCmd cmd) const -> QString { return option(cmd).names().first(); }
     auto toJson() const -> QJsonArray

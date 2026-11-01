@@ -45,8 +45,8 @@ Item { id: item;
             var rate = Alg.clamp((y-gap)/(height-2*gap), min, max)
             target.contentY = (target.contentHeight - target.height)*rate
         }
-        onPressed: move(mouse.y)
-        onPositionChanged: if (pressed) move(mouse.y)
+        onPressed: (mouse) => { move(mouse.y) }
+        onPositionChanged: (mouse) => { if (pressed) move(mouse.y) }
         hoverEnabled: true
         Timer {
             id: timer
@@ -58,18 +58,18 @@ Item { id: item;
         preventStealing: true
         Connections {
             target: item.target
-            onContentYChanged: {
+            function onContentYChanged() {
                 mouseArea.moving = true
                 timer.restart()
             }
-            onMovingVerticallyChanged: {
+            function onMovingVerticallyChanged() {
                 if (item.target.movingVertically) {
                     mouseArea.moving = true
                     timer.restart()
                 }
             }
         }
-        onWheel: target.wheelScroll(wheel.angleDelta, wheel.pixelDelta)
+        onWheel: (wheel) => { target.wheelScroll(wheel.angleDelta, wheel.pixelDelta) }
     }
 
     states: State {

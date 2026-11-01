@@ -119,9 +119,9 @@ Slider {
 
     Connections {
         target: d.e
-        onTick: { d.ticking = true; time = d.e.time; d.ticking = false; }
-        onEndChanged: { d.ticking = true; d.sync(); d.ticking = false; }
-        onBeginChanged: { d.ticking = true; d.sync(); d.ticking = false; }
+        function onTick() { d.ticking = true; time = d.e.time; d.ticking = false; }
+        function onEndChanged() { d.ticking = true; d.sync(); d.ticking = false; }
+        function onBeginChanged() { d.ticking = true; d.sync(); d.ticking = false; }
     }
     onValueChanged: { if (!d.ticking) d.e.seek(value); }
     Component.onCompleted: { d.sync(); d.ticking = false; }
@@ -135,7 +135,7 @@ Slider {
         property bool hv: false
         property int time: target >= 0 ? target : moving ? d.target(mouseX) : d.e.time
         onMovingChanged: if (toolTip && !moving) App.window.hideToolTip()
-        onPositionChanged: {
+        onPositionChanged: (mouse) => {
             var val = d.target(mouse.x)
             if (toolTip)
                 App.window.showToolTip(seeker, mouse.x, mouse.y,
@@ -149,6 +149,6 @@ Slider {
             if (pressed)
                 value = val
         }
-        onPressed: { value = d.target(mouse.x) }
+        onPressed: (mouse) => { value = d.target(mouse.x) }
     }
 }

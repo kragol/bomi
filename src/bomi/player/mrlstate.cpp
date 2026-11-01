@@ -107,10 +107,14 @@ auto MrlState::notifyAll() const -> void
     auto mo = metaObject();
     for (int i = 1; i < mo->propertyCount(); ++i) {
         auto p = mo->property(i);
-        if (p.hasNotifySignal())
-            p.notifySignal().invoke(const_cast<MrlState*>(this),
-                                    QGenericArgument(p.typeName(),
-                                                     p.read(this).constData()));
+        if (p.hasNotifySignal()) {
+            // Name the argument as the signal does: Qt 6 matches type names, and
+            // a typedef such as VideoEffects is not the property's type name.
+            const auto signal = p.notifySignal();
+            signal.invoke(const_cast<MrlState*>(this),
+                          QGenericArgument(signal.parameterTypeName(0).constData(),
+                                           p.read(this).constData()));
+        }
     }
 }
 

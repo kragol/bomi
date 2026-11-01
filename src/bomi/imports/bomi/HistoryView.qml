@@ -31,7 +31,7 @@ Item {
 
     MouseArea {
         anchors.fill: parent
-        onWheel: wheel.accepted = true
+        onWheel: (wheel) => { wheel.accepted = true }
     }
 
     Component {

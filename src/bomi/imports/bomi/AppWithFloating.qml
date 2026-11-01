@@ -25,8 +25,8 @@ BaseApp {
             acceptedButtons: Qt.AllButtons
             anchors.fill: parent
             hoverEnabled: true;
-            onPressed: { mouse.accepted = false; root.dismissTools() }
-            onReleased: mouse.accepted = false
+            onPressed: (mouse) => { mouse.accepted = false; root.dismissTools() }
+            onReleased: (mouse) => { mouse.accepted = false }
             onEntered: floating.shown = isControlsVisible()
             onExited: floating.shown = false
             onPositionChanged: {
@@ -79,7 +79,7 @@ BaseApp {
             }
             Connections {
                 target: App.window.mouse
-                onCursorChanged: floating.shown = area.isControlsVisible()
+                function onCursorChanged() { floating.shown = area.isControlsVisible() }
             }
         }
     }

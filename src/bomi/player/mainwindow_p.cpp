@@ -43,9 +43,12 @@ auto MainWindow::Data::restoreState() -> void
     const auto mo = as.metaObject();
     for (int i = mo->propertyOffset(); i < mo->propertyCount(); ++i) {
         const auto p = mo->property(i);
-        if (p.hasNotifySignal())
-            p.notifySignal().invoke(&as, QGenericArgument(p.typeName(),
-                                                          p.read(&as).constData()));
+        if (p.hasNotifySignal()) {
+            // Named as the signal names it; see MrlState::notifyAll().
+            const auto signal = p.notifySignal();
+            signal.invoke(&as, QGenericArgument(signal.parameterTypeName(0).constData(),
+                                                p.read(&as).constData()));
+        }
     }
 
     as.state.set_video_tracks(StreamList(StreamVideo));
