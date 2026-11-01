@@ -221,7 +221,6 @@ FontComboBox::FontComboBox(QWidget *parent)
     });
     d->model = new FontFamilyModel;
     d->model->setList(d->generateList());
-    setModel(d->model);
     // Every row carries its own family through FontFamilyModel::fontData(), so
     // laying the popup out measures each row in that family and loads a font
     // engine for it. Opening the drop-down took ~24s with ~3700 families
@@ -235,10 +234,14 @@ FontComboBox::FontComboBox(QWidget *parent)
     // QComboBox stops blocking the mouse release that follows the click, so
     // the drop-down opened and immediately closed again. Laying out in batches
     // brings the first open to ~27ms and it stays open.
+    //
+    // Both must be set before the model: Qt 6's setModel() selects the first
+    // row straight away, and the view lays out every row to place it.
     if (auto view = qobject_cast<QListView*>(this->view())) {
         view->setUniformItemSizes(true);
         view->setLayoutMode(QListView::Batched);
     }
+    setModel(d->model);
     setCurrentIndex(0);
 }
 
