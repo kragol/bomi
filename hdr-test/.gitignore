@@ -1,0 +1,4 @@
+# Generated: run make_hdr_test.py to recreate the video
+*.mkv
+qt6-window/build/
+__pycache__/
