@@ -15,6 +15,7 @@ signals:
     void currentFontChanged();
 protected:
     void paintEvent(QPaintEvent *event) override;
+    bool eventFilter(QObject *object, QEvent *event) override;
 private:
     struct Data;
     Data *d;

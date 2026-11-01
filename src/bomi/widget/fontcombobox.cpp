@@ -1,4 +1,5 @@
 #include "fontcombobox.hpp"
+#include <QMouseEvent>
 #include "misc/simplelistmodel.hpp"
 #include <QFontDatabase>
 #include <QListView>
@@ -199,6 +200,7 @@ struct FontComboBox::Data {
     FontComboBox *p = nullptr;
     FontFamilyModel *model = nullptr;
     bool fixedOnly = false;
+    bool eatOpeningRelease = false;
     auto generateList() -> QList<FontData> { return getFontDataList(fixedOnly); }
 };
 
@@ -243,6 +245,33 @@ FontComboBox::FontComboBox(QWidget *parent)
     }
     setModel(d->model);
     setCurrentIndex(0);
+    // See eventFilter(). Installed after QComboBox's own filter on the
+    // viewport, so ours runs first.
+    view()->viewport()->installEventFilter(this);
+    if (auto container = view()->parentWidget())
+        container->installEventFilter(this);
+}
+
+bool FontComboBox::eventFilter(QObject *object, QEvent *event)
+{
+    // QComboBox ignores the release of the click that opened the popup only
+    // if it arrives within the double-click interval of the popup opening.
+    // The first time, painting the visible rows loads a font engine for each
+    // row's family -- at the top of the list, then again around the current
+    // family once showPopup() has scrolled there -- and that can hold the
+    // event loop long enough for the release to count as a click outside the
+    // popup, which closes it again at once. So drop the first release after a
+    // mouse-opened popup when it lands on the combo box itself: that is the
+    // opening click, however late it is processed.
+    if (event->type() == QEvent::MouseButtonPress) {
+        d->eatOpeningRelease = false;
+    } else if (event->type() == QEvent::MouseButtonRelease && d->eatOpeningRelease) {
+        d->eatOpeningRelease = false;
+        const auto pos = static_cast<QMouseEvent*>(event)->globalPosition().toPoint();
+        if (rect().contains(mapFromGlobal(pos)))
+            return true;
+    }
+    return QComboBox::eventFilter(object, event);
 }
 
 void FontComboBox::paintEvent(QPaintEvent *)
@@ -264,6 +293,7 @@ void FontComboBox::paintEvent(QPaintEvent *)
 
 void FontComboBox::showPopup()
 {
+    d->eatOpeningRelease = QGuiApplication::mouseButtons() & Qt::LeftButton;
     QComboBox::showPopup();
     // With batched layout the rows past the first batch are not laid out yet
     // when QComboBox does its own scroll-to-current, so the popup opens at the
