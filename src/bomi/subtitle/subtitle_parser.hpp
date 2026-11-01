@@ -14,7 +14,7 @@ protected:
     virtual void _parse(Subtitle &sub) = 0;
     virtual auto type() const -> SubType = 0;
     const QString &all() const { return m_all; }
-    auto getLine() const -> QStringRef;
+    auto getLine() const -> QStringView;
     auto pos() const -> int { return m_pos; }
     auto atEnd() const -> bool { return m_pos >= m_all.size(); }
     auto at(int i) const -> ushort { return m_all.at(i).unicode(); }
@@ -25,9 +25,9 @@ protected:
     auto append(Subtitle &s, SubComp::SyncType b = SubComp::Time) -> SubComp&;
     static auto predictEndTime(const SubComp::const_iterator &it) -> int;
     static auto predictEndTime(int start, const QString &text) -> int;
-    static auto predictEndTime(int start, const QStringRef &text) -> int;
-    static auto encodeEntity(const QStringRef &str) -> QString;
-    static auto processLine(int &idx, const QString &contents) -> QStringRef;
+    static auto predictEndTime(int start, const QStringView &text) -> int;
+    static auto encodeEntity(const QStringView &str) -> QString;
+    static auto processLine(int &idx, const QString &contents) -> QStringView;
     static auto components(Subtitle &sub) -> QList<SubComp>&
         { return sub.m_comp; }
     static auto components(const Subtitle &sub) -> const QList<SubComp>&

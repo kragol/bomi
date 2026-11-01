@@ -9,7 +9,7 @@ class QJSEngine;
 DECL_PLUG_CHANGED_T(QComboBox, currentIndexChanged, int)
 DECL_PLUG_CHANGED  (QAbstractButton, toggled)
 DECL_PLUG_CHANGED  (QLineEdit, textChanged)
-DECL_PLUG_CHANGED_T(QButtonGroup, buttonToggled, int, bool)
+DECL_PLUG_CHANGED(QButtonGroup, idToggled)
 DECL_PLUG_CHANGED_T(QDoubleSpinBox, valueChanged, double)
 DECL_PLUG_CHANGED_T(QSpinBox, valueChanged, int)
 
@@ -112,8 +112,9 @@ template<class T>
 SCIA _InRange(const T &min, const T &val, const T &max) -> bool
 { return min <= val && val <= max; }
 
-template<class T>
-SCIA _InRange0(const T &val, const T &end) -> bool
+// End may be a wider type than val, e.g. an int index against Qt 6's qsizetype sizes.
+template<class T, class E>
+SCIA _InRange0(const T &val, const E &end) -> bool
 { return T(0) <= val && val < end; }
 
 template<class T, class S>
@@ -178,7 +179,7 @@ enum class Location {
     Pictures    = QStandardPaths::PicturesLocation,
     Temp        = QStandardPaths::TempLocation,
     Home        = QStandardPaths::HomeLocation,
-    Data        = QStandardPaths::DataLocation,
+    Data        = QStandardPaths::AppLocalDataLocation,
     Cache       = QStandardPaths::GenericCacheLocation,
     Runtime     = QStandardPaths::RuntimeLocation,
     Config      = QStandardPaths::GenericConfigLocation,

@@ -2,7 +2,6 @@
 
 import QtQuick 2.0
 import QtQuick.Layouts 1.0
-import QtQuick.Controls.Styles 1.0
 import bomi 1.0 as B
 
 B.AppWithFloating {
@@ -11,7 +10,7 @@ B.AppWithFloating {
     readonly property QtObject engine: B.App.engine
     Component {
         id: sliders
-        SliderStyle {
+        B.SliderStyle {
             groove: Rectangle {
                 height: 4; radius: 2
                 anchors.verticalCenter: parent.verticalCenter
@@ -78,7 +77,7 @@ B.AppWithFloating {
                     B.Button {
                         id: mute; width: parent.height; height: parent.height
                         checked: engine.muted
-                        action: "audio/volume/mute"; icon.prefix: "volume"
+                        action: "audio/volume/mute"; icon.prefix: Qt.resolvedUrl("volume")
                     }
                     B.VolumeSlider { id: volumeslider; width: 60; style: sliders; height: parent.height }
                 }
@@ -86,21 +85,21 @@ B.AppWithFloating {
                     height: parent.height; spacing: 20; anchors.horizontalCenter: parent.horizontalCenter;
                     B.Button {
                         id: playPrev; width: 24; height: 24
-                        action: "play/prev"; icon.prefix: "previous"
+                        action: "play/prev"; icon.prefix: Qt.resolvedUrl("previous")
                     }
                     B.Button {
                         id: playPause; width: 24; height: 24
-                        action: "play/play-pause"; icon.prefix: engine.playing ? "pause" : "play"
+                        action: "play/play-pause"; icon.prefix: Qt.resolvedUrl(engine.playing ? "pause" : "play")
                     }
                     B.Button {
                         id: playNext; width: 24; height: 24
-                        action: "play/next"; icon.prefix: "next"
+                        action: "play/next"; icon.prefix: Qt.resolvedUrl("next")
                     }
                 }
             }
         }
         B.Button {
-            id: toggler; parent: checked ? seekbarwrapper : buttons; icon.prefix: "toggle"
+            id: toggler; parent: checked ? seekbarwrapper : buttons; icon.prefix: Qt.resolvedUrl("toggle")
             width: 16; height: 16; anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
             onClicked: checked = !checked
             states: State {
@@ -124,11 +123,11 @@ B.AppWithFloating {
         }
         B.Button {
             id: fullscreen; width: 16; height: 16; parent: checked ? seekbarwrapper : buttons; anchors { verticalCenter: parent.verticalCenter; right: parent.right; rightMargin: 30 }
-            action: "window/full"; icon.prefix: "fullscreen"
+            action: "window/full"; icon.prefix: Qt.resolvedUrl("fullscreen")
         }
         B.Button {
             id: playlistIcon; width: 16; height: 16; parent: checked ? seekbarwrapper : buttons; anchors { verticalCenter: parent.verticalCenter; right: parent.right; rightMargin: 60 }
-            action: "tool/playlist/toggle"; icon.prefix: "playlist"; action2: "tool/playlist"
+            action: "tool/playlist/toggle"; icon.prefix: Qt.resolvedUrl("playlist"); action2: "tool/playlist"
             tooltip: makeToolTip(qsTr("Show/Hide Playlist"), qsTr("Show Playlist Menu"))
         }
     }

@@ -157,23 +157,23 @@ config_opts="""
 
 config=
 
-detect_qt5() {
-    test -n "$(LC_MESSAGES=C "$1" -version 2> /dev/null | grep "version 5.")"
+detect_qt6() {
+    test -n "$(LC_MESSAGES=C "$1" -version 2> /dev/null | grep "version 6.")"
 }
 
-check_qt5_or_exit() {
+check_qt6_or_exit() {
     local var=$1
     local value=$(eval echo \$$var)
     local found=""
     printf "checking for $var ... "
     if [ "$value" = autodetect ]; then
-        for q in "$var" "$var-qt5"; do
-        if detect_qt5 $q; then
+        for q in "${var}6" "$var-qt6" "$var"; do
+        if detect_qt6 $q; then
             found=$q
             break
         fi
         done
-    elif detect_qt5 "$value"; then
+    elif detect_qt6 "$value"; then
         found="$value"
     fi
     if [ -z "$found" ]; then
@@ -212,8 +212,8 @@ setup_build() {
     fi
     echo "$cc"
 
-    check_qt5_or_exit qmake
-    check_qt5_or_exit lrelease
+    check_qt6_or_exit qmake
+    check_qt6_or_exit lrelease
 
     if [ -z "$mkspec" ]; then mkspec=$mk; fi
     echo "checking for mkspec ... $mkspec"

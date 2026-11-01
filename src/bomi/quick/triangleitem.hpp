@@ -27,7 +27,7 @@ signals:
     void p3Changed(const QPointF &p3);
     void colorChanged(const QColor &color);
 private:
-    auto geometryChanged(const QRectF &new_, const QRectF &old) -> void final;
+    auto geometryChange(const QRectF &new_, const QRectF &old) -> void final;
     auto updatePolish() -> void final;
     auto vertexCount() const -> int final { return 3; }
     auto type() const -> Type* final { static Type t; return &t; }

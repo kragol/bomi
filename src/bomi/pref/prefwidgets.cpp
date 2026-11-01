@@ -77,7 +77,7 @@ auto HwAccCodecBox::setValue(const QStringList &list) -> void
 DataButtonGroup::DataButtonGroup(QObject *parent)
     : QButtonGroup(parent)
 {
-    connect(this, static_cast<Signal<QButtonGroup, int>>(&QButtonGroup::buttonClicked), this, [=] () {
+    connect(this, &QButtonGroup::idClicked, this, [=] () {
         if (_Change(m_button, checkedButton()))
             emit currentDataChanged(currentData());
     });

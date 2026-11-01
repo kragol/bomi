@@ -15,7 +15,7 @@ public:
 protected:
     auto forceRepaint() -> void { reserve(UpdateMaterial); }
     auto finalizeGL() -> void;
-    auto geometryChanged(const QRectF &new_, const QRectF &old) -> void override;
+    auto geometryChange(const QRectF &new_, const QRectF &old) -> void override;
     virtual void paint(OpenGLFramebufferObject *fbo) = 0;
 private:
     void updateVertex(Vertex *vertex) final;

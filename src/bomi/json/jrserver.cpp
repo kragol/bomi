@@ -53,7 +53,7 @@ struct JrTcp : public QTcpServer, public JrTransport {
             s->deleteLater();
             return;
         }
-        connect(SIGNAL_VT(s, error, ServerError), this,
+        connect(s, &QTcpSocket::errorOccurred, this,
                 [=] (ServerError e) { error(e, errorString()); });
         connect(s, &QTcpSocket::disconnected, this,
                 [=] () { removeClient(s); s->deleteLater(); });

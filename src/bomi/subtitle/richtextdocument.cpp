@@ -124,7 +124,7 @@ auto RichTextDocument::setTextOutline(const QPen &pen) -> void
 auto RichTextDocument::setText(const QString &text) -> void
 {
     m_blocks.clear();
-    RichTextBlockParser parser(text.midRef(0));
+    RichTextBlockParser parser(QStringView(text).mid(0));
     while (!parser.atEnd())
         m_blocks += parser.paragraph();
     setChanged(true);
@@ -231,7 +231,7 @@ auto RichTextDocument::updateLayoutInfo() -> void
     if (!m_formatChanged && m_pxChanged) {
         auto adjustFormats = [this] (QTextLayout *layout,
                                      const RichTextBlock &block, float r) {
-            auto ranges = layout->additionalFormats();
+            auto ranges = layout->formats();
             for (int j=0; j<ranges.size(); ++j) {
                 const auto &style = block.formats[j].style;
                 if (!style.contains(QTextFormat::FontPixelSize)) {
@@ -243,7 +243,7 @@ auto RichTextDocument::updateLayoutInfo() -> void
                     ranges[j].format.setProperty(QTextFormat::TextOutline, ol);
                 }
             }
-            layout->setAdditionalFormats(ranges);
+            layout->setFormats(ranges);
         };
         for (int i=0; i<m_blocks.size(); ++i) {
             const auto &block = m_blocks[i];
@@ -274,7 +274,7 @@ auto RichTextDocument::updateLayoutInfo() -> void
                     range.format.setProperty(QTextFormat::FontPixelSize, px);
                 }
             }
-            layout->setAdditionalFormats(ranges);
+            layout->setFormats(ranges);
         };
 
         for (int i=0; i<m_blocks.size(); ++i) {

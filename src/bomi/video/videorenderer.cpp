@@ -47,82 +47,20 @@ struct VideoRenderer::VideoShaderData : public VideoRenderer::ShaderData {
     bool redraw = false, osdVisible = false;
     const FboSet *frame = nullptr, *osd = nullptr;
     QMargins osdMargins;
+    SGTextureWrapper sgFrame;
 };
 
 struct VideoRenderer::VideoShaderIface : public VideoRenderer::ShaderIface {
-    VideoShaderIface(bool osd): m_osd(osd) {
-        if (osd) {
-            vertexShader = R"(
-                uniform mat4 qt_Matrix;
-                attribute vec4 aPosition;
-                attribute vec2 aFrameTexCoord;
-                attribute vec2 aOsdTexCoord;
-                varying vec2 frameTexCoord;
-                varying vec2 osdTexCoord;
-                void main() {
-                    frameTexCoord = aFrameTexCoord;
-                    osdTexCoord = aOsdTexCoord;
-                    gl_Position = qt_Matrix * aPosition;
-                }
-            )";
-            fragmentShader = R"(
-                varying vec2 frameTexCoord;
-                varying vec2 osdTexCoord;
-                uniform sampler2D frameTex;
-                uniform sampler2D osdTex;
-                void main() {
-                    vec4 frame = texture2D(frameTex, frameTexCoord);
-                    vec4 osd = texture2D(osdTex, osdTexCoord);
-                    gl_FragColor = (frame * (1.0 - osd.a) + osd);
-                }
-            )";
-        } else {
-            vertexShader = R"(
-                uniform mat4 qt_Matrix;
-                attribute vec4 aPosition;
-                attribute vec2 aFrameTexCoord;
-                attribute vec2 aOsdTexCoord;
-                varying vec2 frameTexCoord;
-                void main() {
-                    frameTexCoord = aFrameTexCoord;
-                    gl_Position = qt_Matrix * aPosition;
-                }
-            )";
-            fragmentShader = R"(
-                varying vec2 frameTexCoord;
-                uniform sampler2D frameTex;
-                void main() {
-                    gl_FragColor = texture2D(frameTex, frameTexCoord);
-                }
-            )";
-        }
-        attributes << "aPosition" << "aFrameTexCoord" << "aOsdTexCoord";
+    VideoShaderIface() {
+        vertexShader = u":/shaders/video.vert.qsb"_q;
+        fragmentShader = u":/shaders/video.frag.qsb"_q;
     }
-    void resolve(QOpenGLShaderProgram *prog) override {
-        Q_ASSERT(prog->isLinked());
-        loc_frameTex = prog->uniformLocation("frameTex");
-        if (m_osd)
-            loc_osdTex = prog->uniformLocation("osdTex");
-    }
-    void update(QOpenGLShaderProgram *prog,
-                VideoRenderer::ShaderData *data) override {
+    auto texture(int binding, VideoRenderer::ShaderData *data) -> QSGTexture* override {
+        Q_UNUSED(binding);
         auto d = static_cast<VideoShaderData*>(data);
         const auto frame = d->frame->texture();
-        if (frame->id() != GL_NONE && !frame->isEmpty()) {
-            prog->setUniformValue(loc_frameTex, 0);
-            prog->setUniformValue(loc_osdTex, 1);
-            func()->glActiveTexture(GL_TEXTURE0);
-            frame->bind();
-            if (m_osd && d->osdVisible) {
-                func()->glActiveTexture(GL_TEXTURE1);
-                d->osd->texture()->bind();
-                func()->glActiveTexture(GL_TEXTURE0);
-            }
-        }
+        return d->sgFrame.get(d->window, frame->id(), frame->size());
     }
-private:
-    int loc_frameTex = -1, loc_osdTex = -1;
-    bool m_osd = false;
 };
 
 struct VideoRenderer::Node : public QSGGeometryNode {
@@ -530,22 +468,22 @@ auto VideoRenderer::mapToVideo(const QPointF &pos) -> QPointF
     return pos - d->vtx.topLeft();
 }
 
-auto VideoRenderer::geometryChanged(const QRectF &new_, const QRectF& old) -> void
+auto VideoRenderer::geometryChange(const QRectF &new_, const QRectF& old) -> void
 {
-    Super::geometryChanged(new_, old);
+    Super::geometryChange(new_, old);
     if (new_.size().toSize() != old.size().toSize())
         polish();
 }
 
 auto VideoRenderer::type() const -> Type*
 {
-    static Type type[2];
-    return &type[d->osd.visible];
+    static Type type;
+    return &type;
 }
 
 auto VideoRenderer::createShader() const -> ShaderIface*
 {
-    return new VideoShaderIface(d->osd.visible);
+    return new VideoShaderIface;
 }
 
 auto VideoRenderer::createData() const -> ShaderData*
@@ -573,9 +511,11 @@ auto VideoRenderer::render(VideoShaderData *data) -> void
     data->redraw = false;
     auto w = window();
     if (w && d->render) {
-        w->resetOpenGLState();
+        // mpv draws with raw OpenGL; this flushes what the scene graph has
+        // recorded so far and makes it forget its cached GL state afterwards.
+        w->beginExternalCommands();
         d->render(d->frame.fbo);
-        w->resetOpenGLState();
+        w->endExternalCommands();
     }
 }
 

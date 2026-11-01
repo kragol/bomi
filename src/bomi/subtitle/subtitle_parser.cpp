@@ -19,10 +19,7 @@ auto SubtitleParser::parse(const QString &fileName,
     QFile file(fileName);
     if (!file.open(QFile::ReadOnly) || file.size() > (1 << 20))
         return Subtitle();
-    QTextStream in;
-    in.setDevice(&file);
-    in.setCodec(enc.codec());
-    const QString all = in.readAll();
+    const QString all = enc.decode(file.readAll());
     QFileInfo info(fileName);
     Subtitle sub;
 
@@ -59,7 +56,7 @@ auto SubtitleParser::parse(const QString &fileName,
     return Subtitle();
 }
 
-auto SubtitleParser::processLine(int &idx, const QString &texts) -> QStringRef
+auto SubtitleParser::processLine(int &idx, const QString &texts) -> QStringView
 {
     int from = idx;
     idx = texts.indexOf(QLatin1Char('\n'), from);
@@ -67,9 +64,9 @@ auto SubtitleParser::processLine(int &idx, const QString &texts) -> QStringRef
         idx = texts.indexOf(QLatin1Char('\r'), from);
     if (idx < 0) {
         idx = texts.size();
-        return texts.midRef(from);
+        return QStringView(texts).mid(from);
     } else {
-        return texts.midRef(from, (idx++) - from);
+        return QStringView(texts).mid(from, (idx++) - from);
     }
 }
 
@@ -80,7 +77,7 @@ auto SubtitleParser::predictEndTime(int start, const QString &text) -> int
     return -1;
 }
 
-auto SubtitleParser::predictEndTime(int start, const QStringRef &text) -> int
+auto SubtitleParser::predictEndTime(int start, const QStringView &text) -> int
 {
     if (msPerChar > 0)
         return start + text.size()*msPerChar;
@@ -94,7 +91,7 @@ auto SubtitleParser::predictEndTime(const SubComp::const_iterator &it) -> int
     return -1;
 }
 
-auto SubtitleParser::encodeEntity(const QStringRef &str) -> QString
+auto SubtitleParser::encodeEntity(const QStringView &str) -> QString
 {
     QString ret;
     for (int i=0; i<str.size(); ++i) {
@@ -120,7 +117,7 @@ auto SubtitleParser::encodeEntity(const QStringRef &str) -> QString
     return ret;
 }
 
-auto SubtitleParser::getLine() const -> QStringRef
+auto SubtitleParser::getLine() const -> QStringView
 {
     int from = m_pos;
     int end = -1;
@@ -140,6 +137,6 @@ auto SubtitleParser::getLine() const -> QStringRef
     }
     if (end < 0)
         end = m_all.size();
-    return from < m_all.size() ? m_all.midRef(from, end - from) : QStringRef();
+    return from < m_all.size() ? QStringView(m_all).mid(from, end - from) : QStringView();
 }
 

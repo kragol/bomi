@@ -131,6 +131,13 @@ auto EncodingInfo::codec() const -> QTextCodec*
     return QTextCodec::codecForMib(m_mib);
 }
 
+auto EncodingInfo::decode(const QByteArray &data) const -> QString
+{
+    if (auto c = codec())
+        return c->toUnicode(data);
+    return QString::fromUtf8(data);
+}
+
 auto EncodingInfo::toJson() const -> QJsonValue
 {
     return m_mib;

@@ -56,7 +56,7 @@ auto check() -> QString
         return qApp->translate("OpenGL", "Cannot make OpenGL context current!");
 
     _Info("Check OpenGL stuffs.");
-    const auto version = QOpenGLVersionProfile(gl.format()).version();
+    const auto version = qMakePair(gl.format().majorVersion(), gl.format().minorVersion());
     d.major = version.first;
     d.minor = version.second;
     _Info("Version: %%.%%", d.major, d.minor);

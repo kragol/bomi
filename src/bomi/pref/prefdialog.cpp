@@ -263,8 +263,7 @@ PrefDialog::PrefDialog(QWidget *parent)
 
     auto currentDataChanged = &DataComboBox::currentDataChanged;
     connect(d->ui.sub_autoselect, currentDataChanged, checkSubAutoselectMode);
-    void(QButtonGroup::*buttonClicked)(int) = &QButtonGroup::buttonClicked;
-    connect(d->shortcutGroup, buttonClicked, [this] (int idx) {
+    connect(d->shortcutGroup, &QButtonGroup::idClicked, [this] (int idx) {
         auto treeItem = d->ui.shortcut_map->currentItem();
         auto item = static_cast<PrefMenuTreeItem*>(treeItem);
         if (!item || item->isMenu() || item->isSeparator())

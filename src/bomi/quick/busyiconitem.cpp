@@ -130,9 +130,9 @@ auto BusyIconItem::setThickness(qreal thickness) -> void
     }
 }
 
-auto BusyIconItem::geometryChanged(const QRectF &n, const QRectF &o) -> void
+auto BusyIconItem::geometryChange(const QRectF &n, const QRectF &o) -> void
 {
-    QQuickItem::geometryChanged(n, o);
+    QQuickItem::geometryChange(n, o);
     polish();
     update();
 }

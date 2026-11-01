@@ -21,7 +21,7 @@ struct LocaleComboBox::Data {
         p->clear();
         for (auto &it : items)
             it.update();
-        qSort(items);
+        std::sort(items.begin(), items.end());
         auto s = Locale::system();
         p->addItem(tr("System locale[%1]").arg(s.nativeName()),
                    system.locale.toVariant());

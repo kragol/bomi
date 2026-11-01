@@ -1,11 +1,12 @@
 #include "subtitlerenderingthread.hpp"
 #include "misc/dataevent.hpp"
 
+// Qt 6's QMap orders keys with std::less instead of qMapLessThanKey.
 template<>
-inline bool qMapLessThanKey(const SubCompItMapIt &lhs,
-                            const SubCompItMapIt &rhs) {
-    return lhs.key() < rhs.key();
-}
+struct std::less<SubCompItMapIt> {
+    auto operator()(const SubCompItMapIt &lhs, const SubCompItMapIt &rhs) const -> bool
+        { return lhs.key() < rhs.key(); }
+};
 
 struct SubCompSelection::Thread::Data {
     Item *item = nullptr;

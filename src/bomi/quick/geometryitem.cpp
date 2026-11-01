@@ -1,7 +1,7 @@
 #include "geometryitem.hpp"
 
-auto GeometryItem::geometryChanged(const QRectF &n, const QRectF &o) -> void
+auto GeometryItem::geometryChange(const QRectF &n, const QRectF &o) -> void
 {
-    QQuickItem::geometryChanged(n, o);
+    QQuickItem::geometryChange(n, o);
     m_size = n.size();
 }

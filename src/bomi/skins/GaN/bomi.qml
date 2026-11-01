@@ -1,6 +1,5 @@
 import QtQuick 2.0
 import QtQuick.Layouts 1.0
-import QtQuick.Controls.Styles 1.0
 import bomi 1.0 as B
 
 B.AppWithFloating {
@@ -20,18 +19,18 @@ B.AppWithFloating {
                         TextButton {
                             id: audio
                             anchors { left: parent.left; verticalCenter: parent.verticalCenter }
-                            icon.prefix: "audios"; action: "audio/track/next"; action2: "audio/track"
+                            icon.prefix: Qt.resolvedUrl("audios"); action: "audio/track/next"; action2: "audio/track"
                             text.content: formatTrackNumber(engine.audio)
                         }
                         TextButton {
                             anchors { left: audio.right; verticalCenter: parent.verticalCenter; leftMargin: 5 }
-                            icon.prefix: "subs"; action: "subtitle/track/next"; action2: "subtitle/track"
+                            icon.prefix: Qt.resolvedUrl("subs"); action: "subtitle/track/next"; action2: "subtitle/track"
                             text.content: formatTrackNumber(engine.subtitle)
                         }
 
                         TextButton {
                             anchors { right: parent.right; verticalCenter: parent.verticalCenter }
-                            icon.prefix: "playlist"; action: "tool/playlist/toggle"; action2: "tool/playlist"
+                            icon.prefix: Qt.resolvedUrl("playlist"); action: "tool/playlist/toggle"; action2: "tool/playlist"
                             text.content: B.Format.listNumber(B.App.playlist.loaded+1, B.App.playlist.count)
                         }
                     }
@@ -48,7 +47,7 @@ B.AppWithFloating {
 
                 B.TimeSlider {
                     id: timeslide; width: parent.width; height: 10
-                    style: SliderStyle {
+                    style: B.SliderStyle {
                         groove: Rectangle {
                             height: 1; anchors.verticalCenter: parent.verticalCenter; color: "white"
                             Rectangle {
@@ -65,7 +64,7 @@ B.AppWithFloating {
                     }
                     markerStyle: B.Button {
                         size: 6; z: hovered ? 1e10 : -1
-                        icon.prefix: "marker"; tooltip: chapter.name; delay: 0
+                        icon.prefix: Qt.resolvedUrl("marker"); tooltip: chapter.name; delay: 0
                         onClicked: control.time = chapter.time
                     }
                 }
@@ -85,11 +84,11 @@ B.AppWithFloating {
 
                     Row {
                         spacing: 5; anchors.centerIn: parent; property real size: 24
-                        B.Button { size: parent.size; icon.prefix: "prev"; action: "play/prev"; action2: "play/chapter/prev"}
-                        B.Button { size: parent.size; icon.prefix: "backward"; action: "play/seek/backward1"; action2: "play/seek/backward2" }
-                        B.Button { size: parent.size; icon.prefix: engine.playing ? "pause" : "play"; action: "play/play-pause" }
-                        B.Button { size: parent.size; icon.prefix: "forward"; action: "play/seek/forward1"; action2: "play/seek/forward2" }
-                        B.Button { size: parent.size; icon.prefix: "next"; action: "play/next";  action2: "play/chapter/next" }
+                        B.Button { size: parent.size; icon.prefix: Qt.resolvedUrl("prev"); action: "play/prev"; action2: "play/chapter/prev"}
+                        B.Button { size: parent.size; icon.prefix: Qt.resolvedUrl("backward"); action: "play/seek/backward1"; action2: "play/seek/backward2" }
+                        B.Button { size: parent.size; icon.prefix: Qt.resolvedUrl(engine.playing ? "pause" : "play"); action: "play/play-pause" }
+                        B.Button { size: parent.size; icon.prefix: Qt.resolvedUrl("forward"); action: "play/seek/forward1"; action2: "play/seek/forward2" }
+                        B.Button { size: parent.size; icon.prefix: Qt.resolvedUrl("next"); action: "play/next";  action2: "play/chapter/next" }
                     }
 
                     Item {
@@ -97,7 +96,7 @@ B.AppWithFloating {
                         anchors { verticalCenter: parent.verticalCenter; right: parent.right; rightMargin: 10 }
                         B.VolumeSlider {
                             id: volume; anchors.fill: parent
-                            style: SliderStyle {
+                            style: B.SliderStyle {
                                 groove: Image {
                                     width: volume.width; height: volume.height; source: "volume-unfill.png"
                                     Item {
@@ -109,7 +108,7 @@ B.AppWithFloating {
                             }
                             B.Button {
                                 width: 12; height: 12; checked: engine.muted; action: "audio/volume/mute"
-                                icon.source: pressed ? "mute-pressed.png" : (hovered || checked ? "mute-checked.png" : "mute.png")
+                                icon.source: Qt.resolvedUrl(pressed ? "mute-pressed.png" : (hovered || checked ? "mute-checked.png" : "mute.png"))
                             }
                         }
                     }

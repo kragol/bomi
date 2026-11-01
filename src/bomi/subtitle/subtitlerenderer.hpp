@@ -56,7 +56,7 @@ private:
     auto finalizeGL() -> void;
     auto rerender() -> void;
     auto customEvent(QEvent *event) -> void override;
-    auto geometryChanged(const QRectF &n, const QRectF &o) -> void override;
+    auto geometryChange(const QRectF &n, const QRectF &o) -> void override;
     auto afterUpdate() -> void;
     auto createShader() const -> ShaderIface* override;
     auto createData() const -> ShaderData* override;

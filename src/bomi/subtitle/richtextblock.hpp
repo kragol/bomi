@@ -47,16 +47,16 @@ struct RichTextBlock::Ruby {
 
 class RichTextBlockParser : public RichTextHelper {
 public:
-    RichTextBlockParser(const QStringRef &text);
+    RichTextBlockParser(const QStringView &text);
     auto atEnd() const -> bool {return m_pos >= m_text.size();}
     auto get(const QString &open, const QString &close,
-             Tag *tag = nullptr) -> QStringRef;
+             Tag *tag = nullptr) -> QStringView;
     auto paragraph(Tag *tag = nullptr) -> QList<RichTextBlock>;
 protected:
     using Style = RichTextBlock::Style;
-    static auto parse(const QStringRef &text,
+    static auto parse(const QStringView &text,
                       const Style &style = Style()) -> QList<RichTextBlock>;
-    QStringRef m_text;
+    QStringView m_text;
     int m_pos, m_good;
 };
 

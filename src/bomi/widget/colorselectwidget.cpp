@@ -23,7 +23,7 @@ ColorSelectWidget::ColorSelectWidget(QWidget *parent)
     hbox->addWidget(d->color);
     hbox->addWidget(d->alphaLabel);
     hbox->addWidget(d->alpha);
-    hbox->setMargin(0);
+    hbox->setContentsMargins(0, 0, 0, 0);
 
     d->alpha->hide();
     d->alphaLabel->hide();

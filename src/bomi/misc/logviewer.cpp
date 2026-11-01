@@ -145,7 +145,7 @@ LogViewer::LogViewer(QWidget *parent)
     d->createMenu();
 
     const QFontMetrics fm(font());
-    const int mw = fm.width('M'_q) * 12;
+    const int mw = fm.horizontalAdvance('M'_q) * 12;
     d->ui.level->setFixedWidth(mw);
     d->ui.level->setMaximumHeight(fm.height() * 10);
     d->ui.context->setFixedWidth(mw);
@@ -193,9 +193,9 @@ LogViewer::LogViewer(QWidget *parent)
         QFile file(path);
         if (file.open(QFile::WriteOnly | QFile::Truncate)) {
             QTextStream out(&file);
-            out.setCodec("UTF-8");
+            out.setEncoding(QStringConverter::Utf8);
             for (int i = 0; i < d->model.size(); ++i)
-                out << d->model.at(i).message << endl;
+                out << d->model.at(i).message << Qt::endl;
         } else
             MBox::error(this, tr("Log Viewer"), tr("Failed to open file to save."), {BBox::Ok});
     });

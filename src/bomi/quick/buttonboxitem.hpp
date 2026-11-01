@@ -37,7 +37,7 @@ private slots:
     void emitClicked();
 private:
     auto updatePolish() -> void;
-    auto geometryChanged(const QRectF &new_, const QRectF &old) -> void;
+    auto geometryChange(const QRectF &new_, const QRectF &old) -> void;
     struct Data;
     Data *d;
 };

@@ -22,7 +22,7 @@ auto LetterboxItem::updatePolish() -> void
 {
     if (!isReserved(UpdateGeometry))
         return;
-    auto it = vertices().begin();
+    auto it = vertices().data();
     auto fill = [&it] (const QPointF &p1, const QPointF &p2) {
         it = Vertex::fillAsTriangles(it, p1, p2);
     };

@@ -778,7 +778,7 @@ auto PlayEngine::Data::observe() -> void
     QRegularExpression rx(uR"(Video decoder: ([^\n]*))"_q);
     auto filterInput = [=] (const char *name) -> QString {
         auto m = rx.match(mpv.get_osd(name));
-        if (!m.hasMatch() || m.capturedRef(1) == "unknown"_a)
+        if (!m.hasMatch() || m.capturedView(1) == "unknown"_a)
             return u"Autoselect"_q;
         return m.captured(1);
     };

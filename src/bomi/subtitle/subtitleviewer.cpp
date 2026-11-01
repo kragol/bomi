@@ -64,14 +64,14 @@ struct SubtitleViewer::Data {
             return EmptyText;
         auto m = rxFormatTime.match(text);
         if (m.hasMatch()) {
-            const int hh = m.capturedRef(1).toInt();
-            const int mm = m.capturedRef(2).toInt();
-            const int ms = m.capturedRef(3).toDouble() * 1000;
+            const int hh = m.capturedView(1).toInt();
+            const int mm = m.capturedView(2).toInt();
+            const int ms = m.capturedView(3).toDouble() * 1000;
             return (hh * 60 + mm) * 60 * 1000 + ms;
         }
         m = rxMSec.match(text);
         if (m.hasMatch())
-            return m.capturedRef(0).toInt();
+            return m.capturedView(0).toInt();
         return InvalidFormat;
     }
 

@@ -3,7 +3,6 @@
 
 import QtQuick 2.0
 import QtQuick.Layouts 1.0
-import QtQuick.Controls.Styles 1.0
 import bomi 1.0 as B
 
 B.AppWithFloating {
@@ -14,7 +13,7 @@ B.AppWithFloating {
 
     Component {
         id: sliderstyle
-        SliderStyle {
+        B.SliderStyle {
             groove: Rectangle {
                 width: control.width; height: 5; color: "#282629"
                 Rectangle {
@@ -44,24 +43,24 @@ B.AppWithFloating {
                 readonly property real gap: 74
                 MediaButton {
                     id: prev; offset: -2
-                    icon.source: "prev.png"; action: "play/prev"
+                    icon.source: Qt.resolvedUrl("prev.png"); action: "play/prev"
                 }
                 MediaButton {
                     id: backward; offset: -1
-                    icon.source: "backward.png"; action: "play/seek/backward1"
+                    icon.source: Qt.resolvedUrl("backward.png"); action: "play/seek/backward1"
                 }
                 MediaButton {
                     id: play; size: 82
-                    icon.source: checked ? "pause.png" : "play.png"
+                    icon.source: Qt.resolvedUrl(checked ? "pause.png" : "play.png")
                     action: "play/play-pause"; checked: engine.playing
                 }
                 MediaButton {
                     id: forward; offset: 1
-                    icon.source: "forward.png"; action: "play/seek/forward1"
+                    icon.source: Qt.resolvedUrl("forward.png"); action: "play/seek/forward1"
                 }
                 MediaButton {
                     id: next; offset: 2
-                    icon.source: "next.png"; action: "play/next"
+                    icon.source: Qt.resolvedUrl("next.png"); action: "play/next"
                 }
             }
 
@@ -74,35 +73,35 @@ B.AppWithFloating {
                 SmallButton {
                     id: shuffle
                     anchors { top: parent.top; left: parent.left }
-                    icon.source: "shuffle.png"; action: "tool/playlist/shuffle"
+                    icon.source: Qt.resolvedUrl("shuffle.png"); action: "tool/playlist/shuffle"
                     checked: B.App.playlist.shuffled
                 }
 
                 SmallButton {
                     id: repeat
                     anchors { top: parent.top; left: shuffle.right; leftMargin: 7 }
-                    icon.source: "repeat.png"; action: "tool/playlist/repeat"
+                    icon.source: Qt.resolvedUrl("repeat.png"); action: "tool/playlist/repeat"
                     checked: B.App.playlist.repetitive
                 }
 
                 SmallButton {
                     id: speaker
                     anchors { left: parent.left; bottom: parent.bottom }
-                    icon.source: "volume.png"; action: "audio/volume/mute"
+                    icon.source: Qt.resolvedUrl("volume.png"); action: "audio/volume/mute"
                     checked: B.App.engine.muted
                 }
 
                 SmallButton {
                     id: playlist
                     anchors { top: parent.top; right: fs.left; rightMargin: 7 }
-                    icon.source: "playlist.png"; action: "tool/playlist/toggle"
+                    icon.source: Qt.resolvedUrl("playlist.png"); action: "tool/playlist/toggle"
                     checked: B.App.playlist.visible
                 }
 
                 SmallButton {
                     id: fs
                     anchors { right: parent.right; top: parent.top }
-                    icon.source: "fullscreen.png"; action: "window/full"
+                    icon.source: Qt.resolvedUrl("fullscreen.png"); action: "window/full"
                     checked: B.App.window.fullscreen
                 }
 
@@ -110,7 +109,7 @@ B.AppWithFloating {
                 SmallButton {
                     id: audio
                     anchors { bottom: parent.bottom; right: fs.left; rightMargin: 7 }
-                    icon.source: "audio.png";
+                    icon.source: Qt.resolvedUrl("audio.png");
                     action: "audio/track/next"; action2: "audio/track"
                     text.content: formatTrackNumber(engine.audio)
                 }
@@ -118,7 +117,7 @@ B.AppWithFloating {
                 SmallButton {
                     id: sub
                     anchors { right: parent.right; bottom: parent.bottom }
-                    icon.source: "sub.png"
+                    icon.source: Qt.resolvedUrl("sub.png")
                     action: "subtitle/track/next"; action2: "subtitle/track"
                     text.content: formatTrackNumber(engine.subtitle)
                 }
@@ -145,7 +144,7 @@ B.AppWithFloating {
                         readonly property bool emph: hovered || pressed
                         width: 5; height: 5; z: emph ? 1e10 : -1
                         y: control.height - 2*(pressed ? 1 : hovered ? -1 : 0) - 2.5
-                        icon.source: emph ? "marker-filled.png" : "marker.png"
+                        icon.source: Qt.resolvedUrl(emph ? "marker-filled.png" : "marker.png")
                         tooltip: chapter.name; delay: 0
                     }
                 }

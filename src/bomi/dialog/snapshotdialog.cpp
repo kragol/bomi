@@ -159,9 +159,9 @@ auto ImageViewer::scale(double factor) -> void
 {
     if (qAbs(1.0 - factor) < 1.0e-5)
         zoomOriginal();
-    else if (d->label->pixmap()) {
+    else if (!d->label->pixmap().isNull()) {
         d->scale *= factor;
-        d->label->resize(d->scale * d->label->pixmap()->size());
+        d->label->resize(d->scale * d->label->pixmap().size());
         adjustScrollBar(horizontalScrollBar(), factor);
         adjustScrollBar(verticalScrollBar(), factor);
     }
@@ -174,5 +174,5 @@ auto ImageViewer::adjustScrollBar(QScrollBar *scrollBar, double factor) -> void
 
 auto ImageViewer::image() const -> QPixmap
 {
-    return d->label->pixmap() ? *d->label->pixmap() : QPixmap();
+    return d->label->pixmap();
 }

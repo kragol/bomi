@@ -4,6 +4,7 @@
 #include "enum/colorrange.hpp"
 #include "enum/colorspace.hpp"
 #include <QQmlListProperty>
+#include <QElapsedTimer>
 
 class AudioFormat;                      class StreamTrack;
 class StreamList;                       class VideoRenderer;
@@ -263,6 +264,7 @@ private:
 
 class VideoObject : public AvCommonObject {
     Q_OBJECT
+    Q_MOC_INCLUDE("video/videorenderer.hpp")
     Q_PROPERTY(VideoFormatObject *decoder READ decoder CONSTANT FINAL)
     Q_PROPERTY(VideoFormatObject *filter READ filter CONSTANT FINAL)
     Q_PROPERTY(VideoFormatObject *output READ output CONSTANT FINAL)
@@ -342,7 +344,7 @@ private:
     qreal m_vsyncRatio = 0.0, m_displayFps = 0.0;
     qreal m_droppedFps = 0.0, m_fpsMp = 1;
     qint64 m_frameCount = 0, m_frameNumber = 0;
-    QTime m_time;
+    QElapsedTimer m_time;
     VideoRenderer *m_screen = nullptr;
 };
 

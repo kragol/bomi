@@ -348,7 +348,7 @@ auto Player::setVolume(double volume) -> void
 auto Player::time() const -> qint64
 {
     const auto length = d->engine->time() - d->engine->begin();
-    return qBound<qint64>(0LL, length, d->engine->duration()) * 1000LL;
+    return qBound(qint64(0), qint64(length), qint64(d->engine->duration())) * 1000LL;
 }
 
 auto Player::hasNext() const -> bool

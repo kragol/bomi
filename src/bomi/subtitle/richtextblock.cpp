@@ -1,17 +1,17 @@
 #include "richtextblock.hpp"
 
-RichTextBlockParser::RichTextBlockParser(const QStringRef &text)
+RichTextBlockParser::RichTextBlockParser(const QStringView &text)
     : m_text(text)
     , m_pos(0)
     , m_good(1) { }
 
 auto RichTextBlockParser::get(const QString &open, const QString &close,
-                              Tag *tag) -> QStringRef
+                              Tag *tag) -> QStringView
 {
     Tag _tag;
     if (!tag)
         tag = &_tag;
-    QStringRef ret;
+    QStringView ret;
     m_good = innerText(open, close, m_text, ret, m_pos, *tag);
     if (m_good <= 0)
         m_pos = m_text.size();
@@ -22,13 +22,13 @@ auto RichTextBlockParser::paragraph(Tag *tag) -> QList<RichTextBlock>
 {
     if (m_pos >= m_text.size())
         return QList<RichTextBlock>();
-    QStringRef paragraph = trim(get(u"p"_q, u"/?sync|/?p|/body|/sami"_q, tag));
+    QStringView paragraph = trim(get(u"p"_q, u"/?sync|/?p|/body|/sami"_q, tag));
     if (m_good)
         return parse(paragraph, tag ? tag->style() : RichTextBlock::Style());
     return QList<RichTextBlock>();
 }
 
-auto RichTextBlockParser::parse(const QStringRef &text,
+auto RichTextBlockParser::parse(const QStringView &text,
                                 const Style &style) -> QList<RichTextBlock>
 {
     QList<RichTextBlock> ret;
@@ -47,12 +47,12 @@ auto RichTextBlockParser::parse(const QStringRef &text,
     };
 
     std::list<RichTextBlock::Style> fmtStack;
-    std::list<QStringRef> tagStack;
+    std::list<QStringView> tagStack;
     add_block(true, style);
 
     int pos = 0;
 
-    auto add_text = [&ret] (const QStringRef &text) {
+    auto add_text = [&ret] (const QStringView &text) {
         int pos = 0;
         QString seps;
         while (pos < text.size()) {
@@ -139,7 +139,7 @@ auto RichTextBlockParser::parse(const QStringRef &text,
                     const auto match = regex.match(text.toString(), pos);
                     Q_ASSERT(match.hasMatch());
                     const auto &st = ret.last().formats.last().style;
-                    ruby->rt_block = parse(match.capturedRef(1), st).value(0);
+                    ruby->rt_block = parse(match.capturedView(1), st).value(0);
                     if (ruby->rb_end < 0)
                         ruby->rb_end = ret.last().text.size();
                     pos = match.capturedEnd();

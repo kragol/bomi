@@ -1,6 +1,8 @@
 #ifndef ENCODINGINFO_HPP
 #define ENCODINGINFO_HPP
 
+class QTextCodec;
+
 class EncodingInfo {
 public:
     enum Category { General, Subtitle, Playlist, CategoryMax };
@@ -18,6 +20,8 @@ public:
     auto subgroup() const -> QString { return m_subgroup; }
     auto description() const -> QString;
     auto codec() const -> QTextCodec*;
+    // Bytes to text with this encoding, or UTF-8 when it is not valid.
+    auto decode(const QByteArray &data) const -> QString;
     static auto all() -> const QVector<EncodingInfo>&;
     static auto grouped() -> QVector<QVector<EncodingInfo>>;
     auto toJson() const -> QJsonValue;

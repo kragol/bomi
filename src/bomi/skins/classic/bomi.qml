@@ -1,6 +1,5 @@
 import QtQuick 2.0
 import QtQuick.Layouts 1.0
-import QtQuick.Controls.Styles 1.0
 import bomi 1.0 as B
 
 B.AppWithDock {
@@ -9,7 +8,7 @@ B.AppWithDock {
     readonly property QtObject engine: B.App.engine
     Component {
         id: slider
-        SliderStyle {
+        B.SliderStyle {
             groove: Item {
                 Rectangle {
                     height: 5; anchors.centerIn: parent; border { color: "#999"; width: 1 }
@@ -66,13 +65,13 @@ B.AppWithDock {
             width: parent.width; height: 35
             RowLayout {
                 anchors.margins: 2; anchors.fill: parent; spacing: 1
-                FramedButton { id: pause; width: height; height: parent.height; action: "play/play-pause"; icon.source: engine.playing ? "pause.png" : "play.png" }
+                FramedButton { id: pause; width: height; height: parent.height; action: "play/play-pause"; icon.source: Qt.resolvedUrl(engine.playing ? "pause.png" : "play.png") }
                 Grid {
                     id: grid; columns: 2; width: h*2; readonly property real h: pause.height/2
-                    FramedButton { id: backward; width: grid.h; height: grid.h; action: "play/seek/backward1"; icon.source: "backward.png" }
-                    FramedButton { id: forward; width: grid.h; height: grid.h; action: "play/seek/forward1"; icon.source: "forward.png" }
-                    FramedButton { id: previous; width: grid.h; height: grid.h; action: "play/prev"; icon.source: "previous.png" }
-                    FramedButton { id: next; width: grid.h; height: grid.h; action: "play/next"; icon.source: "next.png" }
+                    FramedButton { id: backward; width: grid.h; height: grid.h; action: "play/seek/backward1"; icon.source: Qt.resolvedUrl("backward.png") }
+                    FramedButton { id: forward; width: grid.h; height: grid.h; action: "play/seek/forward1"; icon.source: Qt.resolvedUrl("forward.png") }
+                    FramedButton { id: previous; width: grid.h; height: grid.h; action: "play/prev"; icon.source: Qt.resolvedUrl("previous.png") }
+                    FramedButton { id: next; width: grid.h; height: grid.h; action: "play/next"; icon.source: Qt.resolvedUrl("next.png") }
                 }
                 Column {
                     id: right
@@ -110,7 +109,7 @@ B.AppWithDock {
                         B.TimeSlider { id: timeslider; style: slider; Layout.fillWidth: true }
                         FramedButton {
                             id: mute; width: height; height: parent.height; action: "audio/volume/mute"
-                            icon.source: engine.muted ? "speaker-off.png" : "speaker-on.png"
+                            icon.source: Qt.resolvedUrl(engine.muted ? "speaker-off.png" : "speaker-on.png")
                         }
                         B.VolumeSlider { id: volumeslider; width: 70; style: slider }
                     }

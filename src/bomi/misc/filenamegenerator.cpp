@@ -12,8 +12,8 @@ auto get(const FileNameGenerator *g, const QString &ph) -> QString
         get[u"%YEAR_2%"_q]  = [] (const FileNameGenerator *g) { return _N(g->dateTime.date().year() % 100); };
         get[u"%MONTH%"_q]   = [] (const FileNameGenerator *g) { return _N(g->dateTime.date().month()); };
         get[u"%MONTH_0%"_q] = [] (const FileNameGenerator *g) { return n2(g->dateTime.date().month()); };
-        get[u"%MONTH_S%"_q] = [] (const FileNameGenerator *g) { return QDate::shortDayName(g->dateTime.date().month()); };
-        get[u"%MONTH_L%"_q] = [] (const FileNameGenerator *g) { return QDate::longMonthName(g->dateTime.date().month()); };
+        get[u"%MONTH_S%"_q] = [] (const FileNameGenerator *g) { return QLocale().monthName(g->dateTime.date().month(), QLocale::ShortFormat); };
+        get[u"%MONTH_L%"_q] = [] (const FileNameGenerator *g) { return QLocale().monthName(g->dateTime.date().month(), QLocale::LongFormat); };
         get[u"%DAY%"_q]     = [] (const FileNameGenerator *g) { return _N(g->dateTime.date().day()); };
         get[u"%DAY_0%"_q]   = [] (const FileNameGenerator *g) { return n2(g->dateTime.date().day()); };
         get[u"%HOUR%"_q]    = [] (const FileNameGenerator *g) { return _N(g->dateTime.time().hour()); };
@@ -61,10 +61,10 @@ auto get(const FileNameGenerator *g, const QString &ph) -> QString
     QRegEx rxRand(uR"(^%RAND_(\d+)%$)"_q);
     auto m = rxRand.match(ph);
     if (m.hasMatch()) {
-        const int n = m.capturedRef(1).toInt();
+        const int n = m.capturedView(1).toInt();
         QString nums; nums.reserve(n);
         for (int i = 0; i < n; ++i)
-            nums += _N(qrand() % 10);
+            nums += _N(QRandomGenerator::global()->bounded(10));
         return nums;
     }
     return QString();
@@ -74,7 +74,7 @@ auto FileNameGenerator::get(const QString &folder, const QString &format, const 
 {
     QString base;
     int pos = 0;
-    auto append = [&] (int end) { base += format.midRef(pos, end - pos); pos = end; };
+    auto append = [&] (int end) { base += QStringView(format).mid(pos, end - pos); pos = end; };
     while (pos < format.size()) {
         const int from = format.indexOf('%'_q, pos);
         if (from < 0) {
@@ -126,7 +126,7 @@ auto FileNameGenerator::get(const QString &folder, const QString &format, const 
             }
         }
         rxs += '$'_q;
-        const int n = m.capturedRef(1).toInt();
+        const int n = m.capturedView(1).toInt();
         rxs.replace(u"%COUNTER_XX%"_q, "(\\d{"_a % _N(n) % ",})"_a);
         QRegEx rx(rxs, QRegEx::CaseInsensitiveOption);
         qint64 max = 0;
@@ -134,7 +134,7 @@ auto FileNameGenerator::get(const QString &folder, const QString &format, const 
             auto name = info.completeBaseName();
             auto m = rx.match(name);
             if (m.hasMatch())
-                max = std::max(max, m.capturedRef(1).toLongLong());
+                max = std::max(max, m.capturedView(1).toLongLong());
         }
         base.replace(u"%COUNTER_XX%"_q, u"%1"_q.arg(max + 1, n, 10, '0'_q));
     }

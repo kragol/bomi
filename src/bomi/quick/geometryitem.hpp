@@ -15,7 +15,7 @@ public:
     auto geometry() const -> QRectF { return {position(), size()}; }
     auto rect() const -> QRectF { return {0.0, 0.0, width(), height()}; }
 protected:
-    auto geometryChanged(const QRectF &new_, const QRectF &o) -> void override;
+    auto geometryChange(const QRectF &new_, const QRectF &o) -> void override;
 private:
     QSizeF m_size;
 };

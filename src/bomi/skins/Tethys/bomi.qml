@@ -3,7 +3,6 @@
 
 import QtQuick 2.0
 import QtQuick.Layouts 1.0
-import QtQuick.Controls.Styles 1.0
 import bomi 1.0 as B
 
 B.AppWithDock {
@@ -19,7 +18,7 @@ B.AppWithDock {
 
     Component {
         id: sliders
-        SliderStyle {
+        B.SliderStyle {
             groove: Item {
                 Rectangle {
                     color: Qt.rgba(0, 0, 0, 0.4)
@@ -58,32 +57,32 @@ B.AppWithDock {
         id: rightButtons
         Row {
             B.Button {
-                size: 16; icon.prefix: compact ? "to-normal" : "to-compact"
+                size: 16; icon.prefix: Qt.resolvedUrl(compact ? "to-normal" : "to-compact")
                 onClicked: { compact = !compact }
                 anchors.verticalCenter: parent.verticalCenter
             }
             B.Button {
-                size: 24; icon.prefix: "playlist"
+                size: 24; icon.prefix: Qt.resolvedUrl("playlist")
                 anchors.verticalCenter: parent.verticalCenter
                 action: "tool/playlist/toggle"; action2: "tool/playlist"
             }
             B.Button {
-                size: 24; icon.prefix: "subscale"
+                size: 24; icon.prefix: Qt.resolvedUrl("subscale")
                 anchors.verticalCenter: parent.verticalCenter
                 action: "subtitle/scale/increase"; action2: "subtitle/scale/decrease"
             }
             B.Button {
-                size: 24; icon.prefix: "sub"
+                size: 24; icon.prefix: Qt.resolvedUrl("sub")
                 anchors.verticalCenter: parent.verticalCenter
                 action: "subtitle/track/next"; action2: "subtitle/track"
             }
             B.Button {
-                size: 24; icon.prefix: "audio"
+                size: 24; icon.prefix: Qt.resolvedUrl("audio")
                 anchors.verticalCenter: parent.verticalCenter
                 action: "audio/track/next"; action2: "audio/track"
             }
             B.Button {
-                size: 24; icon.prefix: "fs"; action: "window/full"
+                size: 24; icon.prefix: Qt.resolvedUrl("fs"); action: "window/full"
                 checked: B.App.window.fullscreen
                 anchors.verticalCenter: parent.verticalCenter
             }
@@ -96,17 +95,17 @@ B.AppWithDock {
             spacing: 0
             B.Button {
                 width: 32; height: 24
-                icon.prefix: "backward"; action: "play/seek/backward1"
+                icon.prefix: Qt.resolvedUrl("backward"); action: "play/seek/backward1"
                 anchors.verticalCenter: parent.verticalCenter
             }
             B.Button {
                 size: bigSize; action: "play/play-pause"
-                icon.prefix: engine.playing ? "pause" : "play"
+                icon.prefix: Qt.resolvedUrl(engine.playing ? "pause" : "play")
                 anchors.verticalCenter: parent.verticalCenter
             }
             B.Button {
                 width: 32; height: 24
-                icon.prefix: "forward"; action: "play/seek/forward1"
+                icon.prefix: Qt.resolvedUrl("forward"); action: "play/seek/forward1"
                 anchors.verticalCenter: parent.verticalCenter
             }
         }
@@ -121,10 +120,10 @@ B.AppWithDock {
             B.Button {
                 id: volumeButton
                 size: 24; action: "audio/volume/mute"
-                icon.source: engine.muted ? "volume-mute.png"
+                icon.source: Qt.resolvedUrl(engine.muted ? "volume-mute.png"
                            : engine.volume < 0.05 ? "volume-0.png"
                            : engine.volume < 0.4 ? "volume-low.png"
-                           : engine.volume < 0.8 ? "volume-high.png" : "volume-100.png"
+                           : engine.volume < 0.8 ? "volume-high.png" : "volume-100.png")
             }
             Image {
                 visible: volumeButton.pressed
@@ -142,7 +141,7 @@ B.AppWithDock {
                 readonly property bool emph: hovered || pressed
                 size: 8; z: emph ? 1e10 : -1
                 y: control.height - 2*(pressed ? 1 : hovered ? -1 : 0) - 10
-                icon.source: "marker.png"
+                icon.source: Qt.resolvedUrl("marker.png")
                 tooltip: chapter.name; delay: 0
             }
         }

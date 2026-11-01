@@ -24,7 +24,7 @@ auto SimpleFboItem::updateVertex(Vertex *vertex) -> void
                                       {0, 0}, {width(), height()});
 }
 
-auto SimpleFboItem::geometryChanged(const QRectF &new_, const QRectF &old) -> void
+auto SimpleFboItem::geometryChange(const QRectF &new_, const QRectF &old) -> void
 {
     if (m_forced) {
         if (_Change(m_targetSize, new_.size().toSize()))
@@ -35,7 +35,7 @@ auto SimpleFboItem::geometryChanged(const QRectF &new_, const QRectF &old) -> vo
     reserve(UpdateGeometry);
     if (new_.size() != old.size())
         reserve(UpdateMaterial);
-    SimpleTextureItem::geometryChanged(new_, old);
+    SimpleTextureItem::geometryChange(new_, old);
 }
 
 auto SimpleFboItem::updateTexture(OpenGLTexture2D *texture) -> void

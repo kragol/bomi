@@ -267,7 +267,7 @@ struct IcuData {
         if (!file.open(QFile::ReadOnly))
             return;
         QTextStream in(&file);
-        in.setCodec("UTF-8");
+        in.setEncoding(QStringConverter::Utf8);
         QRegEx rx(uR"(^\s*([a-zA-Z0-9_]+)\{$)"_q);
         QRegEx rxLang(uR"#(^\s*([a-zA-Z0-9_]+)\{"(.*)"\}$)#"_q);
         bool inLang = false, inScript = false;

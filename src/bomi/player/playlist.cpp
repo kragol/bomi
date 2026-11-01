@@ -40,7 +40,7 @@ auto Playlist::save(const QString &filePath, Type type) const -> bool
     if (type == Unknown)
         type = guessType(file.fileName());
     QTextStream out(&file);
-    out.setCodec(EncodingInfo::utf8().codec());
+    out.setEncoding(QStringConverter::Utf8);
     switch (type) {
     case PLS:
         return savePLS(out);
@@ -52,18 +52,16 @@ auto Playlist::save(const QString &filePath, Type type) const -> bool
     }
 }
 
-auto Playlist::load(QTextStream &in, const EncodingInfo &_enc,
+auto Playlist::load(const QByteArray &data, const EncodingInfo &_enc,
                     Type type, const QUrl &url) -> bool
 {
     clear();
     EncodingInfo enc = _enc;
     if (type == M3U8)
         enc = EncodingInfo::utf8();
-    if (enc.isValid())
-        in.setCodec(enc.codec());
-    const qint64 pos = in.pos();
-    in.seek(0);
-    auto ret = [&] () {
+    QString text = enc.decode(data);
+    QTextStream in(&text);
+    return [&] () {
         switch (type) {
         case PLS:
             return loadPLS(in, url);
@@ -76,15 +74,12 @@ auto Playlist::load(QTextStream &in, const EncodingInfo &_enc,
             return false;
         }
     }();
-    in.seek(pos);
-    return ret;
 }
 
 auto Playlist::load(const QUrl &url, QByteArray *data,
                     const EncodingInfo &enc, Type type) -> bool
 {
-    QTextStream in(data);
-    return load(in, enc, type, url);
+    return load(*data, enc, type, url);
 }
 
 auto Playlist::load(const QString &filePath, const EncodingInfo &enc, Type type) -> bool
@@ -94,8 +89,7 @@ auto Playlist::load(const QString &filePath, const EncodingInfo &enc, Type type)
         return false;
     if (type == Unknown)
         type = guessType(filePath);
-    QTextStream in(&file);
-    return load(in, enc, type, _UrlFromLocalFile(filePath));
+    return load(file.readAll(), enc, type, _UrlFromLocalFile(filePath));
 }
 
 auto Playlist::load(const Mrl &mrl, const EncodingInfo &enc, Type type) -> bool
@@ -127,11 +121,11 @@ auto Playlist::guessType(const QString &fileName) -> Playlist::Type
 auto Playlist::savePLS(QTextStream &out) const -> bool
 {
     const int count = size();
-    out << "[playlist]" << endl << "NumberOfEntries=" << count << endl << endl;
+    out << "[playlist]" << Qt::endl << "NumberOfEntries=" << count << Qt::endl << Qt::endl;
     for (int i=0; i<count; ++i)
-        out << "File" << i+1 << '=' << at(i).toString() << endl
-                << "Length" << i+1 << '=' << -1 << endl << endl;
-    out << "Version=2" << endl;
+        out << "File" << i+1 << '=' << at(i).toString() << Qt::endl
+                << "Length" << i+1 << '=' << -1 << Qt::endl << Qt::endl;
+    out << "Version=2" << Qt::endl;
     return true;
 }
 
@@ -248,10 +242,10 @@ auto Playlist::loadCue(QTextStream &in, const QUrl &url) -> bool
             m = rxIndex.match(value);
             if (!m.hasMatch())
                 return false;
-            const auto idx = m.capturedRef(1).toInt();
-            const auto min = m.capturedRef(2).toInt();
-            const auto sec = m.capturedRef(3).toInt()
-                    + m.capturedRef(4).toInt() / 75.0;
+            const auto idx = m.capturedView(1).toInt();
+            const auto min = m.capturedView(2).toInt();
+            const auto sec = m.capturedView(3).toInt()
+                    + m.capturedView(4).toInt() / 75.0;
             const auto msec = (min * 60 + sec) * 1000;
             if (idx == 1)
                 current->idx01 = msec;

@@ -2,7 +2,6 @@
 
 import QtQuick 2.0
 import QtQuick.Layouts 1.0
-import QtQuick.Controls.Styles 1.0
 import bomi 1.0 as B
 
 B.AppWithDock {
@@ -11,7 +10,7 @@ B.AppWithDock {
     readonly property QtObject engine: B.App.engine
     Component {
         id: sliders
-        SliderStyle {
+        B.SliderStyle {
             readonly property real ratio: (control.value - control.minimumValue)/(control.maximumValue - control.minimumValue)
             groove: Item {
                 implicitHeight: 4;
@@ -54,21 +53,21 @@ B.AppWithDock {
 
             B.Button {
                 id: playPrev; width: 24; height: 24
-                action: "play/prev"; icon.prefix: "previous"
+                action: "play/prev"; icon.prefix: Qt.resolvedUrl("previous")
             }
 
             B.Button {
                 id: playPause; width: 24; height: 24
-                action: "play/play-pause"; icon.prefix: engine.playing ? "pause" : "play"
+                action: "play/play-pause"; icon.prefix: Qt.resolvedUrl(engine.playing ? "pause" : "play")
             }
             B.Button {
                 id: playStop; width: 24; height: 24
-                action: "play/stop"; icon.prefix: "stop"
+                action: "play/stop"; icon.prefix: Qt.resolvedUrl("stop")
             }
 
             B.Button {
                 id: playNext; width: 24; height: 24
-                action: "play/next"; icon.prefix: "next"
+                action: "play/next"; icon.prefix: Qt.resolvedUrl("next")
             }
 
             B.TimeSlider { id: timeslider; style: sliders; Layout.fillWidth: true; Layout.fillHeight: true }
@@ -81,20 +80,20 @@ B.AppWithDock {
             Row {
                 B.Button {
                     id: playlistIcon; width: 24; height: 24
-                    action: "tool/playlist/toggle"; icon.prefix: "playlist"; action2: "tool/playlist"
+                    action: "tool/playlist/toggle"; icon.prefix: Qt.resolvedUrl("playlist"); action2: "tool/playlist"
                     tooltip: makeToolTip(qsTr("Show/Hide Playlist"), qsTr("Show Playlist Menu"))
                 }
                 B.Button {
                     id: fullscreen; width: 24; height: 24
-                    action: "window/full"; icon.prefix: "fullscreen"
+                    action: "window/full"; icon.prefix: Qt.resolvedUrl("fullscreen")
                 }
                 B.Button {
                     id: openFolder; width: 24; height: 24
-                    action: "open/folder"; icon.prefix: "open-folder"
+                    action: "open/folder"; icon.prefix: Qt.resolvedUrl("open-folder")
                 }
                 B.Button {
                     id: mute; width: 24; height: 24
-                    action: "audio/volume/mute"; icon.prefix: engine.muted ? "speaker-off" : "speaker-on"
+                    action: "audio/volume/mute"; icon.prefix: Qt.resolvedUrl(engine.muted ? "speaker-off" : "speaker-on")
                 }
             }
             B.VolumeSlider { id: volumeslider; width: 100; style: sliders; height: parent.height }

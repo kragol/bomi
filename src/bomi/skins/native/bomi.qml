@@ -1,7 +1,5 @@
 import QtQuick 2.0
 import QtQuick.Layouts 1.0
-import QtQuick.Controls 1.0
-import QtQuick.Controls.Styles 1.0
 import bomi 1.0 as B
 
 B.AppWithDock {
@@ -41,20 +39,20 @@ B.AppWithDock {
                 id: layout; spacing: 0
                 width: parent.width - (fs ? (right.width + 10) : 0); height: implicitHeight
                 anchors.verticalCenter: parent.verticalCenter
-                MediaButton { icon: "media-skip-backward"; action: "play/prev" }
+                MediaButton { iconName: "media-skip-backward"; action: "play/prev" }
                 MediaButton {
-                    icon: "media-playback-" + (engine.playing ? "pause" : "start")
+                    iconName: "media-playback-" + (engine.playing ? "pause" : "start")
                     action: "play/play-pause"
                 }
-                MediaButton { icon: "media-playback-stop"; action: "play/stop" }
-                MediaButton { icon: "media-skip-forward"; action: "play/next" }
+                MediaButton { iconName: "media-playback-stop"; action: "play/stop" }
+                MediaButton { iconName: "media-skip-forward"; action: "play/next" }
                 B.TimeSlider {
                     id: timeslider; Layout.fillWidth: true;
                     anchors.verticalCenter: parent.verticalCenter
                 }
                 MediaButton {
                     id: volume
-                    icon: {
+                    iconName: {
                         if (engine.muted)
                             return "audio-volume-muted"
                         if (engine.volume < 0.3)
@@ -72,12 +70,12 @@ B.AppWithDock {
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
-                MediaButton { icon: "audio-x-generic"; action: "audio/track" }
+                MediaButton { iconName: "audio-x-generic"; action: "audio/track" }
 
-                MediaButton { icon: "text-x-generic"; action: "subtitle/track" }
+                MediaButton { iconName: "text-x-generic"; action: "subtitle/track" }
 
                 MediaButton {
-                    icon: "view-" + (fs ? "restore" : "fullscreen")
+                    iconName: "view-" + (fs ? "restore" : "fullscreen")
                     action: "window/full"; checkable: true; checked: fs
                 }
 

@@ -774,7 +774,7 @@ auto RootMenu::dumpInfo() -> void
     auto d = menu.d;
     int width = 0;
     for (auto it = d->actions.begin(); it != d->actions.end(); ++it)
-        width = std::max(width, it.key().size());
+        width = std::max(width, int(it.key().size()));
     QByteArray fill;
     for (auto it = d->actions.begin(); it != d->actions.end(); ++it) {
         const auto id = it.key();

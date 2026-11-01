@@ -50,7 +50,15 @@ int main(int argc, char **argv) {
         qputenv("QT_QPA_PLATFORM", "xcb");
     }
 #endif
-    QApplication::setAttribute(Qt::AA_X11InitThreads);
+    // mpv's render API and bomi's own scene-graph items draw with OpenGL, so
+    // keep Qt Quick on its OpenGL backend, and on desktop OpenGL rather than the
+    // OpenGL ES that EGL hands out by default.
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
+    {
+        auto format = QSurfaceFormat::defaultFormat();
+        format.setRenderableType(QSurfaceFormat::OpenGL);
+        QSurfaceFormat::setDefaultFormat(format);
+    }
     QApplication::setOrganizationName(u"xylosper"_q);
     QApplication::setOrganizationDomain(u"xylosper.net"_q);
     QApplication::setApplicationName(_L(cApp.name()));
@@ -87,7 +95,6 @@ int main(int argc, char **argv) {
         mbox.mbox()->show();
         return app->exec();
     }
-    qsrand(QDateTime::currentMSecsSinceEpoch());
 
     MainWindow *mw = new MainWindow;
     _Debug("Show MainWindow.");

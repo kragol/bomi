@@ -24,22 +24,22 @@ struct ColorAttr {
     }
     auto toColor() const -> QColor { return QColor(r, g, b, a); }
     SIA data(int index) -> AttrData {
-        return AttrData::create(index, 4, GL_UNSIGNED_BYTE, false);
+        return AttrData::create(index, 4, QSGGeometry::UnsignedByteType, false);
     }
 };
 
 #define SET_ATTR_COLOR(prog, loc, type, mem) { prog->setAttributeBuffer(loc, \
-    GL_UNSIGNED_BYTE, offsetof(type, mem), 4, sizeof(type)); }
+    QSGGeometry::UnsignedByteType, offsetof(type, mem), 4, sizeof(type)); }
 
 #define SET_ATTR_COORD(prog, loc, type, mem) { prog->setAttributeBuffer(loc, \
-    GL_FLOAT, offsetof(type, mem), 2, sizeof(type)); }
+    QSGGeometry::FloatType, offsetof(type, mem), 2, sizeof(type)); }
 
-template<class T> using VecIt = typename QVector<T>::iterator;
+template<class T> using VecIt = T*;
 
 struct CoordAttr {
     float x, y;
     SIA data(int index, bool isPos = false) -> AttrData {
-        return AttrData::create(index, 2, GL_FLOAT, isPos);
+        return AttrData::create(index, 2, QSGGeometry::FloatType, isPos);
     }
     auto toPoint() const -> QPointF { return { x, y }; }
     auto set(const QPointF &p) -> void { x = p.x(); y = p.y(); }

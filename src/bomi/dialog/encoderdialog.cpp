@@ -34,8 +34,8 @@ static auto allCodecs() -> const CodecListPair&
             else if (c->type == AVMEDIA_TYPE_AUDIO)
                 list.ac.push_back(_L(c->name));
         }
-        qSort(list.ac);
-        qSort(list.vc);
+        std::sort(list.ac.begin(), list.ac.end());
+        std::sort(list.vc.begin(), list.vc.end());
         return list;
     }();
     return list;
@@ -212,7 +212,7 @@ auto EncoderDialog::cancel() -> void
 
 auto EncoderDialog::isBusy() const -> bool
 {
-    return d->mpv;
+    return !d->mpv.isNull();
 }
 
 auto EncoderDialog::setSource(const QByteArray &mrl, const QSize &size,

@@ -13,7 +13,7 @@ auto DeintOption::toString() const -> QString
 
 auto DeintOption::fromString(const QString &string) -> DeintOption
 {
-    QStringList tokens = string.split('|'_q, QString::SkipEmptyParts);
+    QStringList tokens = string.split('|'_q, Qt::SkipEmptyParts);
     if (tokens.size() != 3)
         return DeintOption();
     DeintOption opt;

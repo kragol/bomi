@@ -7,9 +7,9 @@
 template<class L, class T = typename std::remove_pointer<typename L::value_type>::type>
 static inline auto _MakeQmlList(const QObject *o, const L *list) -> QQmlListProperty<T>
 {
-    auto at = [] (QQmlListProperty<T> *p, int index) -> T*
+    auto at = [] (QQmlListProperty<T> *p, qsizetype index) -> T*
         { return static_cast<const L*>(p->data)->value(index); };
-    auto count = [] (QQmlListProperty<T> *p) -> int
+    auto count = [] (QQmlListProperty<T> *p) -> qsizetype
         { return static_cast<const L*>(p->data)->size(); };
     return QQmlListProperty<T>(const_cast<QObject*>(o), const_cast<L*>(list), count, at);
 }

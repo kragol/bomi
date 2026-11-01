@@ -10,44 +10,44 @@ public:
     SIA _Same(const QString &str, const char *latin1) -> bool
     { return !str.compare(_L(latin1), QCI); }
 
-    SIA _Same(const QStringRef &str, const char *latin1) -> bool
+    SIA _Same(const QStringView &str, const char *latin1) -> bool
     { return !str.compare(_L(latin1), QCI); }
 
-    static auto toInt(const QStringRef &text) -> int;
-    static auto toColor(const QStringRef &text) -> QColor;
+    static auto toInt(const QStringView &text) -> int;
+    static auto toColor(const QStringView &text) -> QColor;
     static auto isRightBracket(ushort c) -> bool {return c == '>';}
     static auto isSeparator(ushort c) -> bool
         { return _IsOneOf(c, ' ', '\t', '\r', '\n'); }
     static auto isWhitespace(ushort c) -> bool { return _IsOneOf(c, ' ', '\t'); }
     static auto isNewLine(ushort c) -> bool { return _IsOneOf(c, '\r', '\n'); }
-    static auto replace(const QStringRef &str, const QString &from,
+    static auto replace(const QStringView &str, const QString &from,
                         const QString &to, Qt::CaseSensitivity s = QCI) -> QString;
-    static auto trim(const QStringRef &text) -> QStringRef
+    static auto trim(const QStringView &text) -> QStringView
     {
-        if (text.isEmpty()) return QStringRef();
+        if (text.isEmpty()) return QStringView();
         int start = 0, end = text.size();
         while (start < end && isSeparator(text.at(start).unicode())) ++start;
         while (end > start && isSeparator(text.at(end-1).unicode())) --end;
-        return start < end ? text.mid(start, end-start) : QStringRef();
+        return start < end ? text.mid(start, end-start) : QStringView();
     }
-    static auto skipSeparator(int &pos, const QStringRef &text) -> bool
+    static auto skipSeparator(int &pos, const QStringView &text) -> bool
     {
         for (; pos < text.size() && isSeparator(text.at(pos).unicode()); ++pos) ;
         return pos >= text.size(); // true for end
     }
     static auto skipSeparator(int &pos, const QString &text) -> bool
-        { return skipSeparator(pos, text.midRef(0)); }
+        { return skipSeparator(pos, QStringView(text).mid(0)); }
 
-    static auto entityCharacter(const QStringRef &entity) -> QChar;
-    static auto toFontPixelSize(const QStringRef &size) -> int;
+    static auto entityCharacter(const QStringView &entity) -> QChar;
+    static auto toFontPixelSize(const QStringView &size) -> int;
     static auto pixelSizeToPointSize(double pt) -> int;
 
     struct Tag {
         struct Attr {
             Attr() { }
-            Attr(const QStringRef &name, const QStringRef &value)
+            Attr(const QStringView &name, const QStringView &value)
                 : name(name), value(value) { }
-            QStringRef name, value;
+            QStringView name, value;
         };
         auto index(const char *attr) const -> int
         {
@@ -57,26 +57,26 @@ public:
             }
             return -1;
         }
-        auto value(const char *attr) const -> QStringRef
+        auto value(const char *attr) const -> QStringView
         {
             const int idx = index(attr);
-            return idx < 0 ? QStringRef() : this->attr[idx].value;
+            return idx < 0 ? QStringView() : this->attr[idx].value;
         }
         QMap<int, QVariant> style() const;
         int pos = -1;
-        QStringRef name;
+        QStringView name;
         QList<Attr> attr;
     };
-    static auto parseTag(const QStringRef &text, int &pos) -> Tag;
+    static auto parseTag(const QStringView &text, int &pos) -> Tag;
     static auto parseTag(const QString &text, int &pos) -> Tag
-        { return parseTag(text.midRef(0, -1), pos); }
+        { return parseTag(QStringView(text).mid(0, -1), pos); }
     static auto innerText(const QString &open, const QString &close,
-                          const QStringRef &text, QStringRef &block,
+                          const QStringView &text, QStringView &block,
                           int &pos, Tag &tag) -> int;
     static auto innerText(const QString &open, const QString &close,
-                          const QString &text, QStringRef &block,
+                          const QString &text, QStringView &block,
                           int &pos, Tag &tag) -> int
-        { return innerText(open, close, text.midRef(0), block, pos, tag); }
+        { return innerText(open, close, QStringView(text).mid(0), block, pos, tag); }
 };
 
 #endif // RICHTEXTHELPER_HPP

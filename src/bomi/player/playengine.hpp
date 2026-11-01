@@ -39,6 +39,10 @@ struct StringPair { QString s1, s2; };
 
 class PlayEngine : public QObject {
     Q_OBJECT
+    // Qt 6 moc needs complete types for pointer properties.
+    Q_MOC_INCLUDE("video/videopreview.hpp")
+    Q_MOC_INCLUDE("player/avinfoobject.hpp")
+    Q_MOC_INCLUDE("audio/visualizer.hpp")
     Q_ENUMS(State)
     Q_ENUMS(ActivationState)
     Q_ENUMS(Waiting)

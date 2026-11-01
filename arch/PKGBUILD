@@ -27,18 +27,18 @@ license=('GPL2')
 # outputs, DVD, Blu-ray, CDDA and subtitle rendering are libmpv's business now,
 # and the mpv package carries those dependencies.
 depends=('gcc-libs' 'glib2' 'glibc' 'libchardet' 'libgl' 'libxcb'
-         'qt5-base' 'qt5-declarative' 'qt5-x11extras'
+         'qt6-base' 'qt6-declarative' 'qt6-5compat'
          'smbclient' 'systemd-libs' 'zlib'
-         # Loaded at runtime, so they show up in no ELF header: QtQuick.Controls
-         # 1.x for the skins, and the SVG image plugin for SVG icons.
-         'qt5-quickcontrols' 'qt5-svg'
+         # Loaded at runtime, so they show up in no ELF header: the SVG image
+         # plugin for SVG icons, and the Wayland platform plugin.
+         'qt6-svg' 'qt6-wayland'
          # The system libmpv, and the FFmpeg libraries bomi also calls directly.
          # Declared by soname: makepkg turns these into versioned dependencies,
          # so pacman blocks an mpv or ffmpeg soname bump instead of silently
          # breaking bomi -- rebuild this package when one happens.
          'libmpv.so' 'libavcodec.so' 'libavutil.so')
 
-makedepends=('git' 'pkgconf' 'qt5-tools' 'mesa')
+makedepends=('git' 'pkgconf' 'qt6-tools' 'qt6-shadertools' 'mesa')
 
 optdepends=('yt-dlp: streaming website support including YouTube'
             'subliminal: Find Subtitle (AUR)'

@@ -44,6 +44,14 @@ private:
 
 class AppObject : public QObject {
     Q_OBJECT
+    // Qt 6 moc needs complete types for pointer properties.
+    Q_MOC_INCLUDE("player/historymodel.hpp")
+    Q_MOC_INCLUDE("player/playlistmodel.hpp")
+    Q_MOC_INCLUDE("misc/downloader.hpp")
+    Q_MOC_INCLUDE("quick/themeobject.hpp")
+    Q_MOC_INCLUDE("quick/windowobject.hpp")
+    Q_MOC_INCLUDE("player/playengine.hpp")
+    Q_MOC_INCLUDE("quick/toplevelitem.hpp")
     Q_ENUMS(Event)
     Q_FLAGS(Events)
     Q_PROPERTY(PlayEngine *engine READ engine CONSTANT FINAL)

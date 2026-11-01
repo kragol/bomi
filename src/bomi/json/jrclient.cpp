@@ -182,8 +182,8 @@ JrHttp::JrHttp(QIODevice *device, const QString &peer, JrServer *server)
                     break;
                 if (d->body.at(d->body.size() - 1) != ',')
                     d->body += ',';
-                const auto key = m.capturedRef(2).toLatin1();
-                const auto value = m.capturedRef(3).toLatin1();
+                const auto key = m.capturedView(2).toLatin1();
+                const auto value = m.capturedView(3).toLatin1();
                 if (key == "jsonrpc"_b)
                     d->body.replace("{\"jsonrpc\":\"2.0\"", "{\"jsonrpc\":\"" + value + "\"");
                 else {

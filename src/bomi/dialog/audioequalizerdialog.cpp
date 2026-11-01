@@ -45,7 +45,7 @@ AudioEqualizerDialog::AudioEqualizerDialog(QWidget *parent)
     hbox = new QHBoxLayout;
     auto font = this->font();
     font.setPointSizeF(font.pointSizeF()*0.8);
-    const int w = QFontMetrics(font).width(u"+20.0dB"_q) + 2;
+    const int w = QFontMetrics(font).horizontalAdvance(u"+20.0dB"_q) + 2;
     for (int i = 0; i < Eq::bands(); ++i) {
         auto s = d->sliders[i] = new QSlider;
         s->setOrientation(Qt::Vertical);

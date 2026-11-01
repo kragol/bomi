@@ -200,7 +200,7 @@ auto Pref::defaultHwAccCodecs() -> QStringList
             auto s = mpv_get_property_string(mpv,
                         "option-info/hwdec-codecs/default-value");
             if (s) {
-                ret = QString::fromLatin1(s).split(','_q, QString::SkipEmptyParts);
+                ret = QString::fromLatin1(s).split(','_q, Qt::SkipEmptyParts);
                 mpv_free(s);
             }
         }

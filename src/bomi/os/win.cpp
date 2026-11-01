@@ -9,7 +9,6 @@
 #include <QScreen>
 #include <QQuickWindow>
 #include <QQuickItem>
-#include <QDesktopWidget>
 #include <psapi.h>
 #include <QWindow>
 #include <QSettings>
@@ -202,7 +201,7 @@ auto WinWindowAdapter::screen() const -> QScreen*
     auto screens = qApp->screens();
     if (screens.size() > 1) {
         auto g = window()->frameGeometry();
-        qSort(screens.begin(), screens.end(), [&] (QScreen *lhs, QScreen *rhs) {
+        std::sort(screens.begin(), screens.end(), [&] (QScreen *lhs, QScreen *rhs) {
             const auto l = lhs->geometry() & g;
             const auto r = rhs->geometry() & g;
             return l.width() * l.height() > r.width() * r.height();

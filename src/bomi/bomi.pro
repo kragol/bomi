@@ -1,9 +1,9 @@
 TEMPLATE = app
 CONFIG += link_pkgconfig debug_and_release precompile_header \
-	c++14 object_parallel_to_source
+	c++17 object_parallel_to_source
 macx:CONFIG -= app_bundle
 
-QT = core gui network quick widgets sql xml svg
+QT = core gui network quick widgets sql xml svg opengl core5compat
 PRECOMPILED_HEADER = stdafx.hpp
 precompile_header:!isEmpty(PRECOMPILED_HEADER): DEFINES += USING_PCH
 DESTDIR = $${PWD}/../../build
@@ -23,8 +23,6 @@ include(configure.pro)
     macx:CONFIG += app_bundle
 }
 
-QMAKE_CXXFLAGS_CXX11 = -std=c++1y
-
 contains(QMAKE_CXX, clang++) {
 QMAKE_CXXFLAGS += -Wno-missing-braces
 # clang bug: cannot build in debug mode
@@ -38,7 +36,6 @@ QMAKE_CXXFLAGS += -Wno-non-template-friend
 !isEmpty(USE_CCACHE): QMAKE_CXX = ccache $${QMAKE_CXX}
 
 macx {
-    QT += macextras
     CONFIG += sdk
     QMAKE_INFO_PLIST = Info.plist
 	ICON = ../../icons/bomi.icns
@@ -51,13 +48,13 @@ macx {
     OBJECTIVE_SOURCES += os/mac.mm
     INCLUDEPATH += ../ffmpeg ../ffmpeg/libavcode
 } else:unix {
-    QT += dbus x11extras
+    QT += dbus
 	TARGET = bomi
 	LIBS += -ldl
 	HEADERS += player/mpris.hpp
 	SOURCES += player/mpris.cpp
 } else:win32 {
-    QT += winextras gui-private core-private
+    QT += gui-private core-private
     RC_ICONS = ../../icons/bomi.ico
     LIBS += -lopengl32 -lgdi32 -limm32 -lwinmm -lole32 -ldvdcss -lrpcrt4
     HEADERS += os/win.hpp
@@ -76,6 +73,20 @@ DEFINES += _LARGEFILE_SOURCE "_FILE_OFFSET_BITS=64" _LARGEFILE64_SOURCE \
 	QT_NO_CAST_FROM_ASCII
 
 RESOURCES += rsclist.qrc
+
+# Qt 6 scene-graph shaders are compiled to .qsb files that rsclist.qrc embeds.
+# qmake runs on every build (see the top-level Makefile), so recompiling them
+# here keeps them up to date. Only OpenGL variants: bomi forces the OpenGL RHI.
+QSB = $$[QT_HOST_LIBEXECS]/qsb
+!exists($$QSB): QSB = $$[QT_HOST_BINS]/qsb
+QSB_GLSL = "100 es,120,150"
+# Vertex shaders also get the batchable variant (-b) the scene graph asks for.
+for(shader, $$list($$files($$PWD/shaders/*.vert) $$files($$PWD/shaders/*.frag))) {
+    qsb_cmd = $$QSB --glsl $$shell_quote($$QSB_GLSL)
+    contains(shader, .*\\.vert$): qsb_cmd += -b
+    qsb_cmd += -o $$shell_quote($${shader}.qsb) $$shell_quote($$shader)
+    !system($$join(qsb_cmd, " ")): error("qsb failed on $$shader")
+}
 
 HEADERS += \
 	stdafx.hpp \

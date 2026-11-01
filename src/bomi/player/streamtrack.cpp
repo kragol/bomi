@@ -94,7 +94,7 @@ auto StreamTrack::fromMpvData(const QVariant &mpv) -> StreamTrack
     track.m_default = map[u"default"_q].toBool();
     track.m_id = map[u"id"_q].toInt();
     track.m_lang = map[u"lang"_q].toString();
-    if (_InRange(2, track.m_lang.size(), 3) && _IsAlphabet(track.m_lang))
+    if (_InRange<qsizetype>(2, track.m_lang.size(), 3) && _IsAlphabet(track.m_lang))
         track.m_displayLang = Locale::isoToNativeName(track.m_lang);
     track.m_title = map[u"title"_q].toString();
     track.m_file = map[u"external-filename"_q].toString();

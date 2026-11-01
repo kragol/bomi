@@ -1,6 +1,5 @@
 import QtQuick 2.0
 import QtQuick.Layouts 1.0
-import QtQuick.Controls.Styles 1.0
 import bomi 1.0 as B
 
 B.AppWithFloating {
@@ -9,7 +8,7 @@ B.AppWithFloating {
     readonly property QtObject engine: B.App.engine
     Component {
         id: slider
-        SliderStyle {
+        B.SliderStyle {
             groove: Rectangle {
                 height: 5; radius: 2; border { color: "#ccc"; width: 1 }
                 anchors.verticalCenter: parent.verticalCenter
@@ -76,7 +75,7 @@ B.AppWithFloating {
                     height: parent.height*0.75; anchors.verticalCenter: parent.verticalCenter; spacing: 3
                     B.Button {
                         id: mute; checked: engine.muted; width: parent.height; height: parent.height
-                        icon.prefix: "volume"; action: "audio/volume/mute"
+                        icon.prefix: Qt.resolvedUrl("volume"); action: "audio/volume/mute"
                         Item {
                             id: volume; anchors.fill: parent
                             visible: (!mute.checked && !(mute.hovered && mute.pressed))
@@ -101,22 +100,22 @@ B.AppWithFloating {
                     height: parent.height; spacing: 10; anchors.horizontalCenter: parent.horizontalCenter;
                     B.Button {
                         width: parent.height*0.9; height: width; anchors.verticalCenter: pause.verticalCenter
-                        icon.prefix: "seek-backward"; action: "play/seek/backward2"
+                        icon.prefix: Qt.resolvedUrl("seek-backward"); action: "play/seek/backward2"
                     }
                     B.Button {
                         id: pause; width: parent.height; height: width
-                        icon.prefix: (engine.playing ? "pause" : "play"); action: "play/play-pause"
+                        icon.prefix: Qt.resolvedUrl((engine.playing ? "pause" : "play")); action: "play/play-pause"
                     }
 
                     B.Button {
                         id: faster; width: parent.height*0.9; height: width; anchors.verticalCenter: pause.verticalCenter
-                        icon.prefix: "seek-forward"; action: "play/seek/forward2"
+                        icon.prefix: Qt.resolvedUrl("seek-forward"); action: "play/seek/forward2"
                     }
                 }
             }
         }
         B.Button {
-            id: toggler; parent: checked ? seekbarwrapper : buttons; icon.prefix: "toggle"
+            id: toggler; parent: checked ? seekbarwrapper : buttons; icon.prefix: Qt.resolvedUrl("toggle")
             width: 20; height: 10; anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
             onClicked: checked = !checked
             states: State {

@@ -157,10 +157,10 @@ auto ChannelLayoutMap::toString() const -> QString
 
 auto ChannelLayoutMap::fromString(const QString &text) -> ChannelLayoutMap
 {
-    auto list = text.split('#'_q, QString::SkipEmptyParts);
+    auto list = text.split('#'_q, Qt::SkipEmptyParts);
     ChannelLayoutMap map;
     for (auto &one : list) {
-        auto parts = one.split(':'_q, QString::SkipEmptyParts);
+        auto parts = one.split(':'_q, Qt::SkipEmptyParts);
         if (parts.size() != 3)
             continue;
         auto src = ChannelLayoutInfo::from(parts[0]);

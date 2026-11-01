@@ -3,7 +3,6 @@
 
 import QtQuick 2.0
 import QtQuick.Layouts 1.0
-import QtQuick.Controls.Styles 1.0
 import bomi 1.0 as B
 
 B.AppWithDock {
@@ -41,7 +40,7 @@ B.AppWithDock {
 
     Component {
         id: sliders
-        SliderStyle {
+        B.SliderStyle {
             groove: Item {
                 width: parent.width; height: 4
                 Rectangle {

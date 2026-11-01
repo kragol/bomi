@@ -3,45 +3,19 @@
 
 struct SimpleTextureData : public SimpleTextureItem::ShaderData {
     const OpenGLTexture2D *texture = nullptr;
+    SGTextureWrapper sgTexture;
 };
 
 struct SimpleTextureShader : public SimpleTextureItem::ShaderIface {
     SimpleTextureShader() {
-        vertexShader = R"(
-            uniform mat4 qt_Matrix;
-            attribute vec4 aPosition;
-            attribute vec2 aTexCoord;
-            varying vec2 texCoord;
-            void main() {
-                texCoord = aTexCoord;
-                gl_Position = qt_Matrix * aPosition;
-            }
-        )";
-        fragmentShader = R"(
-            varying vec2 texCoord;
-            uniform float qt_Opacity;
-            uniform sampler2D tex;
-            void main() {
-                gl_FragColor = texture2D(tex, texCoord) * qt_Opacity;
-            }
-        )";
-        attributes << "aPosition" << "aTexCoord";
+        vertexShader = u":/shaders/texture.vert.qsb"_q;
+        fragmentShader = u":/shaders/simpletexture.frag.qsb"_q;
     }
-    void resolve(QOpenGLShaderProgram *prog) override {
-        Q_ASSERT(prog->isLinked());
-        loc_tex = prog->uniformLocation("tex");
+    auto texture(int binding, SimpleTextureItem::ShaderData *data) -> QSGTexture* override {
+        Q_UNUSED(binding);
+        auto d = static_cast<SimpleTextureData*>(data);
+        return d->sgTexture.get(d->window, d->texture->id(), d->texture->size());
     }
-    void update(QOpenGLShaderProgram *prog,
-                SimpleTextureItem::ShaderData *data) override {
-        auto d = static_cast<const SimpleTextureData*>(data);
-        if (d->texture->id() != GL_NONE && !d->texture->isEmpty()) {
-            prog->setUniformValue(loc_tex, 0);
-            func()->glActiveTexture(GL_TEXTURE0);
-            d->texture->bind();
-        }
-    }
-private:
-    int loc_tex = -1;
 };
 
 SimpleTextureItem::SimpleTextureItem(QQuickItem *parent)

@@ -156,9 +156,9 @@ auto VideoPreview::paint(OpenGLFramebufferObject *fbo) -> void
         d->redraw = false;
         auto w = window();
         if (w) {
-            w->resetOpenGLState();
+            w->beginExternalCommands();
             d->mpv.render(fbo);
-            w->resetOpenGLState();
+            w->endExternalCommands();
         }
     }
     fbo->release();

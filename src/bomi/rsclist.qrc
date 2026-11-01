@@ -1,5 +1,16 @@
 <RCC>
     <qresource prefix="/">
+        <file>shaders/texture.vert.qsb</file>
+        <file>shaders/simpletexture.frag.qsb</file>
+        <file>shaders/subtitle.frag.qsb</file>
+        <file>shaders/triangle.vert.qsb</file>
+        <file>shaders/triangle.frag.qsb</file>
+        <file>shaders/video.vert.qsb</file>
+        <file>shaders/video.frag.qsb</file>
+        <file>shaders/blur_h.frag.qsb</file>
+        <file>shaders/blur_v.frag.qsb</file>
+        <file>shaders/reflection.vert.qsb</file>
+        <file>shaders/reflection.frag.qsb</file>
         <file>img/zoom-original.png</file>
         <file>img/zoom-in.png</file>
         <file>img/zoom-out.png</file>

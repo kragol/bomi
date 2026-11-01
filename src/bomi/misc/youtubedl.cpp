@@ -248,7 +248,7 @@ auto YouTubeDL::result() const -> Result
         videos = std::move(fmts);
         audios.clear();
     }
-    qSort(videos.begin(), videos.end(), qGreater<YouTubeFormat>());
+    std::sort(videos.begin(), videos.end(), std::greater<YouTubeFormat>());
     r.videos = std::move(videos);
     r.audio = audios.isEmpty() ? YouTubeFormat() : audios.front();
     return r;

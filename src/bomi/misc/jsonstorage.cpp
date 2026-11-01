@@ -110,7 +110,7 @@ static auto convs() -> const QHash<int, JVConvert>&
             [] (const JVConvert*, const QJsonValue &j, QVariant &var) -> bool { \
                 type t = var.value<type>(); \
                 if (json_io<type>()->fromJson(t, j)) { \
-                    var.setValue<type>(t); \
+                    var.setValue(t); \
                     return true; \
                 } \
                 return false; \

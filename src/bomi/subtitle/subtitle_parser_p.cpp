@@ -29,7 +29,7 @@ auto SamiParser::_parse(Subtitle &sub) -> void
             break;
         }
     }
-    RichTextBlockParser parser(text.midRef(pos));
+    RichTextBlockParser parser(QStringView(text).mid(pos));
     auto &comps = components(sub);
     while (!parser.atEnd()) {
         Tag tag;
@@ -81,12 +81,12 @@ auto SubRipParser::_parse(Subtitle &sub) -> void
         const auto m = rx.match(all, prev.capturedEnd());
         const int begin = prev.capturedEnd();
         const int end = m.hasMatch() ? m.capturedStart() : all.size();
-        auto caption = all.midRef(begin, end - begin).trimmed().toString();
+        auto caption = QStringView(all).mid(begin, end - begin).trimmed().toString();
         caption.replace(QRegEx(uR"((\r\n|\n|\r|\\N))"_q), u"<br>"_q);
         caption.replace("\\h"_a, u"&nbsp;"_q);
         if (caption.isEmpty())
             caption = u"<br>"_q;
-#define TO_INT(n) (prev.capturedRef(n).toInt())
+#define TO_INT(n) (prev.capturedView(n).toInt())
         const int t1 = _TimeToMSec(TO_INT(3), TO_INT(4), TO_INT(5), TO_INT(6));
         const int t2 = _TimeToMSec(TO_INT(7), TO_INT(8), TO_INT(9), TO_INT(10));
 #undef TO_INT
@@ -120,11 +120,11 @@ auto TMPlayerParser::_parse(Subtitle &sub) -> void
         auto m = match(getLine().toString());
         if (!m.hasMatch())
             continue;
-        auto toInt = [&] (int nth) { return m.capturedRef(nth).toInt(); };
+        auto toInt = [&] (int nth) { return m.capturedView(nth).toInt(); };
         const int time = _TimeToMSec(toInt(1), toInt(2), toInt(3));
         if (predictedEnd > 0 && time > predictedEnd)
             comp[predictedEnd];
-        auto text = m.capturedRef(4);
+        auto text = m.capturedView(4);
         predictedEnd = predictEndTime(time, text);
         append(comp, "<p>"_a % encodeEntity(trim(text)) % "</p>"_a, time);
     }
@@ -141,7 +141,7 @@ auto MicroDVDParser::_parse(Subtitle &sub) -> void
     if (!m.hasMatch())
         return;
     bool ok = false;
-    const double fps = m.capturedRef(3).toDouble(&ok);
+    const double fps = m.capturedView(3).toDouble(&ok);
     auto getKey = [ok, fps] (int frame)
         { return ok ? qRound((frame/fps)*1000.0) : frame; };
     seekTo(0);
@@ -153,8 +153,8 @@ auto MicroDVDParser::_parse(Subtitle &sub) -> void
         m = match(trim(getLine()).toString());
         if (!m.hasMatch())
             continue;
-        const int start = getKey(m.capturedRef(1).toInt());
-        const int end = getKey(m.capturedRef(2).toInt());
+        const int start = getKey(m.capturedView(1).toInt());
+        const int end = getKey(m.capturedView(2).toInt());
         const auto text = m.captured(3);
         QString parsed1, parsed2;
         auto addTag0 = [&] (const QString &name) {
@@ -169,8 +169,8 @@ auto MicroDVDParser::_parse(Subtitle &sub) -> void
         QRegEx rxColor(u"\\$([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})"_q);
         QRegExMatch am;
         while ((am = rxAttr.match(text, idx)).hasMatch()) {
-            const auto name = am.capturedRef(1);
-            const auto value = am.capturedRef(2);
+            const auto name = am.capturedView(1);
+            const auto value = am.capturedView(2);
             if (_Same(name, "y")) {
                 if (value.contains('i'_q, QCI))
                     addTag0(u"i"_q);
@@ -184,8 +184,8 @@ auto MicroDVDParser::_parse(Subtitle &sub) -> void
                 auto cm = rxColor.match(value.toString());
                 if (cm.hasMatch())
                     addTag1(u"font"_q,
-                            "color=\"#"_a % cm.capturedRef(3)
-                            % cm.capturedRef(2) % cm.capturedRef(1) % '"'_q);
+                            "color=\"#"_a % cm.capturedView(3)
+                            % cm.capturedView(2) % cm.capturedView(1) % '"'_q);
             }
             idx = am.capturedEnd();
         }
@@ -196,7 +196,7 @@ auto MicroDVDParser::_parse(Subtitle &sub) -> void
                 ++idx;
             }
             caption = "<p>"_a % parsed1
-                      % replace(text.midRef(idx), u"|"_q, u"<br>"_q)
+                      % replace(QStringView(text).mid(idx), u"|"_q, u"<br>"_q)
                       % parsed2 % "</p>"_a;
         } else
             caption = "<p>"_a % parsed1 % parsed2 % "</p>"_a;

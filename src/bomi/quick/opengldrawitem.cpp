@@ -1,5 +1,7 @@
 #include "opengldrawitem.hpp"
 #include <QQuickWindow>
+#include <QSGRendererInterface>
+#include <QtQuick/qsgtexture_platform.h>
 
 OpenGLDrawItem::OpenGLDrawItem(QQuickItem *parent)
     : GeometryItem(parent)
@@ -61,4 +63,36 @@ auto OpenGLDrawItem::updatePaintNode(QSGNode *old,
     m_updates = 0;
     afterUpdate();
     return m_node;
+}
+
+SGTextureWrapper::~SGTextureWrapper()
+{
+    delete m_texture;
+    delete m_empty;
+}
+
+auto SGTextureWrapper::get(QQuickWindow *window, GLuint id,
+                           const QSize &size) -> QSGTexture*
+{
+    if (!window)
+        return nullptr;
+    if (!id || size.isEmpty()) {
+        if (!m_empty) {
+            QImage image(1, 1, QImage::Format_RGBA8888_Premultiplied);
+            image.fill(Qt::transparent);
+            m_empty = window->createTextureFromImage(image);
+        }
+        return m_empty;
+    }
+    if (!m_texture || id != m_id || size != m_size) {
+        delete m_texture;
+        m_texture = QNativeInterface::QSGOpenGLTexture::fromNative(id, window, size,
+                                                                   QQuickWindow::TextureHasAlphaChannel);
+        m_texture->setFiltering(QSGTexture::Linear);
+        m_texture->setHorizontalWrapMode(QSGTexture::ClampToEdge);
+        m_texture->setVerticalWrapMode(QSGTexture::ClampToEdge);
+        m_id = id;
+        m_size = size;
+    }
+    return m_texture;
 }

@@ -18,8 +18,8 @@ SimpleListWidgetBase::SimpleListWidgetBase(QWidget *parent)
     hbox->addWidget(m_down);
     vbox->addLayout(hbox);
     vbox->addWidget(m_view);
-    vbox->setMargin(0);
-    hbox->setMargin(0);
+    vbox->setContentsMargins(0, 0, 0, 0);
+    hbox->setContentsMargins(0, 0, 0, 0);
 
     setAddingAndErasingEnabled(false);
     setChangingOrderEnabled(false);

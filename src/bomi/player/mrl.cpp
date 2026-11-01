@@ -97,7 +97,7 @@ auto Mrl::device() const -> QString
     const auto scheme = this->scheme();
     if (!discSchemes.contains(scheme, Qt::CaseInsensitive))
         return QString();
-    auto path = m_loc.midRef(scheme.size() + 3);
+    auto path = QStringView(m_loc).mid(scheme.size() + 3);
     const int idx = path.indexOf('/'_q);
     if (idx < 0)
         return QString();

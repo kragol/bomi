@@ -21,7 +21,7 @@ MainWindow::MainWindow()
     if (OpenGLLogger::isAvailable())
         format.setOption(QSurfaceFormat::DebugContext);
     setFormat(format);
-    setPersistentOpenGLContext(true);
+    setPersistentGraphics(true);
     setPersistentSceneGraph(true);
 
     d->top = new TopLevelItem;
@@ -58,7 +58,8 @@ MainWindow::MainWindow()
     connect(d->adapter, &OS::WindowAdapter::stateChanged, this,
             [=] (Qt::WindowState ws) { d->updateWindowState(ws); });
     connect(this, &QQuickView::sceneGraphInitialized, this, [this] () {
-        auto context = openglContext();
+        auto context = static_cast<QOpenGLContext*>(rendererInterface()->getResource(
+            this, QSGRendererInterface::OpenGLContextResource));
         if (cApp.isOpenGLDebugLoggerRequested())
             m_glLogger->initialize(context);
         m_sgInit = true;
@@ -97,7 +98,7 @@ MainWindow::~MainWindow() {
         d->jrServer->setInterface(nullptr);
     delete d->jrServer;
     exit();
-    setPersistentOpenGLContext(false);
+    setPersistentGraphics(false);
     setPersistentSceneGraph(false);
     d->clear();
     d->deleteDialogs();
@@ -420,11 +421,11 @@ auto MainWindow::keyPressEvent(QKeyEvent *event) -> void
 {
     event->setAccepted(false);
     if (auto item = AppObject::itemToAccept(AppObject::KeyEvent))
-        sendEvent(item, event);
+        QCoreApplication::sendEvent(item, event);
     if (event->isAccepted())
         return;
-    constexpr int modMask = Qt::SHIFT | Qt::CTRL | Qt::ALT | Qt::META;
-    const QKeySequence shortcut(event->key() + (event->modifiers() & modMask));
+    constexpr auto modMask = Qt::ShiftModifier | Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier;
+    const QKeySequence shortcut(QKeyCombination(event->modifiers() & modMask, Qt::Key(event->key())));
     d->trigger(RootMenu::instance().action(shortcut));
     event->accept();
 }

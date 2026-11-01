@@ -107,7 +107,7 @@ class ColorPickerItem : public QFrame
     Q_OBJECT
 
 public:
-    ColorPickerItem(const QColor &color = Qt::white, const QString &text = QString::null,
+    ColorPickerItem(const QColor &color = Qt::white, const QString &text = QString(),
               QWidget *parent = 0);
     ~ColorPickerItem();
 
@@ -195,7 +195,7 @@ public:
 
     ~QtColorPicker();
 
-    void insertColor(const QColor &color, const QString &text = QString::null, int index = -1);
+    void insertColor(const QColor &color, const QString &text = QString(), int index = -1);
 
     QColor currentColor() const;
 

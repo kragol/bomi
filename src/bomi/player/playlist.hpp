@@ -28,7 +28,7 @@ private:
     static auto resolve(const QString &location, const QUrl &url) -> QString;
     auto savePLS(QTextStream &out) const -> bool;
     auto saveM3U(QTextStream &out) const -> bool;
-    auto load(QTextStream &in, const EncodingInfo &enc, Type type,
+    auto load(const QByteArray &data, const EncodingInfo &enc, Type type,
               const QUrl &url = QUrl()) -> bool;
     auto loadPLS(QTextStream &in, const QUrl &url = QUrl()) -> bool;
     auto loadM3U(QTextStream &in, const QUrl &url = QUrl()) -> bool;

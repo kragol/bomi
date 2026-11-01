@@ -106,13 +106,13 @@ auto ChannelManipulation::fromString(const QString &text) -> ChannelManipulation
     auto list = text.split(','_q);
 
     for (auto &one : list) {
-        auto map = one.split('!'_q, QString::SkipEmptyParts);
+        auto map = one.split('!'_q, Qt::SkipEmptyParts);
         if (map.size() != 2)
             continue;
         auto dest = nameToId(map[0]);
         if (dest == MP_SPEAKER_ID_COUNT)
             continue;
-        auto srcs = map[1].split('/'_q, QString::SkipEmptyParts);
+        auto srcs = map[1].split('/'_q, Qt::SkipEmptyParts);
         SourceArray sources;
         for (int i=0; i<srcs.size(); ++i) {
             auto src = nameToId(srcs[i]);

@@ -247,7 +247,7 @@ class MouseActionItem : public QTreeWidgetItem {
         {
             if (column != 1 || role != Qt::EditRole || !actions)
                 return;
-            if (_Change(index, qBound(0, value.toInt(), actions->size() - 1)))
+            if (_Change(index, qBound(0, value.toInt(), int(actions->size()) - 1)))
                 emitDataChanged();
         }
     };

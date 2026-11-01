@@ -27,7 +27,7 @@ FontOptionWidget::FontOptionWidget(QWidget *parent)
     hbox->addWidget(d->italic);
     hbox->addWidget(d->underline);
     hbox->addWidget(d->strikeout);
-    hbox->setMargin(0);
+    hbox->setContentsMargins(0, 0, 0, 0);
 
     auto signal = &FontOptionWidget::changed;
     PLUG_CHANGED(d->bold);

@@ -320,6 +320,12 @@ template<class T, class D>
 SCIA _JE(const QString &key, D&(T::*ref)())
     { return JsonReferenceEntry<T, D>(key, ref); }
 
+// Qt 6 declares accessors such as QPoint::rx() noexcept; without this they
+// would match D T::* above as a data member of function type.
+template<class T, class D>
+SCIA _JE(const QString &key, D&(T::*ref)() noexcept)
+    { return JsonReferenceEntry<T, D>(key, ref); }
+
 template<class T, class D, class Set>
 SCIA _JE(const QString &key, D(T::*get)()const, Set set)
     { return JsonPropertyEntry<T, decltype(get), Set>(key, get, set); }
@@ -358,7 +364,6 @@ template<class T> \
 auto json_io(const C<T>*) \
 { static const JsonArrayIO<T, C<T>> io{}; return &io; }
 JSON_DECLARE_ARRAY_IO(QList)
-JSON_DECLARE_ARRAY_IO(QVector)
 JSON_DECLARE_ARRAY_IO(QLinkedList)
 JSON_DECLARE_ARRAY_IO(std::vector)
 JSON_DECLARE_ARRAY_IO(std::list)

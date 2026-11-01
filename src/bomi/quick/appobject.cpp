@@ -88,7 +88,7 @@ auto AppObject::textWidth(const QString &text, int size, const QString &family) 
     QFont font(family);
     font.setPixelSize(size);
     QFontMetricsF metrics(font);
-    return metrics.width(text);
+    return metrics.horizontalAdvance(text);
 }
 
 auto AppObject::textWidth(const QString &text, int size) const -> double
@@ -261,7 +261,7 @@ static auto dumpProperty(const QMetaProperty &p, QByteArray &indent) -> void
         QRegEx rxQmlList(uR"(QQmlListProperty<(.+)>)"_q);
         auto m = rxQmlList.match(QString::fromLatin1(p.typeName()));
         if (m.hasMatch()) {
-            const int type = QMetaType::type(m.capturedRef(1).toLatin1() + '*');
+            const int type = QMetaType::type(m.capturedView(1).toLatin1() + '*');
             const auto mo = QMetaType::metaObjectForType(type);
             indent += "    ";
             dumpObject("item", mo, indent);

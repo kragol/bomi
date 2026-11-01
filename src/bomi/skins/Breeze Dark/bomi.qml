@@ -2,7 +2,6 @@
 
 import QtQuick 2.0
 import QtQuick.Layouts 1.0
-import QtQuick.Controls.Styles 1.0
 import bomi 1.0 as Cp
 
 Cp.AppWithDock {
@@ -11,7 +10,7 @@ Cp.AppWithDock {
     readonly property QtObject engine: Cp.App.engine
     Component {
         id: sliders
-        SliderStyle {
+        Cp.SliderStyle {
             groove: Item {
                 implicitHeight: 2;
                 implicitWidth: 100;
@@ -53,21 +52,21 @@ Cp.AppWithDock {
 
             Cp.Button {
                 id: playPrev; width: 22; height: 22
-                action: "play/prev"; icon.prefix: "previous"
+                action: "play/prev"; icon.prefix: Qt.resolvedUrl("previous")
             }
 
             Cp.Button {
                 id: playPause; width: 22; height: 22
-                action: "play/play-pause"; icon.prefix: engine.running ? "pause" : "play"
+                action: "play/play-pause"; icon.prefix: Qt.resolvedUrl(engine.running ? "pause" : "play")
             }
             Cp.Button {
                 id: playStop; width: 22; height: 22
-                action: "play/stop"; icon.prefix: "stop"
+                action: "play/stop"; icon.prefix: Qt.resolvedUrl("stop")
             }
 
             Cp.Button {
                 id: playNext; width: 22; height: 22
-                action: "play/next"; icon.prefix: "next"
+                action: "play/next"; icon.prefix: Qt.resolvedUrl("next")
             }
 
             Cp.TimeSlider { id: timeslider; style: sliders; Layout.fillWidth: true; Layout.fillHeight: true }
@@ -80,16 +79,16 @@ Cp.AppWithDock {
             Row {
                 Cp.Button {
                     id: playlistIcon; width: 22; height: 22
-                    action: "tool/playlist/toggle"; icon.prefix: "playlist"; action2: "tool/playlist"
+                    action: "tool/playlist/toggle"; icon.prefix: Qt.resolvedUrl("playlist"); action2: "tool/playlist"
                     tooltip: makeToolTip(qsTr("Show/Hide Playlist"), qsTr("Show Playlist Menu"))
                 }
                 Cp.Button {
                     id: fullscreen; width: 22; height: 22
-                    action: "window/full"; icon.prefix: "fullscreen"
+                    action: "window/full"; icon.prefix: Qt.resolvedUrl("fullscreen")
                 }
                 Cp.Button {
                     id: mute; width: 22; height: 22
-                    action: "audio/volume/mute"; icon.prefix: engine.muted ? "speaker-off" : "speaker-on"
+                    action: "audio/volume/mute"; icon.prefix: Qt.resolvedUrl(engine.muted ? "speaker-off" : "speaker-on")
                 }
             }
             Cp.VolumeSlider { id: volumeslider; width: 100; style: sliders; height: parent.height }

@@ -1,5 +1,4 @@
 import QtQuick 2.0
-import QtQuick.Controls.Styles 1.0
 import QtQuick.Layouts 1.0
 import bomi 1.0 as B
 
@@ -17,7 +16,7 @@ B.AppWithDock {
             width: parent.width; color: Qt.rgba(0, 0, 0, 0.5); z: 1
             Component {
                 id: sliderStyle
-                SliderStyle {
+                B.SliderStyle {
                     groove: Rectangle {
                         height: control.height; radius: height*0.5
                         border { color: Qt.rgba(1, 1, 1, 0.5); width: 1 }
@@ -49,35 +48,35 @@ B.AppWithDock {
 
                     ImageButton {
                         id: prev
-                        icon.source: "prev.png"; size: 24; action: "play/prev"
+                        icon.source: Qt.resolvedUrl("prev.png"); size: 24; action: "play/prev"
                     }
 
                     ImageButton {
                         id: backward
-                        icon.source: "backward.png"; size: 24
+                        icon.source: Qt.resolvedUrl("backward.png"); size: 24
                         action: "play/seek/backward1"; action2: "play/chapter/prev"
                     }
                     ImageButton {
                         id: play
-                        icon.source: engine.playing ? "pause.png" : "play.png"
+                        icon.source: Qt.resolvedUrl(engine.playing ? "pause.png" : "play.png")
                         action: "play/play-pause"; size: 28
                     }
                     ImageButton {
                         id: forward
-                        icon.source: "forward.png"; size: 24
+                        icon.source: Qt.resolvedUrl("forward.png"); size: 24
                         action: "play/seek/forward1"; action2: "play/chapter/next"
                     }
 
                     ImageButton {
                         id: next
-                        icon.source: "next.png"; size: 24; action: "play/next"
+                        icon.source: Qt.resolvedUrl("next.png"); size: 24; action: "play/next"
                     }
                 }
 
                 IconTextButton {
                     id: playlist
                     anchors { left: mediaButtons.right; leftMargin: 20 }
-                    icon.source: "pl.png"; action: "tool/playlist/toggle"
+                    icon.source: Qt.resolvedUrl("pl.png"); action: "tool/playlist/toggle"
                     readonly property QtObject pl: B.App.playlist
                     text.content: '[' + B.Format.listNumber(pl.currentNumber, pl.length) + ']'
                 }
@@ -104,11 +103,11 @@ B.AppWithDock {
                         verticalCenter: parent.verticalCenter
                     }
                     IconTextButton {
-                        icon.source: "audio.png"; action: "audio/track"
+                        icon.source: Qt.resolvedUrl("audio.png"); action: "audio/track"
                         text.content: formatTrackNumber(engine.audio)
                     }
                     IconTextButton {
-                        icon.source: "sub.png"; action: "subtitle/track"
+                        icon.source: Qt.resolvedUrl("sub.png"); action: "subtitle/track"
                         text.content: formatTrackNumber(engine.subtitle)
                     }
                 }

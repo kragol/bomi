@@ -6,37 +6,16 @@ struct TriangleItem::SData : ShaderData {
 
 struct TriangleItem::SIface : ShaderIface {
     SIface() {
-        vertexShader = R"(
-            uniform mat4 qt_Matrix;
-            uniform mat4 scaler;
-            attribute vec4 aPosition;
-            attribute vec4 aColor;
-            varying vec4 color;
-            void main() {
-                color = aColor;
-                gl_Position = scaler * qt_Matrix * aPosition;
-            }
-        )";
-        fragmentShader = R"(
-            varying vec4 color;
-            uniform float qt_Opacity;
-            void main() {
-                gl_FragColor = color * qt_Opacity;
-            }
-        )";
-        attributes << "aPosition" << "aColor";
+        vertexShader = u":/shaders/triangle.vert.qsb"_q;
+        fragmentShader = u":/shaders/triangle.frag.qsb"_q;
     }
 private:
-    auto resolve(QOpenGLShaderProgram *prog) -> void final
-    {
-        loc_scaler = prog->uniformLocation("scaler");
-    }
-    auto update(QOpenGLShaderProgram *prog, ShaderData *data) -> void final
+    auto updateUniforms(char *block, ShaderData *data) -> bool final
     {
         auto d = static_cast<const SData*>(data);
-        prog->setUniformValue(loc_scaler, d->scaler);
+        memcpy(block + UserUniforms, d->scaler.constData(), 64);
+        return true;
     }
-    int loc_scaler = -1;
 };
 
 struct TriangleItem::Data {
@@ -148,9 +127,9 @@ auto TriangleItem::updateData(ShaderData *data) -> void
     static_cast<SData*>(data)->scaler = d->scaler;
 }
 
-auto TriangleItem::geometryChanged(const QRectF &new_, const QRectF &old) -> void
+auto TriangleItem::geometryChange(const QRectF &new_, const QRectF &old) -> void
 {
-    Super::geometryChanged(new_, old);
+    Super::geometryChange(new_, old);
     if (new_.size() != old.size())
         polish();
 }

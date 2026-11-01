@@ -122,9 +122,9 @@ auto CircularImageItem::updateVertex(Vertex *vertex) -> void
     memset(it, 0, sizeof(Vertex)*zeros);
 }
 
-auto CircularImageItem::geometryChanged(const QRectF &new_, const QRectF &old) -> void
+auto CircularImageItem::geometryChange(const QRectF &new_, const QRectF &old) -> void
 {
-    SimpleTextureItem::geometryChanged(new_, old);
+    SimpleTextureItem::geometryChange(new_, old);
 }
 
 auto CircularImageItem::drawingMode() const -> GLenum

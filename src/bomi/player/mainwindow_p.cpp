@@ -462,7 +462,7 @@ auto MainWindow::Data::openMimeData(const QMimeData *md) -> void
 {
     auto urls = md->urls();
     if (md->hasText()) {
-        const auto lines = md->text().split(QRegEx(uR"([\n\r]+)"_q), QString::SkipEmptyParts);
+        const auto lines = md->text().split(QRegEx(uR"([\n\r]+)"_q), Qt::SkipEmptyParts);
         for (auto &line : lines) {
             QUrl url(line.trimmed());
             if (!url.scheme().isEmpty() && url.isValid() && !urls.contains(url))
@@ -546,17 +546,17 @@ auto MainWindow::Data::generatePlaylist(const Mrl &mrl) const -> Playlist
             if (!mt.hasMatch())
                 continue;
             if (!prefix && !suffix) {
-                if (ms.capturedRef(1) == mt.capturedRef(1))
+                if (ms.capturedView(1) == mt.capturedView(1))
                     prefix = true;
-                else if (ms.capturedRef(2) == mt.capturedRef(2))
+                else if (ms.capturedView(2) == mt.capturedView(2))
                     suffix = true;
                 else
                     continue;
             } else if (prefix) {
-                if (ms.capturedRef(1) != mt.capturedRef(1))
+                if (ms.capturedView(1) != mt.capturedView(1))
                     continue;
             } else if (suffix) {
-                if (ms.capturedRef(2) != mt.capturedRef(2))
+                if (ms.capturedView(2) != mt.capturedView(2))
                     continue;
             }
             list.append(it->absoluteFilePath());

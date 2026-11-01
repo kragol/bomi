@@ -249,13 +249,13 @@ PlayEngine::PlayEngine()
     if (!overrides.isEmpty()) {
         const auto opts = QString::fromLocal8Bit(overrides);
         const auto args = opts.split(QRegEx(uR"([\s\t]+)"_q),
-                                     QString::SkipEmptyParts);
+                                     Qt::SkipEmptyParts);
         for (int i=0; i<args.size(); ++i) {
             if (!args[i].startsWith("--"_a)) {
                 _Error("Cannot parse option %%.", args[i]);
                 continue;
             }
-            const auto arg = args[i].midRef(2);
+            const auto arg = QStringView(args[i]).mid(2);
             const int index = arg.indexOf('='_q);
             if (index < 0) {
                 if (arg.startsWith("no-"_a))
@@ -1281,9 +1281,9 @@ auto PlayEngine::setAudioEqualizer(const AudioEqualizer &eq) -> void
 template<class T = EditionChapterObject, class L = QVector<T*>>
 SIA makePtrList(const QObject *o, const L *list) -> QQmlListProperty<T>
 {
-    auto at = [] (QQmlListProperty<T> *p, int index) -> T*
+    auto at = [] (QQmlListProperty<T> *p, qsizetype index) -> T*
         { return static_cast<const L*>(p->data)->value(index); };
-    auto count = [] (QQmlListProperty<T> *p) -> int
+    auto count = [] (QQmlListProperty<T> *p) -> qsizetype
         { return static_cast<const L*>(p->data)->size(); };
     return QQmlListProperty<T>(const_cast<QObject*>(o), const_cast<L*>(list), count, at);
 }

@@ -121,9 +121,9 @@ auto ButtonBoxItem::setButtons(QList<int> buttons) -> void
     }
 }
 
-auto ButtonBoxItem::geometryChanged(const QRectF &new_, const QRectF &old) -> void
+auto ButtonBoxItem::geometryChange(const QRectF &new_, const QRectF &old) -> void
 {
-    QQuickItem::geometryChanged(new_, old);
+    QQuickItem::geometryChange(new_, old);
     polish();
 }
 

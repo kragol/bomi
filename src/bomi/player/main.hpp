@@ -46,30 +46,30 @@ auto registerType() -> void
     qmlRegisterType<EditionChapterObject>("bomi", 1, 0, "Edition");
     qmlRegisterType<TriangleItem>("bomi", 1, 0, "Triangle");
     qmlRegisterType<AudioVisualizer>("bomi", 1, 0, "Visualizer");
-    qmlRegisterType<TopLevelItem>();
-    qmlRegisterType<Downloader>();
-    qmlRegisterType<HistoryModel>();
-    qmlRegisterType<VideoObject>();
-    qmlRegisterType<AvTrackObject>();
-    qmlRegisterType<VideoFormatObject>();
-    qmlRegisterType<VideoToolObject>();
-    qmlRegisterType<AudioFormatObject>();
-    qmlRegisterType<AudioObject>();
-    qmlRegisterType<CodecObject>();
-    qmlRegisterType<SubtitleObject>();
-    qmlRegisterType<CacheInfoObject>();
-    qmlRegisterType<PlaylistModel>();
-    qmlRegisterType<WindowObject>();
-    qmlRegisterType<MemoryObject>();
-    qmlRegisterType<CpuObject>();
-    qmlRegisterType<MouseObject>();
-    qmlRegisterType<ThemeObject>();
-    qmlRegisterType<ControlsThemeObject>();
-    qmlRegisterType<OsdThemeObject>();
-    qmlRegisterType<MessageThemeObject>();
-    qmlRegisterType<MouseEventObject>();
-    qmlRegisterType<VideoPreview>();
-    qmlRegisterType<VideoRenderer>();
+    qmlRegisterAnonymousType<TopLevelItem>("bomi", 1);
+    qmlRegisterAnonymousType<Downloader>("bomi", 1);
+    qmlRegisterAnonymousType<HistoryModel>("bomi", 1);
+    qmlRegisterAnonymousType<VideoObject>("bomi", 1);
+    qmlRegisterAnonymousType<AvTrackObject>("bomi", 1);
+    qmlRegisterAnonymousType<VideoFormatObject>("bomi", 1);
+    qmlRegisterAnonymousType<VideoToolObject>("bomi", 1);
+    qmlRegisterAnonymousType<AudioFormatObject>("bomi", 1);
+    qmlRegisterAnonymousType<AudioObject>("bomi", 1);
+    qmlRegisterAnonymousType<CodecObject>("bomi", 1);
+    qmlRegisterAnonymousType<SubtitleObject>("bomi", 1);
+    qmlRegisterAnonymousType<CacheInfoObject>("bomi", 1);
+    qmlRegisterAnonymousType<PlaylistModel>("bomi", 1);
+    qmlRegisterAnonymousType<WindowObject>("bomi", 1);
+    qmlRegisterAnonymousType<MemoryObject>("bomi", 1);
+    qmlRegisterAnonymousType<CpuObject>("bomi", 1);
+    qmlRegisterAnonymousType<MouseObject>("bomi", 1);
+    qmlRegisterAnonymousType<ThemeObject>("bomi", 1);
+    qmlRegisterAnonymousType<ControlsThemeObject>("bomi", 1);
+    qmlRegisterAnonymousType<OsdThemeObject>("bomi", 1);
+    qmlRegisterAnonymousType<MessageThemeObject>("bomi", 1);
+    qmlRegisterAnonymousType<MouseEventObject>("bomi", 1);
+    qmlRegisterAnonymousType<VideoPreview>("bomi", 1);
+    qmlRegisterAnonymousType<VideoRenderer>("bomi", 1);
 
     qmlRegisterSingletonType<AppObject>("bomi", 1, 0, "App", _QmlSingleton<AppObject>);
     qmlRegisterSingletonType<FormatObject>("bomi", 1, 0, "Format", _QmlSingleton<FormatObject>);
@@ -94,11 +94,6 @@ auto registerType() -> void
     qRegisterMetaType<AudioVisualizer::Type>();
     qRegisterMetaType<AudioVisualizer::Scale>();
 
-    qRegisterMetaTypeStreamOperators<Mrl>();
-    qRegisterMetaTypeStreamOperators<Playlist>();
-    qRegisterMetaTypeStreamOperators<EncodingInfo>();
-    qRegisterMetaTypeStreamOperators<Locale>();
-    qRegisterMetaTypeStreamOperators<QMap<QString, QString>>();
 }
 
 namespace Global {

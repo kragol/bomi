@@ -6,6 +6,8 @@
 #include <QSGGeometry>
 #include <QSGMaterial>
 #include <QSGGeometryNode>
+#include <QSGTexture>
+#include <QQuickWindow>
 
 class OpenGLDrawItem : public GeometryItem {
 public:
@@ -76,7 +78,7 @@ public:
     auto vertices() const -> const QVector<Vertex>& { return m_vertices; }
 protected:
     auto vertices() -> QVector<Vertex>& { return m_vertices; }
-    auto geometryChanged(const QRectF &new_, const QRectF &old) -> void override;
+    auto geometryChange(const QRectF &new_, const QRectF &old) -> void override;
     virtual auto updateVertexOnGeometryChanged() const -> bool { return false; }
 private:
     virtual auto initializeVertex(Vertex *vertex) const -> void;
@@ -88,10 +90,10 @@ private:
 };
 
 template<class T>
-auto VertexDrawItem<T>::geometryChanged(const QRectF &new_,
+auto VertexDrawItem<T>::geometryChange(const QRectF &new_,
                                                const QRectF &old) -> void
 {
-    OpenGLDrawItem::geometryChanged(new_, old);
+    OpenGLDrawItem::geometryChange(new_, old);
     if (updateVertexOnGeometryChanged())
         reserve(UpdateGeometry);
 }
@@ -121,6 +123,23 @@ auto VertexDrawItem<T>::updateGeometry(QSGGeometry *geometry) -> QSGGeometry*
 
 /******************************************************************************/
 
+// Hands a texture bomi manages itself in OpenGL (an OpenGLTexture2D, mpv's
+// FBO) to the Qt 6 scene graph, which only samples QSGTextures. The wrapper is
+// rebuilt when the GL texture is recreated or resized; an empty texture is
+// replaced by a transparent 1x1 one, because every sampler needs a texture.
+class SGTextureWrapper {
+public:
+    SGTextureWrapper() = default;
+    SGTextureWrapper(const SGTextureWrapper&) = delete;
+    SGTextureWrapper &operator = (const SGTextureWrapper&) = delete;
+    ~SGTextureWrapper();
+    auto get(QQuickWindow *window, GLuint id, const QSize &size) -> QSGTexture*;
+private:
+    QSGTexture *m_texture = nullptr, *m_empty = nullptr;
+    GLuint m_id = 0;
+    QSize m_size;
+};
+
 template<class T>
 class ShaderRenderItem : public VertexDrawItem<T> {
 protected:
@@ -130,19 +149,23 @@ public:
     using VertexDrawItem<T>::VertexDrawItem;
     struct ShaderData {
         virtual ~ShaderData() = default;
+        // Set on every sync; QSGTextures are created for this window.
+        QQuickWindow *window = nullptr;
     };
     struct ShaderIface {
-        static QOpenGLFunctions *func() { return VertexDrawItem<T>::func(); }
         virtual ~ShaderIface() = default;
-        QByteArray fragmentShader, vertexShader;
-        QVector<QByteArray> attributes;
-        static auto matrixName() -> const char* { return "qt_Matrix"; }
-        static auto opacityName() -> const char* { return "qt_Opacity"; }
+        // Compiled shaders (.qsb) in the resources, e.g. ":/shaders/x.vert.qsb".
+        // Their uniform block (binding 0, std140) starts with mat4 qt_Matrix and
+        // float qt_Opacity; any uniforms of their own start at UserUniforms.
+        QString vertexShader, fragmentShader;
+        static constexpr int UserUniforms = 80;
     private:
-        virtual auto resolve(QOpenGLShaderProgram *prog) -> void = 0;
-        virtual auto update(QOpenGLShaderProgram *prog, ShaderData *data) -> void = 0;
-        virtual auto beforeUpdate() -> void { }
-        virtual auto afterUpdate() -> void { }
+        // Writes the shader's own uniforms into the block; true if it did.
+        virtual auto updateUniforms(char *block, ShaderData *data) -> bool
+            { Q_UNUSED(block); Q_UNUSED(data); return false; }
+        // The texture for the sampler at this binding.
+        virtual auto texture(int binding, ShaderData *data) -> QSGTexture*
+            { Q_UNUSED(binding); Q_UNUSED(data); return nullptr; }
         friend class ShaderRenderItem;
     };
     virtual auto isOpaque() const -> bool { return false; }
@@ -157,8 +180,9 @@ private:
 private:
     struct Material : public QSGMaterial {
         Material(const ShaderRenderItem *item);
+        ~Material() { delete m_data; }
         auto type() const -> QSGMaterialType* final { return m_item->type(); }
-        auto createShader() const -> QSGMaterialShader* final;
+        auto createShader(QSGRendererInterface::RenderMode) const -> QSGMaterialShader* final;
         auto data() -> ShaderData* { return m_data; }
         auto data() const -> const ShaderData* { return m_data; }
     private:
@@ -167,19 +191,12 @@ private:
     };
     struct Shader : public QSGMaterialShader {
         ShaderIface *m_iface = nullptr;
-        QVector<const char*> m_attributes;
         Shader(ShaderIface *iface);
         ~Shader() { delete m_iface; }
-        auto vertexShader() const -> const char* final;
-        auto fragmentShader() const -> const char* final;
-        auto attributeNames() const -> const char *const* final;
-        auto initialize() -> void final;
-        auto activate() -> void final { m_iface->beforeUpdate(); }
-        auto updateState(const RenderState &state,
-                         QSGMaterial *new_, QSGMaterial *) -> void final;
-        auto deactivate() -> void final { m_iface->afterUpdate(); }
-    private:
-        int loc_matrix = -1, loc_opacity = -1;
+        auto updateUniformData(RenderState &state, QSGMaterial *new_,
+                               QSGMaterial *old) -> bool final;
+        auto updateSampledImage(RenderState &state, int binding, QSGTexture **texture,
+                                QSGMaterial *new_, QSGMaterial *old) -> void final;
     };
     auto createMaterial() const -> QSGMaterial* final;
     auto updateMaterial(QSGMaterial *material) -> QSGMaterial* final;
@@ -194,52 +211,48 @@ ShaderRenderItem<T>::Material::Material(const ShaderRenderItem *item)
 }
 
 template<class T>
-auto ShaderRenderItem<T>::Material::createShader() const -> QSGMaterialShader*
+auto ShaderRenderItem<T>::Material::createShader(QSGRendererInterface::RenderMode) const -> QSGMaterialShader*
 { return new Shader(m_item->createShader()); }
 
 template<class T>
 ShaderRenderItem<T>::Shader::Shader(ShaderIface *iface)
     : m_iface(iface)
 {
-    m_attributes.resize(m_iface->attributes.size()+1);
-    for (int i=0; i<m_iface->attributes.size(); ++i)
-        m_attributes[i] = m_iface->attributes[i].constData();
-    m_attributes.last() = nullptr;
+    setShaderFileName(VertexStage, m_iface->vertexShader);
+    setShaderFileName(FragmentStage, m_iface->fragmentShader);
 }
 
 template<class T>
-auto ShaderRenderItem<T>::Shader::vertexShader() const -> const char*
-{ return m_iface->vertexShader.constData(); }
-
-template<class T>
-auto ShaderRenderItem<T>::Shader::fragmentShader() const -> const char*
-{ return m_iface->fragmentShader.constData(); }
-
-template<class T>
-auto ShaderRenderItem<T>::Shader::attributeNames() const -> const char *const*
-{ return m_attributes.data(); }
-
-template<class T>
-auto ShaderRenderItem<T>::Shader::initialize() -> void
+auto ShaderRenderItem<T>::Shader::updateUniformData(RenderState &state,
+                                                    QSGMaterial *new_,
+                                                    QSGMaterial *) -> bool
 {
-    auto prog = program();
-    loc_matrix = prog->uniformLocation(m_iface->matrixName());
-    loc_opacity = prog->uniformLocation(m_iface->opacityName());
-    m_iface->resolve(prog);
-}
-
-template<class T>
-auto ShaderRenderItem<T>::Shader::updateState(const RenderState &state,
-                                              QSGMaterial *new_,
-                                              QSGMaterial *) -> void
-{
-    auto prog = program();
-    if (state.isMatrixDirty())
-        prog->setUniformValue(loc_matrix, state.combinedMatrix());
-    if (state.isOpacityDirty())
-        prog->setUniformValue(loc_opacity, state.opacity());
+    auto block = state.uniformData()->data();
+    bool changed = false;
+    if (state.isMatrixDirty()) {
+        memcpy(block, state.combinedMatrix().constData(), 64);
+        changed = true;
+    }
+    if (state.isOpacityDirty()) {
+        const float opacity = state.opacity();
+        memcpy(block + 64, &opacity, 4);
+        changed = true;
+    }
     auto m = static_cast<Material*>(new_);
-    m_iface->update(prog, m->data());
+    return m_iface->updateUniforms(block, m->data()) || changed;
+}
+
+template<class T>
+auto ShaderRenderItem<T>::Shader::updateSampledImage(RenderState &state, int binding,
+                                                     QSGTexture **texture,
+                                                     QSGMaterial *new_,
+                                                     QSGMaterial *) -> void
+{
+    auto m = static_cast<Material*>(new_);
+    if (auto t = m_iface->texture(binding, m->data())) {
+        t->commitTextureOperations(state.rhi(), state.resourceUpdateBatch());
+        *texture = t;
+    }
 }
 
 template<class T>
@@ -250,6 +263,7 @@ template<class T>
 auto ShaderRenderItem<T>::updateMaterial(QSGMaterial *material) -> QSGMaterial*
 {
     auto m = static_cast<Material*>(material);
+    m->data()->window = this->window();
     updateData(m->data());
     return m;
 }

@@ -1,7 +1,5 @@
 import QtQuick 2.0
 import QtQuick.Layouts 1.0
-import QtQuick.Controls 1.0
-import QtQuick.Controls.Styles 1.0
 import bomi 1.0 as B
 
 B.AppWithDock {
@@ -9,7 +7,7 @@ B.AppWithDock {
     readonly property QtObject engine: B.App.engine
     Component {
         id: sliders
-        SliderStyle {
+        B.SliderStyle {
             groove: Item {
                 implicitHeight: 12;
                 implicitWidth: 100;
@@ -48,7 +46,7 @@ B.AppWithDock {
                 id: playPause; size: parent.height
                 action: "play/play-pause";
                 adjustIconSize: true
-                icon.source: engine.playing ? "pause.png" : "play.png"
+                icon.source: Qt.resolvedUrl(engine.playing ? "pause.png" : "play.png")
                 paddings: pressed ? 2 : (hovered ? 0 : 1)
             }
             B.TimeSlider { id: timeslider; style: sliders; Layout.fillWidth: true; Layout.fillHeight: true }

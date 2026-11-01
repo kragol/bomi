@@ -257,7 +257,7 @@ auto _GetSaveFile(QWidget *parent, const QString &title,
     QFileDialog dlg(parent, title, path, _ToFilter(exts));
     dlg.setAcceptMode(QFileDialog::AcceptSave);
     dlg.setFileMode(QFileDialog::AnyFile);
-    dlg.setConfirmOverwrite(true);
+    dlg.setOption(QFileDialog::DontConfirmOverwrite, false);
     dlg.setDefaultSuffix(_ExtList(exts).front());
     if (!dlg.exec())
         return QString();

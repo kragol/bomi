@@ -4,7 +4,7 @@
 
 #include "tmp/algorithm.hpp"
 #include "enum/codecid.hpp"
-#include <QDesktopWidget>
+#include <QGuiApplication>
 #include <QMouseEvent>
 #include <QScreen>
 #include <QWindow>
@@ -12,7 +12,6 @@
 #include <QtDBus/QDBusMessage>
 #include <QtDBus/QDBusInterface>
 #include <QtDBus/QDBusReply>
-#include <QtX11Extras/QX11Info>
 #include <unistd.h>
 #include <fcntl.h>
 #include <time.h>
@@ -127,11 +126,17 @@ struct X11 : public QObject {
 static X11 *d = nullptr;
 
 // True when we actually have an X11 connection to talk to. False under a
-// native Wayland session (or any non-xcb platform), where QX11Info hands back
-// a null connection and every xcb_* call below would segfault.
+// native Wayland session (or any non-xcb platform), where there is no X11
+// connection and every xcb_* call below would segfault.
+static auto x11App() -> QNativeInterface::QX11Application*
+{
+    return qApp->nativeInterface<QNativeInterface::QX11Application>();
+}
+
 auto isX11Available() -> bool
 {
-    return QX11Info::isPlatformX11() && QX11Info::connection();
+    auto x11 = x11App();
+    return x11 && x11->connection();
 }
 
 auto initialize() -> void
@@ -150,9 +155,9 @@ auto finalize() -> void { _Delete(d); }
 
 X11::X11()
 {
-    connection = QX11Info::connection();
-    display = QX11Info::display();
-    root = QX11Info::appRootWindow();
+    connection = x11App()->connection();
+    display = x11App()->display();
+    root = xcb_setup_roots_iterator(xcb_get_setup(connection)).data->root;
 
     Q_ASSERT(connection);
 
@@ -223,7 +228,8 @@ auto refreshRate() -> qreal
         xcb_randr_get_screen_resources_current_unchecked(d->connection, d->root),
         nullptr));
     const auto len = xcb_randr_get_screen_resources_current_crtcs_length(sr.data());
-    const int n = qApp->desktop()->screenNumber(qApp->topLevelWidgets().value(0));
+    auto window = qApp->focusWindow();
+    const int n = QGuiApplication::screens().indexOf(window ? window->screen() : QGuiApplication::primaryScreen());
     if (len < 1 || n >= len)
         return -1;
     auto crtc = xcb_randr_get_screen_resources_current_crtcs(sr.data())[n];

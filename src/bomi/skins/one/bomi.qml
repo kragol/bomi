@@ -3,7 +3,6 @@
 
 import QtQuick 2.0
 import QtQuick.Layouts 1.0
-import QtQuick.Controls.Styles 1.0
 import bomi 1.0 as B
 
 B.AppWithFloating {
@@ -72,23 +71,23 @@ B.AppWithFloating {
 
             IconButton {
                 anchors { top: parent.top; left: parent.left }
-                icon.source: "cb-audio.png";
+                icon.source: Qt.resolvedUrl("cb-audio.png");
                 action: "audio/track/next"; action2: "audio/track"
             }
 
             IconButton {
                 anchors { top: parent.top; right: parent.right }
-                icon.source: "cb-sub.png"
+                icon.source: Qt.resolvedUrl("cb-sub.png")
                 action: "subtitle/track/next"; action2: "subtitle/track"
             }
             IconButton {
                 anchors { bottom: parent.bottom; right: parent.right }
-                icon.source: "cb-pl.png"
+                icon.source: Qt.resolvedUrl("cb-pl.png")
                 action: "tool/playlist/toggle"; action2: "tool/playlist"
             }
             IconButton {
                 anchors { bottom: parent.bottom; left: parent.left }
-                icon.source: "cb-hl.png"
+                icon.source: Qt.resolvedUrl("cb-hl.png")
                 action: "tool/history/toggle"; action2: "tool/history"
             }
         }
@@ -180,8 +179,8 @@ B.AppWithFloating {
                 id: play;
                 anchors.centerIn: parent; width: 40; height: 40
                 readonly property string prefix: engine.playing ? "pause" : "play"
-                action: "play/play-pause"; icon.prefix: prefix
-                mask: prefix + ".png"
+                action: "play/play-pause"; icon.prefix: Qt.resolvedUrl(prefix)
+                mask: Qt.resolvedUrl(prefix + ".png")
                 Item {
                     readonly property real gap: engine.playing ? 4 : 2
                     width: parent.width

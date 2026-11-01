@@ -26,7 +26,7 @@ signals:
     void angleChanged();
 private:
     auto type() const -> Type* override { static Type type; return &type; }
-    auto geometryChanged(const QRectF &n, const QRectF &o) -> void override;
+    auto geometryChange(const QRectF &n, const QRectF &o) -> void override;
     auto initializeGL() -> void override;
     auto finalizeGL() -> void override;
     auto updateTexture(OpenGLTexture2D *texture) -> void override;

@@ -108,7 +108,7 @@ LogOptionWidget::LogOptionWidget(QWidget *parent)
     grid->addWidget(new QLabel(tr("Keep")), 2, 2);
     QWidget *vw = new QWidget;
     auto hbox = new QHBoxLayout;
-    hbox->setMargin(0);
+    hbox->setContentsMargins(0, 0, 0, 0);
     d->viewer = new QSpinBox;
     d->viewer->setSuffix(tr(" Lines"));
     d->viewer->setSpecialValueText(tr("No Limit"));

@@ -3,7 +3,6 @@
 #include "logoption.hpp"
 #include "configure.hpp"
 #include "tmp/algorithm.hpp"
-#include <QTextCodec>
 #include <QBuffer>
 #include <cstdlib>
 
@@ -108,7 +107,12 @@ auto Log::setOption(const LogOption &option) -> void
     lvMax = tmp::max(lvMax, lvJournal);
 #endif
 
-    s_local8BitIsUtf8 = QTextCodec::codecForLocale()->mibEnum() == 106;
+    // Qt 6 always treats the local 8-bit encoding as UTF-8 outside Windows.
+#ifdef Q_OS_WIN
+    s_local8BitIsUtf8 = false;
+#else
+    s_local8BitIsUtf8 = true;
+#endif
 
     if (!lvFile)
         return;

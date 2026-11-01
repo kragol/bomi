@@ -8,50 +8,28 @@
 struct SubtitleShaderData : public SubtitleRenderer::ShaderData {
     const OpenGLTexture2D *texture, *bbox;
     QColor bboxColor;
+    SGTextureWrapper sgTexture, sgBbox;
 };
 
 struct SubtitleShader : public SubtitleRenderer::ShaderIface {
     SubtitleShader()
     {
-        vertexShader = R"(
-            uniform mat4 qt_Matrix;
-            attribute vec4 aPosition;
-            attribute vec2 aTexCoord;
-            varying vec2 texCoord;
-            void main() {
-                texCoord = aTexCoord;
-                gl_Position = qt_Matrix * aPosition;
-            }
-        )";
-        fragmentShader = (R"(
-            uniform sampler2D tex;
-            uniform sampler2D bbox;
-            uniform vec4 bboxColor;
-            varying vec2 texCoord;
-            void main() {
-                vec4 top = texture2D(tex, texCoord);
-                float alpha = texture2D(bbox, texCoord).a*bboxColor.a*(1.0 - top.a);
-                gl_FragColor = top + bboxColor*alpha;
-            }
-        )");
-        attributes << "aPosition" << "aTexCoord";
+        vertexShader = u":/shaders/texture.vert.qsb"_q;
+        fragmentShader = u":/shaders/subtitle.frag.qsb"_q;
     }
-    void resolve(QOpenGLShaderProgram *prog) override {
-        loc_tex = prog->uniformLocation("tex");
-        loc_bbox = prog->uniformLocation("bbox");
-        loc_bboxColor = prog->uniformLocation("bboxColor");
-    }
-    void update(QOpenGLShaderProgram *prog,
-                SubtitleRenderer::ShaderData *data) override {
+    auto updateUniforms(char *block, SubtitleRenderer::ShaderData *data) -> bool override {
         auto d = static_cast<const SubtitleShaderData*>(data);
-        auto f = func();
-        d->texture->bind(prog, loc_tex, 0);
-        d->bbox->bind(prog, loc_bbox, 1);
-        prog->setUniformValue(loc_bboxColor, d->bboxColor);
-        f->glActiveTexture(GL_TEXTURE0);
+        const float color[4] = { float(d->bboxColor.redF()), float(d->bboxColor.greenF()),
+                                 float(d->bboxColor.blueF()), float(d->bboxColor.alphaF()) };
+        memcpy(block + UserUniforms, color, sizeof color);
+        return true;
     }
-private:
-    int loc_tex = -1, loc_bbox = -1, loc_bboxColor = -1;
+    auto texture(int binding, SubtitleRenderer::ShaderData *data) -> QSGTexture* override {
+        auto d = static_cast<SubtitleShaderData*>(data);
+        if (binding == 2)
+            return d->sgBbox.get(d->window, d->bbox->id(), d->bbox->size());
+        return d->sgTexture.get(d->window, d->texture->id(), d->texture->size());
+    }
 };
 
 struct SubtitleRenderer::Data {
@@ -348,10 +326,10 @@ auto SubtitleRenderer::isHidden() const -> bool
     return d->hidden;
 }
 
-auto SubtitleRenderer::geometryChanged(const QRectF &new_, const QRectF &old) -> void
+auto SubtitleRenderer::geometryChange(const QRectF &new_, const QRectF &old) -> void
 {
     d->selection.setArea(rect(), devicePixelRatio());
-    SimpleTextureItem::geometryChanged(new_, old);
+    SimpleTextureItem::geometryChange(new_, old);
 }
 
 auto SubtitleRenderer::delay() const -> int

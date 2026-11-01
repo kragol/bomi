@@ -93,7 +93,7 @@ auto JrPlayer::request(const JrRequest &request) -> JrResponse
     while (pos < jrMethod.size()) {
         const int next = jrMethod.indexOf('.'_q, pos);
         if (next > pos) {
-            const auto name = jrMethod.midRef(pos, next - pos).toUtf8();
+            const auto name = QStringView(jrMethod).mid(pos, next - pos).toUtf8();
             pos = next + 1;
             const int left = name.indexOf('[');
             if (left > 0) {
@@ -115,11 +115,11 @@ auto JrPlayer::request(const JrRequest &request) -> JrResponse
                 continue;
             }
             QQmlListReference list(object, name);
-            if (!list.isValid() || jrMethod.midRef(pos) != "length"_a)
+            if (!list.isValid() || QStringView(jrMethod).mid(pos) != "length"_a)
                 break;
             return { request, list.count() };
         }
-        const auto name = jrMethod.midRef(pos).toUtf8();
+        const auto name = QStringView(jrMethod).mid(pos).toUtf8();
         pos = jrMethod.size();
         if (name.isEmpty())
             break;

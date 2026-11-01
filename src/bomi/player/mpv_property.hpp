@@ -103,8 +103,6 @@ template<class T>
 struct IsList : std::false_type { };
 template<class T>
 struct IsList<QList<T>> : std::true_type { };
-template<class T>
-struct IsList<QVector<T>> : std::true_type { };
 
 template<class T>
 static constexpr inline auto mpv_trait_type() -> MpvTraitType

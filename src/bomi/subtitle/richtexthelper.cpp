@@ -1,10 +1,10 @@
 #include "richtexthelper.hpp"
+#include <QScreen>
 #include "misc/log.hpp"
-#include <QDesktopWidget>
 
 DECLARE_LOG_CONTEXT(RichText)
 
-auto RichTextHelper::toInt(const QStringRef &text) -> int
+auto RichTextHelper::toInt(const QStringView &text) -> int
 {
     int ret = 0;
     for (int i=0; i<text.size(); ++i) {
@@ -26,7 +26,7 @@ SIA _IsHexNumber(ushort c) -> bool
                         || _InRange<ushort>('A', c, 'F');
 }
 
-auto RichTextHelper::toColor(const QStringRef &text) -> QColor
+auto RichTextHelper::toColor(const QStringView &text) -> QColor
 {
     if (text.isEmpty())
         return QColor();
@@ -44,7 +44,7 @@ auto RichTextHelper::toColor(const QStringRef &text) -> QColor
     return QColor(text.toString());
 }
 
-auto RichTextHelper::replace(const QStringRef &str, const QString &from,
+auto RichTextHelper::replace(const QStringView &str, const QString &from,
                              const QString &to, Qt::CaseSensitivity s) -> QString
 {
     QString text;
@@ -66,11 +66,11 @@ auto RichTextHelper::replace(const QStringRef &str, const QString &from,
 
 auto RichTextHelper::pixelSizeToPointSize(double pt) -> int
 {
-    const double dpi = qApp->desktop()->logicalDpiY();
+    const double dpi = QGuiApplication::primaryScreen()->logicalDotsPerInchY();
     return pt*dpi/72.0 + 0.5;
 }
 
-auto RichTextHelper::toFontPixelSize(const QStringRef &size) -> int
+auto RichTextHelper::toFontPixelSize(const QStringView &size) -> int
 {
     int px = 0, i = 0;
     while (i<size.size()) {
@@ -83,13 +83,13 @@ auto RichTextHelper::toFontPixelSize(const QStringRef &size) -> int
     }
     if (i >= size.size())
         return px;
-    const QStringRef unit = size.mid(i);
+    const QStringView unit = size.mid(i);
     if (unit.size() == 2 && unit.compare("pt"_a, QCI) == 0)
         px = pixelSizeToPointSize(px);
     return px;
 }
 
-auto RichTextHelper::parseTag(const QStringRef &text,
+auto RichTextHelper::parseTag(const QStringView &text,
                               int &pos) -> RichTextHelper::Tag
 {
     auto at = [&text] (int idx) {return text.at(idx).unicode();};
@@ -178,7 +178,7 @@ auto RichTextHelper::parseTag(const QStringRef &text,
     return Tag();
 }
 
-auto RichTextHelper::entityCharacter(const QStringRef &entity) -> QChar
+auto RichTextHelper::entityCharacter(const QStringView &entity) -> QChar
 {
     Q_UNUSED(entity);
 #define RETURN(ent, c) {if (!entity.compare(ent##_a, QCI)) return c##_q;}
@@ -191,7 +191,7 @@ auto RichTextHelper::entityCharacter(const QStringRef &entity) -> QChar
 }
 
 auto RichTextHelper::innerText(const QString &open, const QString &close,
-                               const QStringRef &text, QStringRef &block,
+                               const QStringView &text, QStringView &block,
                                int &pos, Tag &tag) -> int
 {
     while (pos < text.size()) {
@@ -215,7 +215,7 @@ auto RichTextHelper::innerText(const QString &open, const QString &close,
         end = pos = text.size();
     } else {
         pos = end;
-        const auto cap = match.capturedRef(1);
+        const auto cap = match.capturedView(1);
         if (Q_UNLIKELY(cap.startsWith('/'_q))) {
             if (!cap.mid(1).compare(open, QCI))
                 pos += match.capturedLength();

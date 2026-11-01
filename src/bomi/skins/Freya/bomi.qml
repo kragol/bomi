@@ -1,6 +1,5 @@
 // Designed by varlesh (varlesh@gmail.com)
 import QtQuick 2.0
-import QtQuick.Controls.Styles 1.0
 import QtQuick.Layouts 1.0
 import bomi 1.0 as B
 
@@ -13,7 +12,7 @@ B.AppWithDock {
     readonly property QtObject engine: B.App.engine
     Component {
         id: sliderstyle
-        SliderStyle {
+        B.SliderStyle {
             groove: Item {
                 implicitHeight: 5;
                 implicitWidth: 100;
@@ -60,17 +59,17 @@ B.AppWithDock {
 
                 B.Button {
                     id: prev; width: 32; height: 32
-                    action: "play/prev"; icon.prefix: "prev";
+                    action: "play/prev"; icon.prefix: Qt.resolvedUrl("prev");
                 }
 
                 B.Button {
                     id: play; width: 32; height: 32
-                    action: "play/play-pause"; icon.prefix: engine.playing ? "pause" : "play"
+                    action: "play/play-pause"; icon.prefix: Qt.resolvedUrl(engine.playing ? "pause" : "play")
                 }
 
                 B.Button {
                     id: next; width: 32; height: 32
-                    action: "play/next"; icon.prefix: "next"
+                    action: "play/next"; icon.prefix: Qt.resolvedUrl("next")
                 }
             }
             B.TimeSlider {
@@ -86,15 +85,15 @@ B.AppWithDock {
 
                 B.Button {
                     id: subtitles; width: 24; height: 25
-                    action: "subtitle/track"; icon.prefix: "sub"
+                    action: "subtitle/track"; icon.prefix: Qt.resolvedUrl("sub")
                 }
                 B.Button {
                     id: playlist; width: 25; height: 25
-                    action: "tool/playlist/toggle"; icon.prefix: "pl"
+                    action: "tool/playlist/toggle"; icon.prefix: Qt.resolvedUrl("pl")
                 }
                 B.Button {
                     id: fullscreen; width: 25; height: 25
-                    action: "window/full"; icon.prefix: "fullscreen"
+                    action: "window/full"; icon.prefix: Qt.resolvedUrl("fullscreen")
                 }
             }
             Row {
@@ -105,7 +104,7 @@ B.AppWithDock {
                 }
                 B.Button {
                     id: preferences; width: 32; height: 32
-                    action: "tool/pref"; icon.prefix: "pref"
+                    action: "tool/pref"; icon.prefix: Qt.resolvedUrl("pref")
                 }
             }
         }
