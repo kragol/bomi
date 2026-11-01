@@ -102,13 +102,15 @@ background and measurements behind each item.
 
 ## Beyond the old bomi
 
-- [ ] **HDR output.** HDR sources are already tone-mapped to SDR correctly, which the
-  old bomi could not do. Real HDR output to an HDR display needs an HDR surface, which
-  Qt 5 cannot provide. That means Qt 6 plus Wayland colour management (KDE supports
-  it). The colour shader hooks `OUTPUT`, so it would need revisiting, because OUTPUT
-  would then be PQ.
-  - The libmpv render API only offers the `vo_gpu` renderer, not `gpu-next` (libplacebo). Switch to `gpu-next` when libmpv offers it (mpv issue #10810, PR #16818); nothing to do before then.
-- [ ] **Native Wayland / Qt 6** in general (currently out of scope).
+- [ ] **HDR output.** HDR sources are already tone-mapped to SDR correctly, which the old bomi could not do. Real HDR output to an HDR display needs an HDR surface, which Qt 5 cannot provide. Until then, `mpv --vo=gpu-next --target-colorspace-hint=yes` with Plasma HDR on is the way to watch HDR files.
+  - Requires the Qt 6 / native Wayland item below; an XWayland window cannot use Wayland colour management.
+  - Tagging the window looks possible with Qt 6.12 (unverified end to end): `QColorSpace` has `Bt2020` primaries and the `St2084` (PQ) transfer function, and QtWayland passes `QSurfaceFormat::colorSpace()` to the compositor through `wp_color_management_v1` (`QWaylandWindow::initializeColorSpace`). Since it goes through the surface format, OpenGL should be fine.
+  - `gpu-next` is not strictly needed: `vo_gpu` can emit PQ when told `target-trc=pq`, `target-prim=bt.2020` and `target-peak`. bomi would set these itself instead of mpv negotiating with the compositor.
+  - The whole window becomes PQ, not just the video: the OSD, playlist and other QML overlays must be drawn at SDR white (about 203 nits) in PQ, and SDR files need mapping up too, or a per-file switch of the window colour space.
+  - The colour shader hooks `OUTPUT`, so it needs revisiting, because `OUTPUT` would then be PQ.
+  - First step before any port: a small Qt 6 QML window tagged PQ/BT.2020 rendering libmpv with `target-trc=pq`, playing `hdr-test.mkv`, to prove KWin shows real HDR.
+  - The libmpv render API only offers the `vo_gpu` renderer, not `gpu-next` (libplacebo). Switch to `gpu-next` when libmpv offers it (mpv issue #10810, PR #16818) for better tone mapping and compositor negotiation; nothing to do before then.
+- [ ] **Native Wayland / Qt 6** in general (currently out of scope). Prerequisite for HDR output.
 - [ ] **Expose mpv's HDR tone-mapping options** (`tone-mapping`, `hdr-compute-peak`,
   `target-peak`) in preferences, since mpv now does the work.
 
