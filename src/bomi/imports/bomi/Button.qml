@@ -133,7 +133,7 @@ Item {
                     if (containsMouse && action)
                         B.App.execute(action)
                 }
-                onClicked: item.clicked(mouse);
+                onClicked: (mouse) => item.clicked(mouse)
                 onExited: B.App.window.hideToolTip();
                 onCanceled: B.App.window.hideToolTip()
                 Timer {
