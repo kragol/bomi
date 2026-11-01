@@ -187,6 +187,9 @@ enum class Location {
 };
 
 auto _WritablePath(Location loc, bool create = true) -> QString;
+// Keeps settings, history and app state in dir instead of the usual
+// configuration folder (BOMI_CONFIG_DIR or --config-dir).
+auto _SetConfigDir(const QString &dir) -> void;
 
 enum ExtType {
     AllExt      = 0,

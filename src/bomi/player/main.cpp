@@ -50,6 +50,19 @@ int main(int argc, char **argv) {
         qputenv("QT_QPA_PLATFORM", "xcb");
     }
 #endif
+    // Settings, history and app state live here when given; --config-dir
+    // wins over BOMI_CONFIG_DIR. Read before anything opens a settings file.
+    {
+        auto dir = qEnvironmentVariable("BOMI_CONFIG_DIR");
+        for (int i = 1; i < argc; ++i) {
+            const QByteArray arg(argv[i]);
+            if (arg.startsWith("--config-dir="))
+                dir = QString::fromLocal8Bit(arg.mid(13));
+            else if (arg == "--config-dir" && i + 1 < argc)
+                dir = QString::fromLocal8Bit(argv[++i]);
+        }
+        _SetConfigDir(dir);
+    }
     // mpv's render API and bomi's own scene-graph items draw with OpenGL, so
     // keep Qt Quick on its OpenGL backend, and on desktop OpenGL rather than the
     // OpenGL ES that EGL hands out by default.

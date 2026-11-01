@@ -42,7 +42,7 @@ auto translator_load(const Locale &locale) -> bool;
 enum class LineCmd {
     Wake, Open, Action, LogLevel, Debug,
     DumpApiTree, DumpActionList, WinAssoc, WinUnassoc, WinAssocDefault,
-    SetSubtitle, AddSubtitle,
+    SetSubtitle, AddSubtitle, ConfigDir,
 };
 
 static const QCommandLineOption s_dummy{u"__dummy__"_q};
@@ -257,6 +257,11 @@ App::App(int &argc, char **argv)
                          % Log::levelNames().join(u", "_q), u"lv"_q);
     d->parser->addOption(LineCmd::Debug, u"debug"_q,
                          u"Turn on options for debugging."_q);
+    // Handled in main() before the application starts; listed here for --help.
+    d->parser->addOption(LineCmd::ConfigDir, u"config-dir"_q,
+                         u"Keep settings, history and app state in %1 instead of the "
+                         "usual configuration folder (also BOMI_CONFIG_DIR). An empty "
+                         "folder starts as a copy of the usual settings."_q, u"dir"_q);
     d->parser->addOption(LineCmd::DumpApiTree, u"dump-api-tree"_q,
                          u"Dump API structure tree to stdout."_q);
     d->parser->addOption(LineCmd::DumpActionList, u"dump-action-list"_q,

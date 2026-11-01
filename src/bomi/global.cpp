@@ -281,11 +281,19 @@ auto _GetOpenDir(QWidget *parent, const QString &title,
 }
 
 bool useLocalConfig = false;
+static QString s_configDir;
+
+auto _SetConfigDir(const QString &dir) -> void
+{
+    s_configDir = dir.isEmpty() ? QString() : QDir(dir).absolutePath();
+}
 
 auto _WritablePath(Location loc, bool create) -> QString
 {
     QString path;
-    if (loc == Location::Config && useLocalConfig)
+    if (loc == Location::Config && !s_configDir.isEmpty())
+        path = s_configDir;
+    else if (loc == Location::Config && useLocalConfig)
         path = QCoreApplication::applicationDirPath() % "/config"_a;
     else {
         const auto std = static_cast<QStandardPaths::StandardLocation>(loc);
