@@ -184,11 +184,17 @@ SIA colorMatrix(const MrlState *s) -> QMatrix4x4
 // display-referred SDR RGB in 0..1, and for HDR sources that only holds once
 // mpv has tone-mapped them.
 //
+// Gamma follows the matrix in the same shader. mpv's own gamma property acts
+// before tone mapping: on HDR sources it bent the PQ signal (or, in linear
+// light, clipped everything above SDR white), so -50 turned a bright window
+// near black instead of darkening the midtones. The curve is mpv's, so the
+// values mean the same as in mpv and SMPlayer: g = 8^(v/100), pow(rgb, 1/g).
+//
 // mpv caches user shader files by path for the life of the renderer, so each
 // change needs a file of its own; rewriting one file in place would be ignored.
-auto PlayEngine::Data::updateColorShader(const QMatrix4x4 &matrix) -> void
+auto PlayEngine::Data::updateColorShader(const QMatrix4x4 &matrix, int gamma) -> void
 {
-    if (matrix.isIdentity()) {
+    if (matrix.isIdentity() && !gamma) {
         if (!colorShaders.isEmpty())
             mpv.setAsync("glsl-shaders", QByteArray());
         removeColorShaders(0);
@@ -218,8 +224,12 @@ auto PlayEngine::Data::updateColorShader(const QMatrix4x4 &matrix) -> void
                "//!DESC bomi colour adjustment\n"
                "vec4 hook() {\n"
                "    const mat4 m = mat4(" + mat + ");\n"
+               "    const float e = " + QByteArray::number(qPow(8.0, -gamma / 100.0), 'e') + ";\n"
                "    vec4 color = HOOKED_texOff(0);\n"
-               "    return vec4((m * vec4(color.rgb, 1.0)).rgb, color.a);\n"
+               "    vec3 rgb = (m * vec4(color.rgb, 1.0)).rgb;\n"
+               "    if (e != 1.0)\n"
+               "        rgb = pow(clamp(rgb, 0.0, 1.0), vec3(e));\n"
+               "    return vec4(rgb, color.a);\n"
                "}\n");
     file.close();
     colorShaders.push_back(path);
@@ -270,11 +280,7 @@ auto PlayEngine::Data::updateVideoSubOptions() -> void
     mpv.setAsync("sigmoid-upscaling", sigmoid);
     mpv.setAsync("interpolation", interpolation);
     mpv.setAsync("fbo-format", rgba16 ? "rgba16"_b : "rgba"_b);
-    // mpv's own gamma (-100..100, the same scale as SMPlayer's). Unlike the
-    // matrix it acts before colour management, so on HDR sources it bends the
-    // signal ahead of tone mapping rather than the final SDR picture.
-    mpv.setAsync("gamma", gamma);
-    updateColorShader(color);
+    updateColorShader(color, gamma);
 }
 
 auto PlayEngine::Data::loadfile(const Mrl &mrl, bool resume, const QString &sub) -> void

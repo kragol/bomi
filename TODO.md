@@ -148,4 +148,4 @@ background and measurements behind each item.
   (volume × amp, so the soft clip sees the full gain as in bomi's mixer),
   10 × `equalizer`, `asoftclip=type=sin`; tempo scaler via `audio-pitch-correction`
 - [x] Letterbox bars follow fullscreen switches instantly: the item-sized framebuffer was resized behind a 300 ms debounce, so the old bars lingered stretched (`6e41ec8b`)
-- [x] Gamma in the colour dialog and the Adjust Color step actions, through mpv's own `gamma` property (same -100..100 scale as mpv and SMPlayer). It acts before colour management, so on HDR sources it bends the signal ahead of tone mapping; the shader route in the old TODO item would avoid that if it ever matters
+- [x] Gamma in the colour dialog and the Adjust Color step actions, applied in the colour shader after tone mapping with mpv's curve (same -100..100 scale as mpv and SMPlayer). mpv's own `gamma` property was tried first and failed on HDR: on two Spider-Man frames, -50 took bright blinds from 251 to 41 (to 11 with HQ upscaling) where the shader keeps them at 244, and +50 blew out highlights instead of lifting midtones
