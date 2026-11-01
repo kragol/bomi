@@ -103,16 +103,20 @@ background and measurements behind each item.
 ## Beyond the old bomi
 
 - [ ] **HDR output.** HDR sources are already tone-mapped to SDR correctly, which the old bomi could not do. Real HDR output to an HDR display needs an HDR surface, which Qt 5 cannot provide. Until then, `mpv --vo=gpu-next --target-colorspace-hint=yes` with Plasma HDR on is the way to watch HDR files.
+  - Proven with a Qt 6 test window (`~/conneries/bomi/hdr-test/qt6-window/`, 2026-11-01, Plasma 6.8, NVIDIA): real HDR works with the `vo_gpu` renderer libmpv already offers, and looks the same as `mpv --vo=gpu-next --target-colorspace-hint=yes` with `--hdr-compute-peak=no` or `--tone-mapping=bt.2390`. `gpu-next` is not needed.
   - Requires the Qt 6 / native Wayland item below; an XWayland window cannot use Wayland colour management.
-  - Tagging the window looks possible with Qt 6.12 (unverified end to end): `QColorSpace` has `Bt2020` primaries and the `St2084` (PQ) transfer function, and QtWayland passes `QSurfaceFormat::colorSpace()` to the compositor through `wp_color_management_v1` (`QWaylandWindow::initializeColorSpace`). Since it goes through the surface format, OpenGL should be fine.
-  - `gpu-next` is not strictly needed: `vo_gpu` can emit PQ when told `target-trc=pq`, `target-prim=bt.2020` and `target-peak`. bomi would set these itself instead of mpv negotiating with the compositor.
-  - The whole window becomes PQ, not just the video: the OSD, playlist and other QML overlays must be drawn at SDR white (about 203 nits) in PQ, and SDR files need mapping up too, or a per-file switch of the window colour space.
+  - What works: mpv outputs PQ untouched (`target-trc=pq`, `target-prim=bt.2020`, `target-peak` = the source peak), and the surface is tagged PQ/BT.2020 with mastering luminance and max CLL set to the source peak, so KWin does the tone mapping to the display. KWin's curve keeps everything up to 4000 nits distinguishable on a 580-nit display.
+  - Qt's own tag is not enough: `QSurfaceFormat::setColorSpace(QColorSpace(Bt2020, St2084))` reaches KWin, but `QColorSpace` carries no luminances, and without them KWin clips everything above about 1000 nits to white. bomi needs its own small `wp_color_management_v1` client (about 150 lines in the test, using Qt's private `QNativeInterface::Private::QWaylandWindow::surface()`), and must not also set the Qt colour space: a `wl_surface` takes only one colour-management object.
+  - Letting `vo_gpu` tone-map instead does not work well: KWin maps PQ's 203-nit SDR white to its own reference luminance (the SDR brightness setting), so the target peak would be display peak × 203 / reference, and `vo_gpu`'s curves then squeeze 1000–4000 nits into one or two 8-bit steps.
+  - 8-bit window only: NVIDIA's Wayland EGL offers 8-bit and 16-bit float window configs, no 10-bit, and Qt 6.12's EGL config chooser never asks for float. Have mpv dither (`dither-depth=8`); gradients may still band.
+  - The whole window becomes PQ, not just the video: the OSD, playlist and other QML overlays must be drawn at SDR white (203 nits) in PQ, and SDR files need mapping up too, or a per-file switch of the window colour space.
   - The colour shader hooks `OUTPUT`, so it needs revisiting, because `OUTPUT` would then be PQ.
-  - First step before any port: a small Qt 6 QML window tagged PQ/BT.2020 rendering libmpv with `target-trc=pq`, playing `hdr-test.mkv`, to prove KWin shows real HDR.
-  - The libmpv render API only offers the `vo_gpu` renderer, not `gpu-next` (libplacebo). Switch to `gpu-next` when libmpv offers it (mpv issue #10810, PR #16818) for better tone mapping and compositor negotiation; nothing to do before then.
+  - The libmpv render API only offers the `vo_gpu` renderer, not `gpu-next` (libplacebo) (mpv issue #10810, PR #16818). It would add mpv's own compositor negotiation and per-frame tone mapping, but is no longer a prerequisite.
 - [ ] **Native Wayland / Qt 6** in general (currently out of scope). Prerequisite for HDR output.
 - [ ] **Expose mpv's HDR tone-mapping options** (`tone-mapping`, `hdr-compute-peak`,
   `target-peak`) in preferences, since mpv now does the work.
+  - These only apply to SDR output. With HDR output, KWin tone-maps (see "HDR output") and mpv passes PQ through, so they do nothing. Offering "mpv tone-maps" as an HDR alternative is not worth it with `vo_gpu`: even with `hdr-compute-peak`, its curves squeeze 1000–4000 nits into one or two 8-bit steps. gpu-next's per-scene spline (darker mid-tones on mostly dark frames, highlight detail kept) would make it a real choice, if libmpv ever offers gpu-next.
+  - Gamma only partly overlaps a curve choice: it reshapes mid-tones for a static look but cannot adapt per scene.
 
 ## Before merging into master
 
