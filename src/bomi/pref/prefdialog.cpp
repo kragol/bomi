@@ -10,16 +10,44 @@
 #include "misc/simplelistmodel.hpp"
 #include "subtitle/subliminalfinder.hpp"
 #include "ui_prefdialog.h"
-#include <QQmlProperty>
 #include <QElapsedTimer>
 
 #ifdef None
 #undef None
 #endif
 
+// The value property of an editor widget. This used to be a QQmlProperty,
+// but Qt 6's QQmlProperty cannot read, write or watch properties whose type
+// QML does not know (MouseActionMap, ShortcutMap, OsdStyle, ...), and fails
+// silently: such preferences never enabled Apply and were never saved.
+class EditorProperty {
+public:
+    EditorProperty() = default;
+    EditorProperty(QObject *object, const QString &name): m_object(object)
+    {
+        const auto mo = object->metaObject();
+        m_property = mo->property(mo->indexOfProperty(name.toLatin1().constData()));
+    }
+    auto isValid() const -> bool { return m_object && m_property.isValid(); }
+    auto object() const -> QObject* { return m_object; }
+    auto read() const -> QVariant { return isValid() ? m_property.read(m_object) : QVariant(); }
+    auto write(const QVariant &value) const -> bool
+        { return isValid() && m_property.write(m_object, value); }
+    auto hasNotifySignal() const -> bool { return isValid() && m_property.hasNotifySignal(); }
+    auto connectNotifySignal(QObject *receiver, const char *slot) const -> bool
+    {
+        const auto method = receiver->metaObject()->indexOfSlot(slot);
+        return hasNotifySignal() && method >= 0
+            && QMetaObject::connect(m_object, m_property.notifySignalIndex(), receiver, method);
+    }
+private:
+    QObject *m_object = nullptr;
+    QMetaProperty m_property;
+};
+
 struct ValueWatcher {
     QMetaProperty property;
-    QQmlProperty editor;
+    EditorProperty editor;
     std::function<bool()> isModified = nullptr;
 };
 
@@ -356,11 +384,11 @@ PrefDialog::PrefDialog(QWidget *parent)
             continue;
         }
         d->editorToWatcher[editor].push_back(&w);
-        w.editor = QQmlProperty(editor, editorProp);
+        w.editor = EditorProperty(editor, editorProp);
         if (!w.editor.hasNotifySignal())
             qDebug() << "No notify signal in" << editor->metaObject()->className() << "for" << w.property.name();
         else
-            w.editor.connectNotifySignal(this, SLOT(checkModified()));
+            w.editor.connectNotifySignal(this, "checkModified()");
 #define CHECK_W(W) if (qobject_cast<W*>(editor)) { w.isModified = [=, &w] () { \
             return !static_cast<W*>(w.editor.object())->compare(w.property.read(&d->orig)); }; continue; }
         CHECK_W(PrefMenuTreeWidget);

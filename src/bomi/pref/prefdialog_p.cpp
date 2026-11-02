@@ -247,8 +247,13 @@ class MouseActionItem : public QTreeWidgetItem {
         {
             if (column != 1 || role != Qt::EditRole || !actions)
                 return;
-            if (_Change(index, qBound(0, value.toInt(), int(actions->size()) - 1)))
+            if (_Change(index, qBound(0, value.toInt(), int(actions->size()) - 1))) {
                 emitDataChanged();
+                // Qt 6 no longer turns this into QTreeWidget::itemChanged for
+                // an edit committed by the delegate, so tell the dialog here.
+                if (auto tree = qobject_cast<PrefMouseActionTree*>(treeWidget()))
+                    emit tree->changed();
+            }
         }
     };
 public:
