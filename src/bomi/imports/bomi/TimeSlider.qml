@@ -9,6 +9,10 @@ Slider {
     property bool toolTip: !bind
     property VideoPreviewStyle preview: VideoPreviewStyle { }
     property int target: -1
+    // Extends the area that takes the mouse below the slider, for skins whose
+    // seek bar sits just above the bottom edge: the screen edge is the easiest
+    // place to aim at, but with fractional scaling it can land in that gap.
+    property real extraBottom: 0
     enabled: d.e.seekable
     acceptsWheel: true
     z: 1
@@ -130,6 +134,7 @@ Slider {
         id: mouseArea
         visible: bind || toolTip
         anchors.fill: parent
+        anchors.bottomMargin: -seeker.extraBottom
         hoverEnabled: true
         property bool moving: pressed || containsMouse
         property bool hv: false

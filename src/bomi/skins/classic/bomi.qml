@@ -106,7 +106,8 @@ B.AppWithDock {
                     }
                     RowLayout {
                         width: parent.width; spacing: 1; height: 10
-                        B.TimeSlider { id: timeslider; style: slider; Layout.fillWidth: true }
+                        // The row ends a pixel or two above the bottom of the bar.
+                        B.TimeSlider { id: timeslider; style: slider; Layout.fillWidth: true; extraBottom: 3 }
                         FramedButton {
                             id: mute; width: height; height: parent.height; action: "audio/volume/mute"
                             icon.source: Qt.resolvedUrl(engine.muted ? "speaker-off.png" : "speaker-on.png")
