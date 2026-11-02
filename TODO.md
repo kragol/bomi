@@ -1,8 +1,6 @@
-# TODO: libmpv port
+# TODO
 
-What remains before the `libmpv-port` branch matches the old vendored-mpv bomi, and
-what could take it further. README.md, "Known issues after the libmpv port", has the
-background and measurements behind each item.
+Open work since the port to the system libmpv (merged 2026-10-04, released as v0.10.0): what still falls short of the old vendored-mpv bomi, and what could take it further. README.md, "Known issues after the libmpv port", has the background and measurements behind many items.
 
 ## Performance
 
@@ -66,6 +64,7 @@ background and measurements behind each item.
 - [ ] **Show that display sync improves playback.** It engages, but nothing shows it
   helps yet. Test with high-bitrate 23.976/24fps content, use counter deltas over a
   steady window without touching the UI, and look at a panning shot.
+- [ ] **`bomi --action <id>` does nothing to a running bomi.** Sent from a second instance (same `TMPDIR`, so the single-instance socket is shared), `--action video/snapshot/quick` and `--action window/toggle-fs` had no effect, while the same actions work from their keyboard shortcuts. Seen 2026-11-02 with both the Qt 5 build (master) and the Qt 6 port, so it predates the port; not checked on `legacy`. `--action tool/pref` given at startup does open the dialog, so the problem is forwarding to the running instance (`App`'s `LocalConnection` message handling in `player/app.cpp`) or executing the action once it arrives.
 
 - [ ] **`debian/` and `rpm/` packaging** (inherited from upstream and bm16ton,
   untested here) still build the vendored mpv (`debian/build.sh` runs mpv's waf,
@@ -88,7 +87,7 @@ background and measurements behind each item.
 ## Playback history drawer
 
 - [ ] **Readable columns.**
-  - Size columns as fractions of the drawer width instead of fixed pixels (`HistoryView.qml:62-66`); the fixed widths are far too narrow on HiDPI. Drop the 40% width cap (`BaseApp.qml:98`).
+  - Size columns as fractions of the drawer width instead of fixed pixels (`HistoryView.qml:62-66`); the fixed widths are far too narrow on HiDPI. Drop the 40% width cap (`BaseApp.qml:98`). The Qt 6 port follows the display scale, so fixed pixel widths grow with it there; re-check under Qt 6 before fixing.
   - Location: elide in the middle, so the start (which drive) and the end (which folder) both stay visible. Drop the filename, which repeats Name (`historymodel.cpp:284`).
   - Latest Playback (`historymodel.cpp:282`, now `Qt::ISODate`): time only for today (`14:23`), `Yesterday 23:40` for yesterday (late-night viewing crosses midnight), the date alone for anything older.
   - Hover tooltip with the full name and full path.
@@ -98,11 +97,13 @@ background and measurements behind each item.
 
 ## Dialogs
 
-- [ ] **Hard-coded left column widths are too narrow on HiDPI.** Several dialogs fix the width of their left column (labels or page list) in pixels, so text is cut off or cramped on a HiDPI screen. Let the layout size these from their contents (or scale by font metrics) instead. Leads, not yet checked one by one: Preferences page tree fixed at 200 px min and max (`ui/prefdialog.ui:18-24`); 150 px label columns in `ui/osdstyle_widget.ui` and `ui/subtitlefinddialog.ui`; 100 px in `ui/subtitleviewer.ui`; 75 px in `ui/opendvddialog.ui`. Also check the `setFixedWidth`/`setMinimumWidth` calls in `dialog/audioequalizerdialog.cpp`, `dialog/videocolordialog.cpp` and `misc/logviewer.cpp`.
+- [ ] **Hard-coded left column widths are too narrow on HiDPI.** Several dialogs fix the width of their left column (labels or page list) in pixels, so text is cut off or cramped on a HiDPI screen. Let the layout size these from their contents (or scale by font metrics) instead. Leads, not yet checked one by one: Preferences page tree fixed at 200 px min and max (`ui/prefdialog.ui:18-24`); 150 px label columns in `ui/osdstyle_widget.ui` and `ui/subtitlefinddialog.ui`; 100 px in `ui/subtitleviewer.ui`; 75 px in `ui/opendvddialog.ui`. Also check the `setFixedWidth`/`setMinimumWidth` calls in `dialog/audioequalizerdialog.cpp`, `dialog/videocolordialog.cpp` and `misc/logviewer.cpp`. Under the Qt 6 port these pixel sizes scale with the display (1.6× here), so this may already be fine there; re-check under Qt 6 first.
 
 ## Beyond the old bomi
 
 - [ ] **HDR output.** HDR sources are already tone-mapped to SDR correctly, which the old bomi could not do. Real HDR output to an HDR display needs an HDR surface, which Qt 5 cannot provide. Until then, `mpv --vo=gpu-next --target-colorspace-hint=yes` with Plasma HDR on is the way to watch HDR files.
+  - Plan: the third step after the Qt 6 port and native Wayland (see below). Decided: HDR output switches on automatically when the display is in HDR mode (KWin's preferred image description has a peak above its reference luminance) and the file is PQ or HLG, with an Auto/Off preference; it follows Plasma's HDR toggle and moving between monitors live.
+  - First step: prototype the UI-in-PQ problem in the test window (the UI root item as a layer with an sRGB → PQ shader at 203-nit SDR white); fall back to putting the video in a Wayland subsurface below an SDR surface if blending or quality is poor.
   - Proven with a Qt 6 test window (`hdr-test/qt6-window/`, 2026-11-01, Plasma 6.8, NVIDIA): real HDR works with the `vo_gpu` renderer libmpv already offers, and looks the same as `mpv --vo=gpu-next --target-colorspace-hint=yes` with `--hdr-compute-peak=no` or `--tone-mapping=bt.2390`. `gpu-next` is not needed.
   - Requires the Qt 6 / native Wayland item below; an XWayland window cannot use Wayland colour management.
   - What works: mpv outputs PQ untouched (`target-trc=pq`, `target-prim=bt.2020`, `target-peak` = the source peak), and the surface is tagged PQ/BT.2020 with mastering luminance and max CLL set to the source peak, so KWin does the tone mapping to the display. KWin's curve keeps everything up to 4000 nits distinguishable on a 580-nit display.
@@ -112,17 +113,19 @@ background and measurements behind each item.
   - The whole window becomes PQ, not just the video: the OSD, playlist and other QML overlays must be drawn at SDR white (203 nits) in PQ, and SDR files need mapping up too, or a per-file switch of the window colour space.
   - The colour shader hooks `OUTPUT`, so it needs revisiting, because `OUTPUT` would then be PQ.
   - The libmpv render API only offers the `vo_gpu` renderer, not `gpu-next` (libplacebo) (mpv issue #10810, PR #16818). It would add mpv's own compositor negotiation and per-frame tone mapping, but is no longer a prerequisite.
-- [ ] **Native Wayland / Qt 6** in general (currently out of scope). Prerequisite for HDR output.
+- [ ] **Qt 6 and native Wayland.** Prerequisite for HDR output. Qt 5 support is dropped; the port becomes the next major version.
+  - [x] Qt 6 port, on branch `qt6` (pushed 2026-11-02, not merged). Still runs on XWayland. Qt Quick is forced onto OpenGL for mpv's render API; bomi's scene-graph shaders are GLSL 440 compiled to `.qsb` by qmake; bomi has its own `Slider`/`SliderStyle` in place of Controls 1; skins wrap relative icon paths in `Qt.resolvedUrl`. Checked against the Qt 5 build: all 15 skins, subtitles, seek preview, snapshots, playlist, preferences, settings from a Qt 5 configuration.
+  - Installed next to the Qt 5 package while it is being tried: `configure --suffix=-qt6` names everything `bomi-qt6` (executable, launcher, data and settings folders, single-instance socket, MPRIS name), and the settings folder `~/.config/xylosper/bomi-qt6` starts as a copy of bomi's. The branch's PKGBUILD builds `bomi-qt6-git`. **When merging into master:** drop `_suffix` and restore the `bomi-git` package name, provides and conflicts in `arch/PKGBUILD`.
+  - [ ] Native Wayland: drop the forced `QT_QPA_PLATFORM=xcb` (`player/main.cpp`); drag-move through `QWindow::startSystemMove()`; `OS::usingMemory()` returns 0 without X11 although it only reads `/proc`; remove the `<GL/glx.h>` include; check fullscreen, screensaver inhibition, refresh rate and fractional scaling.
+  - [ ] Qt 6 follow-ups: about 100 compiler warnings left; the Windows and macOS code paths are untested; the UI now follows the display scale (1.6× here, unlike the Qt 5 build), keep or make it a setting; once Qt 6 has rewritten the fonts in `pref.json` (19-field format), a Qt 5 build cannot read them; one unreproduced segfault inside SQLite in `HistoryModel::update()` (2026-11-02, seven reruns clean).
 - [ ] **Expose mpv's HDR tone-mapping options** (`tone-mapping`, `hdr-compute-peak`,
   `target-peak`) in preferences, since mpv now does the work.
   - These only apply to SDR output. With HDR output, KWin tone-maps (see "HDR output") and mpv passes PQ through, so they do nothing. Offering "mpv tone-maps" as an HDR alternative is not worth it with `vo_gpu`: even with `hdr-compute-peak`, its curves squeeze 1000–4000 nits into one or two 8-bit steps. gpu-next's per-scene spline (darker mid-tones on mostly dark frames, highlight detail kept) would make it a real choice, if libmpv ever offers gpu-next.
   - Gamma only partly overlaps a curve choice: it reshapes mid-tones for a static look but cannot adapt per scene.
 
-## Before merging into master
-
-- [ ] Merge PR #1 (maintainer). `legacy` already preserves the pre-port `master`.
-
 ## Done since the port started
+
+- [x] Merged into master (PR #1, 2026-10-04) and released as v0.10.0; `legacy` preserves the pre-port `master`.
 
 - [x] Playback through system libmpv, correct aspect, subtitles on letterbox
 - [x] Hardware decoding, configurable, codec list read from libmpv at runtime
