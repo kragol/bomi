@@ -66,6 +66,7 @@ background and measurements behind each item.
 - [ ] **Show that display sync improves playback.** It engages, but nothing shows it
   helps yet. Test with high-bitrate 23.976/24fps content, use counter deltas over a
   steady window without touching the UI, and look at a panning shot.
+- [ ] **`bomi --action <id>` does nothing to a running bomi.** Sent from a second instance (same `TMPDIR`, so the single-instance socket is shared), `--action video/snapshot/quick` and `--action window/toggle-fs` had no effect, while the same actions work from their keyboard shortcuts. Seen 2026-11-02 with both the Qt 5 build (master) and the Qt 6 port, so it predates the port; not checked on `legacy`. `--action tool/pref` given at startup does open the dialog, so the problem is forwarding to the running instance (`App`'s `LocalConnection` message handling in `player/app.cpp`) or executing the action once it arrives.
 
 - [ ] **`debian/` and `rpm/` packaging** (inherited from upstream and bm16ton,
   untested here) still build the vendored mpv (`debian/build.sh` runs mpv's waf,
