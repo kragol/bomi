@@ -445,6 +445,22 @@ auto MainWindow::hideEvent(QHideEvent *event) -> void
 auto MainWindow::event(QEvent *event) -> bool
 {
     switch (event->type()) {
+    // Qt 6's QQuickWindow::event() calls the mouse handlers before Qt Quick
+    // sees the event, and turns their QQuickView calls into no-ops. Call them
+    // directly, so ME() delivers to Qt Quick first and they can tell whether
+    // an item took the event, as with Qt 5.
+    case QEvent::MouseButtonPress:
+        mousePressEvent(static_cast<QMouseEvent*>(event));
+        return true;
+    case QEvent::MouseButtonRelease:
+        mouseReleaseEvent(static_cast<QMouseEvent*>(event));
+        return true;
+    case QEvent::MouseButtonDblClick:
+        mouseDoubleClickEvent(static_cast<QMouseEvent*>(event));
+        return true;
+    case QEvent::MouseMove:
+        mouseMoveEvent(static_cast<QMouseEvent*>(event));
+        return true;
     case QEvent::InputMethodQuery: {
         auto e = static_cast<QInputMethodQueryEvent*>(event);
         e->setValue(Qt::ImEnabled, false);
