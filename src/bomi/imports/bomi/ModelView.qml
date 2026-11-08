@@ -315,16 +315,21 @@ Item {
             }
         }
 
+        // Qt 6 leaves items declared in a ListView as children of the view
+        // itself rather than of its contentItem, and there z: -1 puts this
+        // below the view, which takes every press. Under the rows, in
+        // contentItem, it gets them; mouse positions are content coordinates.
         MouseArea {
+            parent: list.contentItem
             z: -1
             anchors.fill: parent
             onPressed: (mouse) => {
-                var index = list.getIndex(mouse.y)
+                var index = list.indexAt(mouse.x, mouse.y)
                 if (index !== -1)
                     list.selectedIndex = index
             }
             onDoubleClicked: (mouse) => {
-                var index = list.getIndex(mouse.y)
+                var index = list.indexAt(mouse.x, mouse.y)
                 if (index !== -1)
                     view.activated(index)
             }
