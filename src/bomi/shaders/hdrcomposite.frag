@@ -7,6 +7,10 @@
 // UI is transparent the video passes through untouched. With darker set, the
 // UI is converted to PQ first and blended on PQ values instead, which makes
 // translucent panels much darker.
+// KWin tone-maps the window to the display, and its curve also dims SDR white,
+// so the blend is done on the luminances KWin will show, and the result goes
+// through the inverse of KWin's curve: the UI then shows at the display's SDR
+// white, as in an SDR window.
 
 layout(location = 0) in vec2 qt_TexCoord0;
 layout(location = 0) out vec4 fragColor;
@@ -16,6 +20,7 @@ layout(std140, binding = 0) uniform buf {
     vec4 videoRect; // the video item in the window: x, y, w, h in 0..1
     vec4 videoTex;  // its texture coordinates: top-left x, y, then w, h (flips negative)
     float darker;
+    float tonemap; // KWin's curve parameter v, negative when it does not tone-map
     float uiOpacity;
     float overlayOpacity;
 };
@@ -49,6 +54,28 @@ vec3 linearFromUi(vec3 c)
     return BT709_TO_BT2020 * pow(max(c, 0.0), vec3(2.2));
 }
 
+const vec3 BT2020_Y = vec3(0.2627, 0.6780, 0.0593);
+
+// KWin's tone mapping of luminance relative to SDR white, and its inverse,
+// applied as a scale on linear BT.2020 RGB.
+vec3 kwinMap(vec3 rgb)
+{
+    float x = dot(rgb, BT2020_Y);
+    if (tonemap < 0.0 || x <= 0.0)
+        return rgb;
+    return rgb * (1.0 + x * tonemap) / (1.0 + x);
+}
+
+vec3 kwinUnmap(vec3 rgb)
+{
+    float y = dot(rgb, BT2020_Y);
+    if (tonemap < 0.0 || y <= 0.0)
+        return rgb;
+    float b = 1.0 - y;
+    float x = (sqrt(b * b + 4.0 * tonemap * y) - b) / (2.0 * tonemap);
+    return rgb * (x / y);
+}
+
 // One premultiplied UI layer over a PQ picture
 vec3 over(vec3 pq, vec4 layer)
 {
@@ -56,10 +83,10 @@ vec3 over(vec3 pq, vec4 layer)
         return pq;
     vec3 rgb = layer.rgb / layer.a;
     if (darker > 0.5)
-        return mix(pq, pqFromNits(linearFromUi(rgb) * SDR_WHITE), layer.a);
-    vec3 base = pow(nitsFromPq(pq) / SDR_WHITE, vec3(1.0 / 2.2));
+        return mix(pq, pqFromNits(kwinUnmap(linearFromUi(rgb)) * SDR_WHITE), layer.a);
+    vec3 base = pow(kwinMap(nitsFromPq(pq) / SDR_WHITE), vec3(1.0 / 2.2));
     vec3 g = mix(base, pow(linearFromUi(rgb), vec3(1.0 / 2.2)), layer.a);
-    return pqFromNits(pow(g, vec3(2.2)) * SDR_WHITE);
+    return pqFromNits(kwinUnmap(pow(g, vec3(2.2))) * SDR_WHITE);
 }
 
 void main()

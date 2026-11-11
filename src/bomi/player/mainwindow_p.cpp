@@ -772,8 +772,16 @@ auto MainWindow::Data::updateHdr() -> void
     e.setHdrOutput(on ? peak : 0);
     hdr->setPq(on ? peak : 0);
     setHdrComposite(on);
-    if (hdrComposite)
+    if (hdrComposite) {
         hdrComposite->setProperty("darker", pref.hdr_ui_darker() ? 1.0 : 0.0);
+        // KWin tone-maps a surface whose peak is above the display's with
+        // f(x) = x (1 + v x) / (1 + x), x relative to SDR white, which also
+        // dims SDR white itself (to about half for a 4000-nit source). The
+        // composite undoes it for the UI; v < 0 means no tone mapping.
+        const double in = peak / 203.0, out = hdr->displayHeadroom();
+        const double v = in > out * 1.001 ? (out * (1 + in) - in) / (in * in) : -1;
+        hdrComposite->setProperty("tonemap", qMax(v, v < 0 ? -1.0 : 1e-6));
+    }
 }
 
 // In a PQ window everything Qt Quick draws in sRGB would be far too bright, so
@@ -802,6 +810,7 @@ Item {
     property rect videoRect: Qt.rect(0, 0, 1, 1)
     property rect videoTex: Qt.rect(0, 0, 1, 1)
     property real darker
+    property real tonemap: -1
     ShaderEffectSource { id: uiSource; sourceItem: root.uiItem; hideSource: true; visible: false }
     ShaderEffectSource { id: overlaySource; sourceItem: root.overlayItem; hideSource: true; visible: false }
     ShaderEffect {
@@ -812,6 +821,7 @@ Item {
         property rect videoRect: root.videoRect
         property rect videoTex: root.videoTex
         property real darker: root.darker
+        property real tonemap: root.tonemap
         // A layer renders its item even when hidden, and ignores the item's
         // own opacity: the overlay is a 40% shade that is only shown behind
         // dialogs.

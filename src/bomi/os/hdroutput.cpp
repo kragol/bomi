@@ -92,7 +92,7 @@ struct HdrSurface::Data {
     wp_color_management_surface_v1 *cm = nullptr;
     Preferred preferred;
     bool displayHdr = false;
-    double peak = 0;
+    double headroom = 1, peak = 0;
     QTimer poll;
 
     // Blocks until the description is ready or refused; only our queue runs.
@@ -128,7 +128,9 @@ struct HdrSurface::Data {
         const bool hdr = force || (info.refLum > 0 && peak > info.refLum);
         _Info("Display: peak %% nits, SDR white %% nits -> %%", peak, info.refLum,
               hdr ? "HDR" : "SDR");
-        if (_Change(displayHdr, hdr))
+        const bool changed = _Change(displayHdr, hdr) | _Change(headroom,
+                info.refLum > 0 ? double(peak) / info.refLum : 1.0);
+        if (changed)
             emit p->displayHdrChanged(hdr);
     }
 
@@ -293,6 +295,11 @@ auto HdrSurface::isDisplayHdr() const -> bool
     return d->displayHdr;
 }
 
+auto HdrSurface::displayHeadroom() const -> double
+{
+    return d->headroom;
+}
+
 auto HdrSurface::setPq(double peak) -> void
 {
     if (!d->manager || !_Change(d->peak, qMax(0.0, peak)))
@@ -308,6 +315,7 @@ HdrSurface::HdrSurface(QWindow *) : d(new Data) { }
 HdrSurface::~HdrSurface() { delete d; }
 auto HdrSurface::isAvailable() const -> bool { return false; }
 auto HdrSurface::isDisplayHdr() const -> bool { return false; }
+auto HdrSurface::displayHeadroom() const -> double { return 1; }
 auto HdrSurface::setPq(double) -> void { }
 
 #endif

@@ -18,10 +18,14 @@ public:
     // The compositor would like this surface brighter than SDR white, i.e.
     // its output is in HDR mode.
     auto isDisplayHdr() const -> bool;
+    // The display's peak relative to its SDR white (the compositor's
+    // reference luminance), e.g. 1.45 for 580 nits with SDR white at 400.
+    auto displayHeadroom() const -> double;
     // Tag the surface PQ/BT.2020 with mastering peak and MaxCLL in nits, or
     // remove the tag with 0. Applied with the window's next frame.
     auto setPq(double peak) -> void;
 signals:
+    // Also emitted when only the headroom changed.
     void displayHdrChanged(bool hdr);
 private:
     auto eventFilter(QObject *o, QEvent *e) -> bool final;
