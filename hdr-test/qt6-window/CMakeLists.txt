@@ -22,4 +22,7 @@ qt_add_executable(hdrwindow main.cpp mpvitem.cpp mpvitem.h colormanagement.cpp c
     ${CM_HEADER} ${CM_CODE})
 target_include_directories(hdrwindow PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 qt_add_qml_module(hdrwindow URI HdrWindow QML_FILES Main.qml)
+find_package(Qt6 REQUIRED COMPONENTS ShaderTools)
+qt_add_shaders(hdrwindow "shaders" PREFIX "/shaders" BASE ${CMAKE_CURRENT_SOURCE_DIR}
+    FILES ui_layer.frag ui_composite.frag)
 target_link_libraries(hdrwindow PRIVATE Qt6::Gui Qt6::GuiPrivate Qt6::Quick Qt6::OpenGL PkgConfig::MPV PkgConfig::WAYLAND)

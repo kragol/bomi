@@ -2,7 +2,8 @@
 // libmpv's vo_gpu rendering PQ through the OpenGL render API, give real HDR
 // on KWin? See "HDR output" in bomi's TODO.md.
 //
-//   hdrwindow [--sdr | --describe] [--peak NITS] [--bits 8|16] [FILE]
+//   hdrwindow [--sdr | --describe] [--peak NITS] [--bits 8|16]
+//             [--ui off|layer|composite] [--grab PNG] [FILE]
 //
 // Default: window tagged PQ/BT.2020 through Qt (QSurfaceFormat colour space),
 //          mpv told target-trc=pq, target-prim=bt.2020.
@@ -15,6 +16,10 @@
 // --bits:  window colour depth (default 8). NVIDIA's Wayland EGL offers only
 //          8-bit and 16-bit float window configs, no 10-bit, and Qt 6.12's EGL
 //          config chooser never asks for float, so 16 gets no surface there.
+// --ui:    how the QML UI is drawn into a PQ window (see Main.qml): off (as
+//          is, so white is 10000 nits), layer, or composite. Ignored with --sdr.
+// --grab:  save the window's contents to PNG after a few seconds and quit,
+//          for measure_ui.py.
 
 #include "colormanagement.h"
 #include "mpvitem.h"
@@ -25,6 +30,7 @@
 #include <QQmlApplicationEngine>
 #include <QQuickWindow>
 #include <QSurfaceFormat>
+#include <QTimer>
 #include <clocale>
 
 int main(int argc, char *argv[])
@@ -39,7 +45,9 @@ int main(int argc, char *argv[])
     QCommandLineOption describe("describe", "Tag the surface with luminances, as mpv does.");
     QCommandLineOption peak("peak", "mpv target-peak in nits.", "nits");
     QCommandLineOption bits("bits", "Window bits per channel: 8 or 16 (default 8).", "n", "8");
-    parser.addOptions({sdr, describe, peak, bits});
+    QCommandLineOption ui("ui", "UI in a PQ window: off, layer or composite (default off).", "mode", "off");
+    QCommandLineOption grab("grab", "Save the window to PNG after 4 s and quit.", "png");
+    parser.addOptions({sdr, describe, peak, bits, ui, grab});
     parser.addPositionalArgument("file", "Video to play (default: ../hdr-test.mkv).");
     parser.process(app);
 
@@ -72,7 +80,10 @@ int main(int argc, char *argv[])
     const QString mode = !hdr ? "SDR (untagged window)"
                        : parser.isSet(describe) ? "HDR (own description with luminances)"
                                                 : "HDR (Qt PQ/BT.2020 tag)";
-    engine.setInitialProperties({{"mode", mode}});
+    const QString uiMode = hdr ? parser.value(ui) : QStringLiteral("off");
+    if (!QStringList{"off", "layer", "composite"}.contains(uiMode))
+        qFatal("--ui must be off, layer or composite");
+    engine.setInitialProperties({{"mode", mode}, {"uiMode", uiMode}});
     engine.loadFromModule("HdrWindow", "Main");
     if (engine.rootObjects().isEmpty())
         return 1;
@@ -92,6 +103,15 @@ int main(int argc, char *argv[])
             if (t.peak > 0)
                 window->findChild<MpvItem *>()->setMpvProperty("target-peak", QString::number(qRound(t.peak)));
         }, Qt::SingleShotConnection);
+    }
+
+    if (parser.isSet(grab)) {
+        const QString path = parser.value(grab);
+        QTimer::singleShot(4000, window, [window, path] {
+            if (!window->grabWindow().save(path))
+                qWarning("cannot save %s", qPrintable(path));
+            QCoreApplication::quit();
+        });
     }
 
     return app.exec();
