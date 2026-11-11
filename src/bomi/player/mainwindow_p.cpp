@@ -202,7 +202,7 @@ auto MainWindow::Data::plugEngine() -> void
     connect(e.media(), &MediaObject::nameChanged, p, [=] () { updateTitle(); });
 
     connect(e.video()->output(), &VideoFormatObject::sizeChanged, p, [=] (const QSize &s)
-        { if (pref.fit_to_video() && !s.isEmpty()) setVideoSize(s); });
+        { if (pref.fit_to_video() && !s.isEmpty()) setVideoSize((QSizeF(s) / p->devicePixelRatio()).toSize()); });
     connect(&e, &PlayEngine::videoScreenRectChanged, [=] (const QRectF &r) {
         if (r.isEmpty())
             return;
@@ -320,14 +320,21 @@ auto MainWindow::Data::setVideoSize(const QSize &video) -> void
         p->rootObject()->setWidth(p->width());
     if (p->rootObject()->height() != p->height())
         p->rootObject()->setHeight(p->height());
-    // patched by Handrake
-    const QSizeF vs(e.screen()->width(), e.screen()->height());
-    const QSize size = (p->size() - vs.toSize() + video);
-    if (size == p->size())
-        return;
     const auto s = p->screen()->availableGeometry().adjusted(0, 0, 1, 1);
     const auto g = p->screen()->geometry().adjusted(0, 0, 1, 1);
     const auto m = adapter->frameMargins();
+    // patched by Handrake
+    const QSizeF vs(e.screen()->width(), e.screen()->height());
+    const QSize extra = p->size() - vs.toSize();
+    // Keep the window on the screen: an X11 window manager shrinks a window
+    // larger than the screen, a Wayland compositor leaves it.
+    QSize v = video;
+    const QSize room = p->screen()->availableGeometry().size() - extra - QSize(m.left() + m.right(), m.top() + m.bottom());
+    if (room.isValid() && (v.width() > room.width() || v.height() > room.height()))
+        v.scale(room, Qt::KeepAspectRatio);
+    const QSize size = extra + v;
+    if (size == p->size())
+        return;
     auto pos = p->position();
     const auto prev = pos + QPoint(p->width() + m.right(), p->height() + m.bottom());
     const auto br = pos + QPoint(size.width() + m.right(), size.height() + m.bottom());
@@ -769,7 +776,9 @@ auto MainWindow::Data::videoSize(const WindowSize &hint) -> QSize
 {
     auto area = [] (const QSizeF &s) { return s.width()*s.height(); };
     double r = hint.rate;
-    const QSizeF video = e.videoSizeHint();
+    // In device-independent pixels, so that 100% shows one video pixel per
+    // screen pixel when the display is scaled.
+    const QSizeF video = QSizeF(e.videoSizeHint()) / p->devicePixelRatio();
     if (hint.display_based)
         r = area(screenSize()) * hint.rate / area(video);
     return e.renderSizeHint((video * qSqrt(r)).toSize());
