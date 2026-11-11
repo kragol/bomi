@@ -251,7 +251,22 @@ struct Data {
         auto doc = QJsonDocument::fromJson(file.readAll(), &e);
         if (e.error)
             return QJsonObject();
-        return doc.array().at(lang).toObject();
+        // The map is laid out by Qt 5's QLocale::Language values, which Qt 6
+        // renumbered, so find the entry by its ISO 639 code instead.
+        const auto array = doc.array();
+        auto find = [&] (const QString &code) -> QJsonObject {
+            for (const auto &v : array) {
+                const auto object = v.toObject();
+                if (object.value(u"iso639"_q).toString() == code)
+                    return object;
+            }
+            return QJsonObject();
+        };
+        auto code = QLocale::languageToCode(lang, QLocale::ISO639Part3);
+        if (code == "nob"_a) // the map predates Qt's Norwegian Bokmal
+            code = u"nor"_q;
+        auto object = find(code);
+        return object.isEmpty() ? find(u"eng"_q) : object;
     }
 };
 
