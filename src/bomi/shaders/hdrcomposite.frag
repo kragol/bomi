@@ -16,6 +16,8 @@ layout(std140, binding = 0) uniform buf {
     vec4 videoRect; // the video item in the window: x, y, w, h in 0..1
     vec4 videoTex;  // its texture coordinates: top-left x, y, then w, h (flips negative)
     float darker;
+    float uiOpacity;
+    float overlayOpacity;
 };
 layout(binding = 1) uniform sampler2D video;
 layout(binding = 2) uniform sampler2D ui;
@@ -65,7 +67,7 @@ void main()
     vec2 v = (qt_TexCoord0 - videoRect.xy) / videoRect.zw;
     vec3 pq = all(greaterThanEqual(v, vec2(0.0))) && all(lessThanEqual(v, vec2(1.0)))
             ? texture(video, videoTex.xy + v * videoTex.zw).rgb : vec3(0.0);
-    pq = over(pq, texture(ui, qt_TexCoord0));
-    pq = over(pq, texture(overlay, qt_TexCoord0));
+    pq = over(pq, texture(ui, qt_TexCoord0) * uiOpacity);
+    pq = over(pq, texture(overlay, qt_TexCoord0) * overlayOpacity);
     fragColor = vec4(pq, 1.0) * qt_Opacity;
 }

@@ -812,6 +812,11 @@ Item {
         property rect videoRect: root.videoRect
         property rect videoTex: root.videoTex
         property real darker: root.darker
+        // A layer renders its item even when hidden, and ignores the item's
+        // own opacity: the overlay is a 40% shade that is only shown behind
+        // dialogs.
+        property real uiOpacity: root.uiItem && root.uiItem.visible ? root.uiItem.opacity : 0
+        property real overlayOpacity: root.overlayItem && root.overlayItem.visible ? root.overlayItem.opacity : 0
         fragmentShader: "qrc:/shaders/hdrcomposite.frag.qsb"
     }
 })";
