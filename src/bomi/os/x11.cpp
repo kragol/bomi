@@ -68,6 +68,8 @@ enum class ScreensaverMethod {
     Auto, Gnome, Freedesktop, Xss
 };
 
+// Created on every Linux platform; the xcb members are only set when there is
+// an X11 connection (not under native Wayland).
 struct X11 : public QObject {
     X11();
     ~X11();
@@ -141,13 +143,10 @@ auto isX11Available() -> bool
 
 auto initialize() -> void
 {
-    if (!isX11Available()) {
+    if (!isX11Available())
         _Info("Not running on X11 (platform '%%'). "
-              "Window-manager integration, screensaver inhibition and "
-              "hardware acceleration will be unavailable.",
+              "Window-manager integration goes through Qt.",
               QGuiApplication::platformName());
-        return;
-    }
     _Renew(d);
 }
 
@@ -155,11 +154,12 @@ auto finalize() -> void { _Delete(d); }
 
 X11::X11()
 {
+    statm = ::open("/proc/self/statm", O_RDONLY);
+    if (!isX11Available())
+        return;
     connection = x11App()->connection();
     display = x11App()->display();
     root = xcb_setup_roots_iterator(xcb_get_setup(connection)).data->root;
-
-    Q_ASSERT(connection);
 
 #define GET_ATOM(id) {atoms[id] = getAtom(connection, #id);}
     GET_ATOM(_NET_WM_STATE);
@@ -186,9 +186,6 @@ X11::X11()
         xcb_force_screen_saver(connection, XCB_SCREEN_SAVER_RESET);
         xcb_flush(connection);
     });
-
-
-    statm = ::open("/proc/self/statm", O_RDONLY);
 }
 
 X11::~X11()
@@ -221,7 +218,7 @@ auto refreshRate() -> qreal
     const auto hz = screenRefreshRate();
     if (hz > 0)
         return hz;
-    if (!d)
+    if (!d || !d->connection)
         return -1;
     auto sr = _Reply(xcb_randr_get_screen_resources_current_reply(
         d->connection,
@@ -358,7 +355,10 @@ auto setScreensaverEnabled(bool enabled) -> void
         if (!dbus) {
             _Delete(s.iface);
             s.method = ScreensaverMethod::Xss;
-            if (qgetenv("XDG_SESSION_TYPE") == "wayland") {
+            if (!d->connection) {
+                _Warn("No D-Bus screensaver service and no X11 connection: "
+                      "the screen may blank during playback.");
+            } else if (qgetenv("XDG_SESSION_TYPE") == "wayland") {
                 _Warn("Falling back to XScreenSaver, which cannot inhibit a "
                       "Wayland compositor's idle timer. The screen may blank "
                       "during playback.");
@@ -385,7 +385,7 @@ auto setScreensaverEnabled(bool enabled) -> void
             } else
                 _Debug("Disable screensaver with '%%'.", s.iface->interface());
         }
-        if (s.method == ScreensaverMethod::Xss) {
+        if (s.method == ScreensaverMethod::Xss && d->connection) {
             xcb_screensaver_suspend(d->connection, 1);
             _Debug("Disable screensaver with XScreenSaver.");
             s.reset.start();
@@ -400,7 +400,7 @@ auto setScreensaverEnabled(bool enabled) -> void
             else
                 _Debug("Enable screensaver with '%%'.", s.iface->interface());
         }
-        if (s.method == ScreensaverMethod::Xss) {
+        if (s.method == ScreensaverMethod::Xss && d->connection) {
             xcb_screensaver_suspend(d->connection, 0);
             _Debug("Enable screensaver with XScreenSaver.");
         }
@@ -498,6 +498,41 @@ auto X11WindowAdapter::setAlwaysOnTop(bool on) -> void
     d->sendState(winId(), on, _NET_WM_STATE_ABOVE, _NET_WM_STATE_STAYS_ON_TOP);
 }
 
+auto QtWindowAdapter::setFrameless(bool frameless) -> void
+{
+    // Qt only destroys or recreates the xdg-decoration object, which KWin
+    // does not act on for a mapped window; remapping it applies the change
+    // (KWin then places the window again).
+    if (isFrameless() == frameless)
+        return;
+    const bool visible = window()->isVisible();
+    if (visible)
+        window()->hide();
+    setFramelessHint(frameless);
+    if (visible)
+        window()->show();
+}
+
+auto QtWindowAdapter::moveByDrag(const QPointF &m) -> void
+{
+    // A Wayland client cannot place its own window, so hand the move to the
+    // compositor, as X11WindowAdapter does with _NET_WM_MOVERESIZE.
+    if (m_systemMove)
+        return;
+    if (!isMovingByDrag() && window()->startSystemMove()) {
+        m_systemMove = true;
+        setMovingByDrag(true);
+        return;
+    }
+    WindowAdapter::moveByDrag(m);
+}
+
+auto QtWindowAdapter::endMoveByDrag() -> void
+{
+    m_systemMove = false;
+    WindowAdapter::endMoveByDrag();
+}
+
 auto QtWindowAdapter::isAlwaysOnTop() const -> bool
 {
     return window()->flags() & Qt::WindowStaysOnTopHint;
@@ -520,7 +555,7 @@ auto createAdapter(QWindow *w) -> WindowAdapter*
 {
     // Without X11 there is no _NET_WM_STATE to talk to; fall back to what Qt
     // can do on its own.
-    if (!d)
+    if (!d || !d->connection)
         return new QtWindowAdapter(w);
     return new X11WindowAdapter(w);
 }

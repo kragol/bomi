@@ -38,15 +38,20 @@ private:
 };
 
 // Used when there is no X11 connection, i.e. a native Wayland session. The
-// base class already implements fullscreen, frameless, move-by-drag and
-// snapping through Qt; only the four pure virtuals need filling in.
+// base class already implements fullscreen and frameless through Qt; moving
+// by drag is handed to the compositor.
 class QtWindowAdapter : public WindowAdapter {
 public:
     QtWindowAdapter(QWindow *w) : WindowAdapter(w) { }
     auto isAlwaysOnTop() const -> bool final;
     auto setAlwaysOnTop(bool onTop) -> void final;
+    auto setFrameless(bool frameless) -> void final;
+    auto moveByDrag(const QPointF &m) -> void final;
+    auto endMoveByDrag() -> void final;
     auto setImeEnabled(bool /*enabled*/) -> void final { }
     auto isImeEnabled() const -> bool final { return false; }
+private:
+    bool m_systemMove = false;
 };
 
 }

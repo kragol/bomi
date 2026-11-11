@@ -4,7 +4,6 @@
 #include <QOpenGLFramebufferObject>
 #include <QSet>
 #ifdef Q_OS_LINUX
-#include <GL/glx.h>
 #endif
 
 DECLARE_LOG_CONTEXT(OpenGL)
