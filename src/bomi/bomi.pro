@@ -48,11 +48,22 @@ macx {
     OBJECTIVE_SOURCES += os/mac.mm
     INCLUDEPATH += ../ffmpeg ../ffmpeg/libavcode
 } else:unix {
-    QT += dbus
+    QT += dbus gui-private
 	TARGET = bomi
 	LIBS += -ldl
 	HEADERS += player/mpris.hpp
 	SOURCES += player/mpris.cpp
+    # Wayland colour management for HDR output (os/hdroutput.cpp). Like the
+    # shaders below, the protocol code is generated when qmake runs.
+    CM_XML = $$[QT_INSTALL_DATA]/wayland/protocols/color-management/color-management-v1.xml
+    !exists($$CM_XML): error("$$CM_XML not found (from Qt's wayland support)")
+    CM_OUT = $$PWD/os/color-management-v1
+    !system(wayland-scanner client-header $$shell_quote($$CM_XML) $$shell_quote($${CM_OUT}-client-protocol.h)): \
+        error("wayland-scanner failed")
+    !system(wayland-scanner private-code $$shell_quote($$CM_XML) $$shell_quote($${CM_OUT}-protocol.c)): \
+        error("wayland-scanner failed")
+    HEADERS += os/color-management-v1-client-protocol.h
+    SOURCES += os/color-management-v1-protocol.c
 } else:win32 {
     QT += gui-private core-private
     RC_ICONS = ../../icons/bomi.ico
@@ -268,6 +279,7 @@ HEADERS += \
 	tmp/type_traits.hpp \
     os/os.hpp \
     os/x11.hpp \
+    os/hdroutput.hpp \
     enum/codecid.hpp \
     global.hpp \
     global_def.hpp \
@@ -474,6 +486,7 @@ SOURCES += \
 	misc/logviewer.cpp \
     os/x11.cpp \
     os/os.cpp \
+    os/hdroutput.cpp \
     enum/codecid.cpp \
     global.cpp \
     player/shortcutmap.cpp \

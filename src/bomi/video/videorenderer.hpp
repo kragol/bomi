@@ -66,6 +66,18 @@ public:
     auto setScalerEnabled(bool on) -> void;
     auto setOsdVisible(bool visible) -> void;
     auto updateAll() -> void;
+    // HDR output: everything is drawn through one composite pass. The item
+    // then draws nothing itself, the pass reads the frame through
+    // textureProvider(), and mpv is rendered from a proxy item in the main
+    // scene (createRenderProxy()), since this item is only drawn into a layer
+    // there and a layer is not refreshed by a render-thread-only update.
+    auto setHdrComposite(bool on) -> void;
+    auto createRenderProxy(QQuickItem *parent) -> QQuickItem*;
+    auto isTextureProvider() const -> bool final { return true; }
+    auto textureProvider() const -> QSGTextureProvider* final;
+    // Texture coordinates of the frame in the framebuffer: tl and br, with
+    // flips applied.
+    auto frameTexRect() const -> QRectF;
     Q_INVOKABLE QRectF mapFromVideo(const QRect &rect);
 signals:
     void offsetChanged(const QPointF &pos);
@@ -94,8 +106,11 @@ private:
     struct VideoShaderIface;
     struct Node;
     struct Waker;
+    struct FrameProvider;
+    struct RenderProxy;
 
     auto render(VideoShaderData *data) -> void;
+    auto renderFromProxy() -> void;
 
     struct Data;
     Data *d;

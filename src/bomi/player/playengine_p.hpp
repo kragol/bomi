@@ -112,6 +112,8 @@ struct PlayEngine::Data {
     bool pauseAfterSkip = false, resume = false, hwdec = false;
     bool quit = false, preciseSeeking = false, mouseOnButton = false;
     bool displaySync = true;
+    double hdrSourcePeak = 0, hdrOutput = 0;
+    int sdrCaptures = 0;
     bool filterResync = false, audioOnly = false, useIntrplDown = false;
 
     QStringList hwCodecs;
@@ -217,6 +219,8 @@ struct PlayEngine::Data {
         return true;
     }
     auto takeSnapshot() -> void;
+    auto applyHdrOutput() -> void;
+    auto setSdrForCapture(bool on) -> void;
     auto snapshotCaptured(int stage, const QImage &image) -> void;
     auto localCopy() -> QSharedPointer<MrlState>;
     auto onLoad() -> void;

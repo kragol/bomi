@@ -1077,6 +1077,35 @@
           </widget>
          </item>
          <item>
+          <widget class="QGroupBox" name="hdr_group">
+           <property name="title">
+            <string>HDR Output</string>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_hdr">
+            <item>
+             <widget class="QCheckBox" name="hdr_output">
+              <property name="toolTip">
+               <string>When the display is in HDR mode (Plasma's HDR setting, on Wayland) and the video is HDR, send the video to the display as HDR and let the desktop map it to the screen. Otherwise HDR video is tone-mapped to SDR.</string>
+              </property>
+              <property name="text">
+               <string>Output HDR video as HDR when the display is in HDR mode</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="hdr_ui_darker">
+              <property name="toolTip">
+               <string>During HDR output, blend translucent panels over the video on HDR values. They come out much darker than in SDR, which can make text over bright scenes easier to read. Off, they look as they do in SDR.</string>
+              </property>
+              <property name="text">
+               <string>Darker translucent panels during HDR output</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
           <spacer name="verticalSpacer_7">
            <property name="orientation">
             <enum>Qt::Vertical</enum>

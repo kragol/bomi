@@ -759,6 +759,77 @@ auto MainWindow::Data::applyPref() -> void
                                p.sub_ext(), p.sub_prefer_external());
     e.unlock();
     e.reload();
+    updateHdr();
+}
+
+// HDR output is on when allowed, the display is in HDR mode and the video is
+// HDR: mpv then outputs PQ, the surface is tagged PQ with the video's peak and
+// the compositor maps it to the display.
+auto MainWindow::Data::updateHdr() -> void
+{
+    const auto peak = e.hdrSourcePeak();
+    const bool on = pref.hdr_output() && hdr && hdr->isDisplayHdr() && peak > 0;
+    e.setHdrOutput(on ? peak : 0);
+    hdr->setPq(on ? peak : 0);
+    setHdrComposite(on);
+    if (hdrComposite)
+        hdrComposite->setProperty("darker", pref.hdr_ui_darker() ? 1.0 : 0.0);
+}
+
+// In a PQ window everything Qt Quick draws in sRGB would be far too bright, so
+// the video, the skin and the dialog overlay are only drawn through one pass
+// that converts and blends them (shaders/hdrcomposite.frag).
+auto MainWindow::Data::setHdrComposite(bool on) -> void
+{
+    if (on == !!hdrComposite)
+        return;
+    auto vr = static_cast<VideoRenderer*>(e.screen());
+    if (!on) {
+        vr->setHdrComposite(false);
+        delete hdrComposite;
+        hdrComposite = nullptr;
+        return;
+    }
+    static const QByteArray qml = R"(
+import QtQuick
+Item {
+    id: root
+    anchors.fill: parent
+    z: 2e10
+    property Item videoItem
+    property Item uiItem
+    property Item overlayItem
+    property rect videoRect: Qt.rect(0, 0, 1, 1)
+    property rect videoTex: Qt.rect(0, 0, 1, 1)
+    property real darker
+    ShaderEffectSource { id: uiSource; sourceItem: root.uiItem; hideSource: true; visible: false }
+    ShaderEffectSource { id: overlaySource; sourceItem: root.overlayItem; hideSource: true; visible: false }
+    ShaderEffect {
+        anchors.fill: parent
+        property var video: root.videoItem
+        property var ui: uiSource
+        property var overlay: overlaySource
+        property rect videoRect: root.videoRect
+        property rect videoTex: root.videoTex
+        property real darker: root.darker
+        fragmentShader: "qrc:/shaders/hdrcomposite.frag.qsb"
+    }
+})";
+    QQmlComponent component(p->QQuickView::engine());
+    component.setData(qml, QUrl());
+    auto item = qobject_cast<QQuickItem*>(component.createWithInitialProperties({
+        { u"videoItem"_q, QVariant::fromValue(e.screen()) },
+        { u"uiItem"_q, QVariant::fromValue(p->rootObject()) },
+        { u"overlayItem"_q, QVariant::fromValue<QQuickItem*>(top) },
+    }));
+    if (!item) {
+        _Error("Cannot create the HDR composite: %%", component.errorString());
+        return;
+    }
+    item->setParentItem(p->contentItem());
+    vr->createRenderProxy(item);
+    vr->setHdrComposite(true);
+    hdrComposite = item;
 }
 
 auto MainWindow::Data::updateStaysOnTop() -> void

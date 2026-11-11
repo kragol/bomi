@@ -31,6 +31,7 @@ MainWindow::MainWindow()
     d->undo.setActive(false);
     d->logViewer = d->dialog<LogViewer>();
     d->adapter = OS::adapter(this);
+    d->hdr = new HdrSurface(this);
 
     AppObject::setTopLevelItem(d->top);
     AppObject::setQmlEngine(QQuickView::engine());
@@ -57,6 +58,22 @@ MainWindow::MainWindow()
         { if (status == Ready) d->top->setParentItem(contentItem()); });
     connect(d->adapter, &OS::WindowAdapter::stateChanged, this,
             [=] (Qt::WindowState ws) { d->updateWindowState(ws); });
+    connect(d->hdr, &HdrSurface::displayHdrChanged, this, [=] () { d->updateHdr(); });
+    connect(&d->e, &PlayEngine::hdrSourcePeakChanged, this, [=] () { d->updateHdr(); });
+    // The composite pass needs to know where the skin put the video.
+    connect(this, &QQuickWindow::afterAnimating, this, [=] () {
+        if (!d->hdrComposite || width() <= 0 || height() <= 0)
+            return;
+        const auto v = d->e.screen();
+        const auto r = v->mapRectToItem(contentItem(), QRectF(0, 0, v->width(), v->height()));
+        const QRectF rect(r.x() / width(), r.y() / height(),
+                          r.width() / width(), r.height() / height());
+        if (d->hdrComposite->property("videoRect").toRectF() != rect)
+            d->hdrComposite->setProperty("videoRect", rect);
+        const auto tex = static_cast<VideoRenderer*>(v)->frameTexRect();
+        if (d->hdrComposite->property("videoTex").toRectF() != tex)
+            d->hdrComposite->setProperty("videoTex", tex);
+    });
     connect(this, &QQuickView::sceneGraphInitialized, this, [this] () {
         auto context = static_cast<QOpenGLContext*>(rendererInterface()->getResource(
             this, QSGRendererInterface::OpenGLContextResource));

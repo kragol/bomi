@@ -26,7 +26,7 @@ license=('GPL2')
 # makepkg's --as-needed drops everything bomi does not call itself). Audio
 # outputs, DVD, Blu-ray, CDDA and subtitle rendering are libmpv's business now,
 # and the mpv package carries those dependencies.
-depends=('gcc-libs' 'glib2' 'glibc' 'libchardet' 'libgl' 'libxcb'
+depends=('gcc-libs' 'glib2' 'glibc' 'libchardet' 'libgl' 'libxcb' 'wayland'
          'qt6-base' 'qt6-declarative' 'qt6-5compat'
          'smbclient' 'systemd-libs' 'zlib'
          # Loaded at runtime, so they show up in no ELF header: the SVG image

@@ -23,6 +23,7 @@
 #include "misc/stepaction.hpp"
 #include "misc/logviewer.hpp"
 #include "os/os.hpp"
+#include "os/hdroutput.hpp"
 #include "misc/smbauth.hpp"
 #include "misc/dataevent.hpp"
 #include "json/jrserver.hpp"
@@ -129,6 +130,8 @@ struct MainWindow::Data {
 
     TopLevelItem *top = nullptr;
     OS::WindowAdapter *adapter = nullptr;
+    HdrSurface *hdr = nullptr;
+    QQuickItem *hdrComposite = nullptr;
     JrServer *jrServer = nullptr;
     JrPlayer jrPlayer;
     Qt::WindowState prevWindowState = Qt::WindowNoState;
@@ -166,6 +169,8 @@ struct MainWindow::Data {
     auto restoreState() -> void;
     auto applyPref() -> void;
     auto updateStaysOnTop() -> void;
+    auto updateHdr() -> void;
+    auto setHdrComposite(bool on) -> void;
     auto videoSize(const WindowSize &hint) -> QSize;
     auto setVideoSize(const QSize &video) -> void;
     auto updateRecentActions(const QList<Mrl> &list) -> void;

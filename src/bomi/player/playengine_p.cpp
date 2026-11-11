@@ -799,6 +799,19 @@ auto PlayEngine::Data::observe() -> void
         auto &video = info.video;
         auto info = video.filter();
         setParams(info, params, u"w"_q, u"h"_q);
+        // MaxCLL when the file has it, else the mastering peak; HLG carries
+        // neither and is nominally 1000 nits.
+        double peak = 0;
+        const auto gamma = params[u"gamma"_q].toString();
+        if (gamma == "pq"_a || gamma == "hlg"_a) {
+            peak = params[u"max-cll"_q].toDouble();
+            if (peak <= 0)
+                peak = params[u"max-luma"_q].toDouble();
+            if (peak <= 0)
+                peak = 1000;
+        }
+        if (_Change(hdrSourcePeak, peak))
+            emit p->hdrSourcePeakChanged(peak);
     });
     mpv.observe("video-out-params", [=] (QVariant &&var) {
         const auto params = var.toMap();
@@ -1029,6 +1042,7 @@ auto PlayEngine::Data::takeSnapshot() -> void
     }
     ss.time = mpv.get<double>("time-pos") * 1e3;
     ss.size = displaySize(); // the video's output size, so no letterbox bars
+    setSdrForCapture(true);
     ss.stage = 1;
     vr->updateForNewFrame(displaySize());
 }
@@ -1050,7 +1064,41 @@ auto PlayEngine::Data::snapshotCaptured(int stage, const QImage &image) -> void
         if (ss.hidSubtitles)
             mpv.setAsync("sub-visibility", true);
     }
+    setSdrForCapture(false);
     emit p->snapshotTaken();
+}
+
+// With the source's own peak as target, mpv passes PQ through untouched and
+// the compositor does the tone mapping to the display. A lower target would
+// have vo_gpu squeeze highlights into a few 8-bit codes.
+auto PlayEngine::Data::applyHdrOutput() -> void
+{
+    const bool on = hdrOutput > 0 && sdrCaptures == 0;
+    const auto trc = on ? "pq"_b : "auto"_b;
+    const auto prim = on ? "bt.2020"_b : "auto"_b;
+    const auto peak = on ? QByteArray::number(qRound(hdrOutput)) : "auto"_b;
+    // A capture must not start before mpv has switched to SDR, so wait for
+    // it then. Each change waits for a rendered frame, and asynchronous ones
+    // are not ordered with synchronous ones, so it has to be all three.
+    if (sdrCaptures > 0) {
+        mpv.set("target-trc", trc);
+        mpv.set("target-prim", prim);
+        mpv.set("target-peak", peak);
+    } else {
+        mpv.setAsync("target-trc", trc);
+        mpv.setAsync("target-prim", prim);
+        mpv.setAsync("target-peak", peak);
+    }
+}
+
+// Snapshots and grabbed frames are SDR images, so mpv tone-maps for them; the
+// screen may show a frame or two of that.
+auto PlayEngine::Data::setSdrForCapture(bool on) -> void
+{
+    const auto was = sdrCaptures;
+    sdrCaptures = qMax(0, sdrCaptures + (on ? 1 : -1));
+    if (hdrOutput > 0 && (was == 0) != (sdrCaptures == 0))
+        applyHdrOutput();
 }
 
 auto PlayEngine::Data::renderVideoFrame(Fbo *frame) -> void

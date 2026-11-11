@@ -766,6 +766,17 @@ auto PlayEngine::setDisplaySync_locked(bool on) -> void
                         on ? "display-resample"_b : "audio"_b);
 }
 
+auto PlayEngine::hdrSourcePeak() const -> double
+{
+    return d->hdrSourcePeak;
+}
+
+auto PlayEngine::setHdrOutput(double peak) -> void
+{
+    if (_Change(d->hdrOutput, qMax(0.0, peak)))
+        d->applyHdrOutput();
+}
+
 auto PlayEngine::setMrl(const Mrl &mrl) -> void
 {
     if (d->mrl != mrl) {
@@ -1522,7 +1533,11 @@ auto PlayEngine::grabFrame(std::function<void(const QImage&)> &&done) -> void
         done(QImage());
         return;
     }
-    d->grab.done = std::move(done);
+    d->setSdrForCapture(true);
+    d->grab.done = [this, done = std::move(done)] (const QImage &image) {
+        d->setSdrForCapture(false);
+        done(image);
+    };
     d->grab.size = size;
     d->grab.pending = true;
     d->vr->updateForNewFrame(size);

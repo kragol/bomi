@@ -221,6 +221,11 @@ public:
     auto run() -> void;
     auto waitUntilTerminated() -> void;
     auto screen() const -> QQuickItem*;
+    // Peak luminance in nits of the video if it is HDR (PQ or HLG), else 0.
+    auto hdrSourcePeak() const -> double;
+    // Have mpv output PQ/BT.2020 up to this peak, i.e. without tone mapping,
+    // or its usual SDR output with 0.
+    auto setHdrOutput(double peak) -> void;
     auto media() const -> MediaObject*;
     auto audio() const -> AudioObject*;
     auto video() const -> VideoObject*;
@@ -349,6 +354,7 @@ signals:
     void streamingFormatChanged();
     void streamingFormatsChanged();
     void videoScreenRectChanged(const QRectF &rect);
+    void hdrSourcePeakChanged(double peak);
 private:
     auto setVideoTrackSelected(int id, bool s) -> void;
     auto setAudioTrackSelected(int id, bool s) -> void;

@@ -79,6 +79,10 @@ private:
     // display-resample) instead of to the audio clock. Off falls back to
     // video-sync=audio, which is mpv's default and never resamples audio.
     P0(bool, video_display_sync, true)
+    // Output HDR video as HDR when the display is in HDR mode (Wayland).
+    P0(bool, hdr_output, true)
+    // In HDR output, blend translucent UI on PQ values: much darker panels.
+    P0(bool, hdr_ui_darker, false)
     P0(bool, remember_image, false)
     P0(bool, enable_generate_playlist, true)
     P0(QStringList, restore_properties, defaultRestoreProperties())

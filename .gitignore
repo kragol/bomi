@@ -112,3 +112,4 @@ __pycache__/
 # local agent state and worktrees
 .claude/
 src/bomi/shaders/*.qsb
+src/bomi/os/color-management-v1-*

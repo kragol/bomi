@@ -8,6 +8,7 @@
 #include "enum/rotation.hpp"
 #include <QQmlProperty>
 #include <QQuickWindow>
+#include <QSGTextureProvider>
 #include <QMutex>
 #include <QCoreApplication>
 #include <atomic>
@@ -65,13 +66,34 @@ struct VideoRenderer::VideoShaderIface : public VideoRenderer::ShaderIface {
 
 struct VideoRenderer::Node : public QSGGeometryNode {
     Node(VideoRenderer *r): r(r) { setFlag(UsePreprocess, true); }
-    auto preprocess() -> void final
-    {
-        auto d = shaderData(material());
-        r->render(static_cast<VideoRenderer::VideoShaderData*>(d));
-    }
+    auto preprocess() -> void final;
 private:
     VideoRenderer *r;
+};
+
+// The framebuffer as a texture, for the HDR composite pass.
+struct VideoRenderer::FrameProvider : public QSGTextureProvider {
+    FrameProvider(const VideoRenderer *r): r(r) { }
+    auto texture() const -> QSGTexture* final;
+    const VideoRenderer *r;
+    mutable SGTextureWrapper wrapper;
+    mutable GLuint id = 0;
+};
+
+// Drives mpv's rendering from the main scene in HDR output.
+struct VideoRenderer::RenderProxy : public QQuickItem {
+    RenderProxy(VideoRenderer *r, QQuickItem *parent)
+        : QQuickItem(parent), r(r) { setFlag(ItemHasContents); }
+    auto updatePaintNode(QSGNode *old, UpdatePaintNodeData *) -> QSGNode* final
+    {
+        struct ProxyNode : QSGNode {
+            ProxyNode(VideoRenderer *r): r(r) { setFlag(UsePreprocess, true); }
+            auto preprocess() -> void final { r->renderFromProxy(); }
+            VideoRenderer *r;
+        };
+        return old ? old : new ProxyNode(r);
+    }
+    QPointer<VideoRenderer> r;
 };
 
 // Lives on the scene-graph render thread. A posted event wakes that thread, and
@@ -113,6 +135,12 @@ struct VideoRenderer::Data {
     std::atomic<quint64> displaySize{0};
     QMutex wakerLock;
     Waker *waker = nullptr;
+
+    // HDR output (see setHdrComposite()); the data is the node's, set on the
+    // render thread.
+    std::atomic<bool> hdr{false};
+    std::atomic<VideoShaderData*> renderData{nullptr};
+    mutable FrameProvider *provider = nullptr;
 
     static auto isSameRatio(double r1, double r2) -> bool
         {return (r1 < 0.0 && r2 < 0.0) || qFuzzyCompare(r1, r2);}
@@ -296,6 +324,7 @@ auto VideoRenderer::finalizeGL() -> void
     }
     d->frame.fallback.destroy();
     _Delete(d->frame.fbo);
+    _Delete(d->provider);
 }
 
 auto VideoRenderer::customEvent(QEvent *event) -> void
@@ -511,6 +540,64 @@ auto VideoRenderer::createNode() const -> QSGGeometryNode*
     return new Node(const_cast<VideoRenderer*>(this));
 }
 
+auto VideoRenderer::Node::preprocess() -> void
+{
+    auto data = static_cast<VideoRenderer::VideoShaderData*>(shaderData(material()));
+    r->d->renderData = data;
+    if (!r->d->hdr)
+        r->render(data);
+}
+
+auto VideoRenderer::renderFromProxy() -> void
+{
+    if (!d->hdr)
+        return;
+    if (auto data = d->renderData.load())
+        render(data);
+    if (d->provider && d->frame.fbo && d->provider->id != d->frame.fbo->texture().id())
+        emit d->provider->textureChanged();
+}
+
+auto VideoRenderer::FrameProvider::texture() const -> QSGTexture*
+{
+    auto fbo = r->d->frame.fbo;
+    if (!fbo || !r->window())
+        return nullptr;
+    id = fbo->texture().id();
+    return wrapper.get(r->window(), id, fbo->size());
+}
+
+auto VideoRenderer::textureProvider() const -> QSGTextureProvider*
+{
+    if (!d->provider)
+        d->provider = new FrameProvider(this);
+    return d->provider;
+}
+
+auto VideoRenderer::createRenderProxy(QQuickItem *parent) -> QQuickItem*
+{
+    return new RenderProxy(this, parent);
+}
+
+auto VideoRenderer::setHdrComposite(bool on) -> void
+{
+    if (d->hdr.exchange(on) != on) {
+        d->redraw = true;
+        reserve(UpdateAll);
+    }
+}
+
+auto VideoRenderer::frameTexRect() const -> QRectF
+{
+    auto tl = d->frame.rect.topLeft();
+    auto br = d->frame.rect.bottomRight();
+    if (d->flip_v)
+        std::swap(tl.ry(), br.ry());
+    if (d->flip_h)
+        std::swap(tl.rx(), br.rx());
+    return { tl, br };
+}
+
 auto VideoRenderer::render(VideoShaderData *data) -> void
 {
     // Clear the flag before asking mpv, so an update callback arriving during
@@ -556,7 +643,11 @@ auto VideoRenderer::updateVertex(Vertex *vertex) -> void
         std::swap(tl.ry(), br.ry());
     if (d->flip_h)
         std::swap(tl.rx(), br.rx());
-    FILL_TS(position, {0, 0}, {width(), height()});
+    // During HDR output the composite pass draws the frame.
+    if (d->hdr)
+        FILL_TS(position, {0, 0}, {0, 0});
+    else
+        FILL_TS(position, {0, 0}, {width(), height()});
     FILL_TS(frameTexCoord, tl, br);
     FILL_TS(osdTexCoord, d->osd.rect.topLeft(), d->osd.rect.bottomRight());
 }
