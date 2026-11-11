@@ -183,9 +183,13 @@ struct VideoRenderer::Data {
     // the video letterboxed inside it, and places subtitles on the resulting
     // bars when --sub-use-margins is on. Sizing this to the video instead would
     // leave no bars for subtitles to land on.
+    // In device pixels: with a scaled display, an item-sized framebuffer in
+    // logical pixels would have mpv render below the screen's resolution and
+    // the scene graph stretch it back up.
     auto fboSizeHint() const -> QSize
     {
-        auto size = p->size().toSize();
+        const auto dpr = p->window() ? p->window()->effectiveDevicePixelRatio() : 1.0;
+        auto size = (p->size() * dpr).toSize();
         return size.isEmpty() ? QSize(1, 1) : size;
     }
 };
@@ -472,6 +476,14 @@ auto VideoRenderer::geometryChange(const QRectF &new_, const QRectF& old) -> voi
 {
     Super::geometryChange(new_, old);
     if (new_.size().toSize() != old.size().toSize())
+        polish();
+}
+
+auto VideoRenderer::itemChange(ItemChange change, const ItemChangeData &data) -> void
+{
+    Super::itemChange(change, data);
+    // Moved to a screen with another scale: the framebuffer follows it.
+    if (change == ItemDevicePixelRatioHasChanged)
         polish();
 }
 

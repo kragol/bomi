@@ -87,6 +87,7 @@ private:
     auto updateVertexOnGeometryChanged() const -> bool final { return true; }
 
     auto geometryChange(const QRectF &new_, const QRectF&) -> void final;
+    auto itemChange(ItemChange change, const ItemChangeData &data) -> void final;
     auto updatePolish() -> void final;
     auto customEvent(QEvent *event) -> void final;
     struct VideoShaderData;
