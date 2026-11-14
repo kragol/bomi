@@ -7,6 +7,7 @@
 #include "misc/locale.hpp"
 #include "ui_subtitlefinddialog.h"
 #include <QFileDialog>
+#include <QScrollBar>
 #include <QTemporaryDir>
 #include <QTemporaryFile>
 #include <QSortFilterProxyModel>
@@ -62,10 +63,45 @@ struct DownloadInfo {
     QString fileName;
 };
 
+// The codes subliminal uses: ISO 639-1 where there is one, plus a country,
+// lowercase ("en", "pt-br"). Lists saved before subliminal hold
+// OpenSubtitles.org's codes ("eng", "fre", "pob"), which would show the same
+// language twice and which subliminal partly rejects.
+SIA languageCode(const QString &code) -> QString
+{
+    auto c = code.trimmed().toLower().replace('_'_q, '-'_q);
+    static const QHash<QString, QString> openSubtitles = {
+        { u"pob"_q, u"pt-br"_q }, { u"pb"_q, u"pt-br"_q }, { u"scc"_q, u"sr"_q },
+        { u"zht"_q, u"zh"_q }, { u"zhe"_q, u"zh"_q },
+        { u"nor"_q, u"no"_q } // Qt would say Bokmal, "nb"
+    };
+    const auto it = openSubtitles.constFind(c);
+    if (it != openSubtitles.cend())
+        return *it;
+    const auto base = c.section('-'_q, 0, 0), country = c.section('-'_q, 1);
+    if (base.size() != 3)
+        return c;
+    const auto lang = QLocale::codeToLanguage(base, QLocale::AnyLanguageCode);
+    const auto two = lang == QLocale::AnyLanguage ? QString()
+                   : QLocale::languageToCode(lang, QLocale::ISO639Part1);
+    if (two.isEmpty())
+        return c;
+    return country.isEmpty() ? two : two % '-'_q % country;
+}
+
 SIA language(const QString &langCode) -> QString
 {
-    const auto lang = Locale::isoToNativeName(langCode);
-    return lang.isEmpty() ? langCode : lang;
+    const auto base = langCode.section('-'_q, 0, 0);
+    const auto country = langCode.section('-'_q, 1).toUpper();
+    auto lang = Locale::isoToNativeName(base);
+    if (lang.isEmpty())
+        lang = base;
+    if (!country.isEmpty()) {
+        const auto t = QLocale::codeToTerritory(country);
+        lang += " ("_a % (t == QLocale::AnyTerritory ? country
+                          : QLocale::territoryToString(t)) % ')'_q;
+    }
+    return lang;
 }
 
 struct SubtitleFindDialog::Data {
@@ -99,15 +135,26 @@ struct SubtitleFindDialog::Data {
 
         auto size = ui.language->count();
         for (auto &link : links) {
+            link.langCode = languageCode(link.langCode);
             link.language = language(link.langCode);
             if (find(link.langCode))
                 continue;
-            ui.language->addItem(link.language, link.langCode.toLower());
+            ui.language->addItem(link.language, link.langCode);
             ui.language->setChecked(ui.language->count() - 1, true);
         }
-        if (size != ui.language->count())
+        if (size != ui.language->count()) {
             ui.language->sortItems();
+            fitLanguages();
+        }
         return size != ui.language->count();
+    }
+
+    // Wide enough for the longest name, such as "Portuguese (Brazil)".
+    auto fitLanguages() -> void
+    {
+        auto list = ui.language;
+        list->setFixedWidth(list->sizeHintForColumn(0) + 2 * list->frameWidth()
+                            + list->verticalScrollBar()->sizeHint().width());
     }
 
     // subliminal needs the languages up front (OpenSubtitles.org used to return
@@ -317,10 +364,19 @@ SubtitleFindDialog::SubtitleFindDialog(QWidget *parent)
     d->storage.add("language", [=] () { return d->ui.language->toVariant(CheckListData); },
                    [=] (auto &var) { d->ui.language->setFromVariant(var, CheckListData); });
     d->storage.restore();
-    for (int i = 0; i < d->ui.language->count(); ++i) {
-        auto item = d->ui.language->item(i);
-        item->setText(language(d->ui.language->data(i).toString()));
+    // Convert a saved list to subliminal's codes, merging what becomes the
+    // same language; it stays ticked if either was.
+    QMap<QString, bool> saved;
+    const auto states = d->ui.language->checkedStates();
+    for (int i = 0; i < d->ui.language->count(); ++i)
+        saved[languageCode(d->ui.language->data(i).toString())] |= states.value(i);
+    d->ui.language->clear();
+    for (auto it = saved.cbegin(); it != saved.cend(); ++it) {
+        d->ui.language->addItem(language(it.key()), it.key());
+        d->ui.language->setChecked(d->ui.language->count() - 1, it.value());
     }
+    d->ui.language->sortItems();
+    d->fitLanguages();
     d->ui.language->setHeaderCheckBox(d->ui.languageCheckBox);
     d->ui.view->setSortingEnabled(true);
 }
